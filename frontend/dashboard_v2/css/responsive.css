@@ -1,0 +1,133 @@
+/* ==========================================================
+   BLOODLINK GLOBAL RESPONSIVE SYSTEM
+   File: responsive.css
+
+   IMPORTANT:
+   Component-specific responsive rules remain inside their
+   respective CSS files.
+
+   This file handles only global application-level behavior.
+========================================================== */
+
+
+/* ==========================================================
+   1. LARGE DESKTOP / LAPTOP
+========================================================== */
+
+@media (max-width: 1400px) {
+
+    :root {
+        --page-padding: 28px;
+    }
+
+}
+
+
+/* ==========================================================
+   2. LAPTOP
+========================================================== */
+
+@media (max-width: 1200px) {
+
+    :root {
+        --page-padding: 24px;
+    }
+
+}
+
+
+/* ==========================================================
+   3. TABLET / MOBILE APPLICATION SHELL
+========================================================== */
+
+@media (max-width: 1024px) {
+
+    :root {
+        --page-padding: 22px;
+    }
+
+
+    /*
+       The sidebar becomes a drawer at this breakpoint.
+
+       Do NOT change --sidebar-width here.
+       sidebar.css controls the drawer width.
+    */
+
+    .dashboard {
+        grid-template-columns:
+            minmax(0, 1fr);
+    }
+
+
+    .main-layout {
+        width: 100%;
+        min-width: 0;
+    }
+
+}
+
+
+/* ==========================================================
+   4. TABLET
+========================================================== */
+
+@media (max-width: 768px) {
+
+    :root {
+        --page-padding: 18px;
+        --topbar-height: 72px;
+    }
+
+
+    .page-container {
+        padding: var(--page-padding);
+    }
+
+}
+
+
+/* ==========================================================
+   5. MOBILE
+========================================================== */
+
+@media (max-width: 576px) {
+
+    :root {
+        --page-padding: 14px;
+    }
+
+
+    .page-container {
+        padding: var(--page-padding);
+    }
+
+
+    .page-header {
+        align-items: flex-start;
+    }
+
+
+    .page-header h2 {
+        font-size: var(--font-xl);
+    }
+
+
+    .page-header p {
+        font-size: var(--font-sm);
+    }
+
+}
+
+
+/* ==========================================================
+   6. SMALL MOBILE
+========================================================== */
+
+@media (max-width: 400px) {
+
+    :root {
+        --page-padding: 12px;
+    }
+
+}

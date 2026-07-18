@@ -1,0 +1,594 @@
+/* ==========================================================
+   BLOODLINK DASHBOARD
+   File: dashboard.css
+========================================================== */
+
+
+/* ==========================================================
+   1. DASHBOARD GRID
+========================================================== */
+
+.dashboard-grid {
+    width: 100%;
+    max-width: var(--content-max-width);
+
+    margin: 0 auto;
+    padding: var(--page-padding);
+
+    display: flex;
+    flex-direction: column;
+
+    gap: var(--space-lg);
+}
+
+
+/* ==========================================================
+   2. HERO SECTION
+========================================================== */
+
+.dashboard-hero {
+    position: relative;
+
+    width: 100%;
+
+    padding: 36px 40px;
+
+    border-radius: var(--radius-xl);
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--primary-hover)
+        );
+
+    color: var(--text-white);
+
+    overflow: hidden;
+
+    box-shadow: var(--shadow-md);
+}
+
+
+/* Decorative background circles */
+
+.dashboard-hero::before,
+.dashboard-hero::after {
+    content: "";
+
+    position: absolute;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.07);
+
+    pointer-events: none;
+}
+
+
+.dashboard-hero::before {
+    width: 260px;
+    height: 260px;
+
+    right: -70px;
+    top: -110px;
+}
+
+
+.dashboard-hero::after {
+    width: 180px;
+    height: 180px;
+
+    right: 38%;
+    bottom: -120px;
+}
+
+
+/* ==========================================================
+   3. HERO CONTENT
+========================================================== */
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: var(--space-xl);
+}
+
+
+.hero-text {
+    max-width: 720px;
+}
+
+
+.hero-badge {
+    display: inline-flex;
+
+    margin-bottom: var(--space-md);
+
+    font-size: var(--font-sm);
+    font-weight: 600;
+
+    color: var(--primary-light);
+}
+
+
+.hero-text h1 {
+    font-size: var(--font-3xl);
+    font-weight: 800;
+
+    line-height: 1.15;
+
+    color: var(--text-white);
+}
+
+
+.hero-text p {
+    max-width: 650px;
+
+    margin-top: var(--space-md);
+
+    font-size: var(--font-md);
+
+    line-height: 1.7;
+
+    color: var(--primary-light);
+}
+
+
+/* ==========================================================
+   4. HERO ACTIONS
+========================================================== */
+
+.hero-actions {
+    display: flex;
+    align-items: center;
+
+    gap: var(--space-sm);
+
+    flex-wrap: wrap;
+}
+
+
+.hero-actions button {
+    min-height: 46px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: var(--space-sm);
+
+    padding: 0 18px;
+
+    border-radius: var(--radius-md);
+
+    font-size: var(--font-sm);
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        background var(--transition);
+}
+
+
+.hero-actions button:hover {
+    transform: translateY(-2px);
+
+    box-shadow: var(--shadow-md);
+}
+
+
+.hero-actions button svg {
+    width: 18px;
+    height: 18px;
+}
+
+
+.hero-actions .primary-btn {
+    background: var(--surface);
+
+    color: var(--primary);
+}
+
+
+.hero-actions .secondary-btn {
+    background: rgba(255, 255, 255, 0.12);
+
+    color: var(--text-white);
+
+    border: 1px solid rgba(255, 255, 255, 0.24);
+}
+
+
+/* ==========================================================
+   5. KPI SECTION
+========================================================== */
+
+.kpi-section {
+    width: 100%;
+}
+
+
+/* ==========================================================
+   6. KPI GRID
+========================================================== */
+
+.kpi-grid {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(6, minmax(0, 1fr));
+
+    gap: var(--space-md);
+}
+
+
+/* ==========================================================
+   7. KPI CARD
+========================================================== */
+
+.kpi-card {
+    min-width: 0;
+    min-height: 145px;
+
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    gap: var(--space-md);
+
+    padding: var(--space-lg);
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-lg);
+
+    background: var(--surface);
+
+    box-shadow: var(--shadow-sm);
+
+    overflow: hidden;
+
+    transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        border-color var(--transition);
+}
+
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+
+    box-shadow: var(--shadow-md);
+
+    border-color: var(--primary-light);
+}
+
+
+/* Small accent */
+
+.kpi-card::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 3px;
+
+    background: var(--primary);
+}
+
+
+/* ==========================================================
+   8. KPI ICON
+========================================================== */
+
+.kpi-icon {
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: var(--radius-md);
+
+    background: var(--primary-light);
+
+    color: var(--primary);
+}
+
+
+.kpi-icon svg {
+    width: 21px;
+    height: 21px;
+}
+
+
+/* ==========================================================
+   9. KPI CONTENT
+========================================================== */
+
+.kpi-content {
+    min-width: 0;
+}
+
+
+.kpi-content span {
+    display: block;
+
+    margin-bottom: var(--space-xs);
+
+    color: var(--text-secondary);
+
+    font-size: var(--font-sm);
+    font-weight: 500;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+.kpi-content h2 {
+    color: var(--text-primary);
+
+    font-size: var(--font-2xl);
+    font-weight: 800;
+
+    line-height: 1.2;
+}
+
+
+/* ==========================================================
+   10. ANALYTICS
+========================================================== */
+
+.analytics-section {
+    width: 100%;
+}
+
+
+.analytics-grid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.6fr)
+        minmax(320px, 0.8fr);
+
+    gap: var(--space-lg);
+}
+
+
+.chart-card {
+    min-width: 0;
+
+    padding: var(--space-lg);
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-lg);
+
+    background: var(--surface);
+
+    box-shadow: var(--shadow-sm);
+}
+
+
+.chart-card canvas {
+    width: 100% !important;
+
+    max-height: 320px;
+}
+
+
+/* ==========================================================
+   11. SHARED CARD HEADER
+========================================================== */
+
+.card-header,
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: var(--space-md);
+
+    margin-bottom: var(--space-lg);
+}
+
+
+.card-header h3,
+.section-header h3 {
+    color: var(--text-primary);
+
+    font-size: var(--font-lg);
+    font-weight: 700;
+}
+
+
+/* ==========================================================
+   12. DASHBOARD ROWS
+========================================================== */
+
+.dashboard-row {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.6fr)
+        minmax(300px, 0.8fr);
+
+    gap: var(--space-lg);
+}
+
+
+/* ==========================================================
+   13. DASHBOARD CONTENT CARDS
+========================================================== */
+
+.requests-section,
+.activity-section,
+.quick-actions,
+.system-status {
+    min-width: 0;
+
+    padding: var(--space-lg);
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-lg);
+
+    background: var(--surface);
+
+    box-shadow: var(--shadow-sm);
+}
+
+
+/* ==========================================================
+   14. TEXT BUTTON
+========================================================== */
+
+.text-btn {
+    background: transparent;
+
+    color: var(--primary);
+
+    font-size: var(--font-sm);
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: color var(--transition);
+}
+
+
+.text-btn:hover {
+    color: var(--primary-hover);
+}
+
+
+/* ==========================================================
+   15. QUICK ACTION GRID
+========================================================== */
+
+.action-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: var(--space-md);
+}
+
+
+/* ==========================================================
+   16. RESPONSIVE DASHBOARD
+========================================================== */
+
+@media (max-width: 1500px) {
+
+    .kpi-grid {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (max-width: 1100px) {
+
+    .analytics-grid,
+    .dashboard-row {
+        grid-template-columns:
+            minmax(0, 1fr);
+    }
+
+}
+
+
+@media (max-width: 768px) {
+
+    .dashboard-grid {
+        padding: var(--space-lg);
+    }
+
+
+    .dashboard-hero {
+        padding: var(--space-xl);
+    }
+
+
+    .hero-content {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+
+    .hero-text h1 {
+        font-size: var(--font-2xl);
+    }
+
+
+    .kpi-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .action-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .dashboard-grid {
+        padding: var(--space-md);
+
+        gap: var(--space-md);
+    }
+
+
+    .dashboard-hero {
+        padding: var(--space-lg);
+    }
+
+
+    .hero-actions {
+        width: 100%;
+    }
+
+
+    .hero-actions button {
+        width: 100%;
+    }
+
+
+    .kpi-grid,
+    .action-grid {
+        grid-template-columns:
+            minmax(0, 1fr);
+    }
+
+}

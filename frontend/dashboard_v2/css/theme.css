@@ -1,0 +1,234 @@
+/* ==========================================================
+   BLOODLINK UI DESIGN SYSTEM
+   Version : 1.0
+   Author  : BloodLink Team
+========================================================== */
+
+:root{
+
+    /* ======================================================
+       BRAND COLORS
+    ====================================================== */
+
+    --primary: #DC2626;
+    --primary-hover: #B91C1C;
+    --primary-light: #FEE2E2;
+
+    --secondary: #1E3A8A;
+    --secondary-hover: #1E40AF;
+    --secondary-light: #DBEAFE;
+
+    --success: #16A34A;
+    --success-light: #DCFCE7;
+
+    --warning: #F59E0B;
+    --warning-light: #FEF3C7;
+
+    --danger: #DC2626;
+    --danger-light: #FEE2E2;
+
+    --info: #0EA5E9;
+    --info-light: #E0F2FE;
+
+
+    /* ======================================================
+       BACKGROUND COLORS
+    ====================================================== */
+
+    --background: #F8FAFC;
+    --surface: #FFFFFF;
+    --surface-secondary: #F1F5F9;
+
+
+    /* ======================================================
+       SIDEBAR
+    ====================================================== */
+
+    --sidebar-bg: #0F172A;
+    --sidebar-hover: #1E293B;
+    --sidebar-active: #DC2626;
+
+    --topbar-bg: #FFFFFF;
+
+
+    /* ======================================================
+       TEXT COLORS
+    ====================================================== */
+
+    --text-primary: #111827;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --text-white: #FFFFFF;
+
+
+    /* ======================================================
+       BORDERS
+    ====================================================== */
+
+    --border: #E2E8F0;
+    --border-light: #F1F5F9;
+
+
+    /* ======================================================
+       SHADOWS
+    ====================================================== */
+
+    --shadow-sm: 0 2px 8px rgba(15,23,42,.05);
+
+    --shadow-md: 0 8px 24px rgba(15,23,42,.08);
+
+    --shadow-lg: 0 20px 40px rgba(15,23,42,.12);
+
+    --shadow-xl: 0 30px 60px rgba(15,23,42,.16);
+
+
+    /* ======================================================
+       BORDER RADIUS
+    ====================================================== */
+
+    --radius-sm: 8px;
+
+    --radius-md: 12px;
+
+    --radius-lg: 18px;
+
+    --radius-xl: 24px;
+
+    --radius-pill: 999px;
+
+
+    /* ======================================================
+       SPACING
+    ====================================================== */
+
+    --space-xs: 4px;
+
+    --space-sm: 8px;
+
+    --space-md: 16px;
+
+    --space-lg: 24px;
+
+    --space-xl: 32px;
+
+    --space-2xl: 48px;
+
+
+    /* ======================================================
+       LAYOUT
+    ====================================================== */
+
+    --sidebar-width: 260px;
+
+    --sidebar-collapsed-width: 76px;
+
+    --topbar-height: 80px;
+
+    --page-padding: 32px;
+
+    --content-max-width: 1800px;
+
+
+    /* ======================================================
+       TRANSITIONS
+    ====================================================== */
+
+    --transition-fast: .15s ease;
+
+    --transition: .25s ease;
+
+    --transition-slow: .40s ease;
+
+
+    /* ======================================================
+       TYPOGRAPHY
+    ====================================================== */
+
+    --font-family: "Inter", sans-serif;
+
+    --font-xs: 12px;
+
+    --font-sm: 14px;
+
+    --font-md: 16px;
+
+    --font-lg: 18px;
+
+    --font-xl: 22px;
+
+    --font-2xl: 28px;
+
+    --font-3xl: 36px;
+
+}
+/* ==========================================================
+   GLOBAL RESET
+========================================================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+
+    scroll-behavior:smooth;
+
+}
+
+body{
+
+    font-family:var(--font-family);
+
+    background:var(--background);
+
+    color:var(--text-primary);
+
+    min-height:100vh;
+
+    overflow-x:hidden;
+
+}
+
+img{
+
+    max-width:100%;
+
+    display:block;
+
+}
+
+button,
+input,
+textarea,
+select{
+
+    font:inherit;
+
+    border:none;
+
+    outline:none;
+
+}
+
+a{
+
+    text-decoration:none;
+
+    color:inherit;
+
+}
+
+ul{
+
+    list-style:none;
+
+}
+/* ==========================================================
+   AUTHENTICATION PAGE STATE
+========================================================== */
+
+body.auth-pending .dashboard {
+    visibility: hidden;
+}

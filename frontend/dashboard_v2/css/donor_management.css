@@ -1,0 +1,2615 @@
+/* ==========================================================
+   BLOODLINK - DONOR MANAGEMENT
+   File: donor_management.css
+
+   Sections:
+   1. Module / Background
+   2. Main Content
+   3. Header
+   4. Action Buttons
+   5. KPI Cards
+   6. Data Panel
+   7. Search & Filters
+   8. Donor Table
+   9. Table Components
+   10. Responsive Design
+========================================================== */
+
+
+/* ==========================================================
+   1. MODULE / BACKGROUND
+========================================================== */
+
+.donor-management {
+    position: relative;
+
+    width: 100%;
+    min-width: 0;
+
+    min-height: calc(
+        100vh - var(--topbar-height, 86px)
+    );
+
+    padding: clamp(18px, 2vw, 32px);
+
+    box-sizing: border-box;
+
+    /*
+       Container queries allow the donor module to respond
+       to its REAL available width.
+
+       This works better when:
+       - Sidebar is open
+       - Browser is resized
+       - DevTools is open
+    */
+    container-type: inline-size;
+    container-name: donor-module;
+
+    background-image:
+        linear-gradient(
+            110deg,
+            rgba(8, 18, 32, 0.22) 0%,
+            rgba(8, 18, 32, 0.14) 48%,
+            rgba(8, 18, 32, 0.06) 100%
+        ),
+        url("/static/assets/donors.png");
+
+    background-size: cover;
+
+    background-position:
+        center center;
+
+    background-repeat: no-repeat;
+
+    background-attachment: scroll;
+}
+
+
+/*
+   Apply predictable box sizing only inside
+   the donor module.
+*/
+
+.donor-management *,
+.donor-management *::before,
+.donor-management *::after {
+    box-sizing: border-box;
+}
+
+
+/* ==========================================================
+   2. MAIN CONTENT
+========================================================== */
+
+.donor-management-content {
+    position: relative;
+    z-index: 1;
+
+    width: 100%;
+    max-width: 1600px;
+    min-width: 0;
+
+    margin: 0 auto;
+}
+
+
+/* ==========================================================
+   3. HEADER
+========================================================== */
+
+.donor-header {
+    width: 100%;
+    min-width: 0;
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 28px;
+
+    margin-bottom: 28px;
+}
+
+
+/* --------------------------
+   Heading
+-------------------------- */
+
+.donor-heading {
+    flex: 1 1 420px;
+
+    min-width: 0;
+    max-width: 650px;
+}
+
+
+.donor-title-row {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.donor-title-icon {
+    width: 42px;
+    height: 42px;
+
+    flex: 0 0 42px;
+
+    display: grid;
+    place-items: center;
+
+    color: #ff303b;
+}
+
+
+.donor-title-icon svg {
+    width: 31px;
+    height: 31px;
+}
+
+
+.donor-heading h1 {
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size:
+        clamp(
+            25px,
+            2.2vw,
+            32px
+        );
+
+    font-weight: 700;
+
+    line-height: 1.2;
+}
+
+
+.donor-heading p {
+    max-width: 620px;
+
+    margin:
+        8px
+        0
+        0;
+
+    color:
+        rgba(
+            255,
+            255,
+            255,
+            0.82
+        );
+
+    font-size: 14px;
+
+    line-height: 1.7;
+}
+
+
+/* ==========================================================
+   4. ACTION BUTTONS
+========================================================== */
+
+.donor-actions {
+    flex: 0 1 auto;
+
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    flex-wrap: wrap;
+
+    gap: 12px;
+}
+
+
+.donor-action-btn {
+    min-height: 48px;
+
+    padding:
+        0
+        18px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    border:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.30
+        );
+
+    border-radius: 10px;
+
+    background:
+        rgba(
+            12,
+            29,
+            48,
+            0.58
+        );
+
+    backdrop-filter:
+        blur(7px);
+
+    -webkit-backdrop-filter:
+        blur(7px);
+
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.donor-action-btn:hover {
+    transform:
+        translateY(-1px);
+
+    background:
+        rgba(
+            12,
+            29,
+            48,
+            0.75
+        );
+
+    border-color:
+        rgba(
+            255,
+            255,
+            255,
+            0.50
+        );
+}
+
+
+.donor-action-btn:active {
+    transform:
+        translateY(0);
+}
+
+
+.donor-action-btn svg {
+    width: 18px;
+    height: 18px;
+
+    flex-shrink: 0;
+}
+
+
+/* Import */
+
+.donor-action-btn.import-btn svg {
+    color: #29d77b;
+}
+
+
+/* Export */
+
+.donor-action-btn.export-btn svg {
+    color: #438dff;
+}
+
+
+/* Add New Donor */
+
+.donor-action-btn.primary {
+    border-color: #ef2933;
+
+    background: #ef2933;
+
+    box-shadow:
+        0 7px 18px
+        rgba(
+            239,
+            41,
+            51,
+            0.16
+        );
+}
+
+
+.donor-action-btn.primary:hover {
+    border-color: #dc2029;
+
+    background: #dc2029;
+}
+
+
+/* ==========================================================
+   5. KPI CARDS
+========================================================== */
+
+/*
+   KPI grid uses auto-fit instead of forcing five cards.
+
+   Each card tries to remain at least 210px wide.
+   If there is not enough room, cards automatically move
+   onto the next row.
+*/
+
+.donor-kpi-grid {
+    width: 100%;
+    min-width: 0;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(
+                min(210px, 100%),
+                1fr
+            )
+        );
+
+    gap: 16px;
+
+    margin-bottom: 24px;
+}
+
+
+/* ==========================================================
+   KPI CARD
+========================================================== */
+
+.donor-kpi-card {
+    position: relative;
+
+    width: 100%;
+    min-width: 0;
+
+    min-height: 152px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    padding: 20px;
+
+    overflow: hidden;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.24);
+
+    border-radius: 16px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(16, 47, 73, 0.50),
+            rgba(18, 54, 82, 0.30)
+        );
+
+    backdrop-filter:
+        blur(8px);
+
+    -webkit-backdrop-filter:
+        blur(8px);
+
+    box-shadow:
+        0 10px 30px
+        rgba(0, 0, 0, 0.10),
+        inset 0 1px 0
+        rgba(255, 255, 255, 0.10);
+
+    transition:
+        transform 0.22s ease,
+        border-color 0.22s ease,
+        background 0.22s ease,
+        box-shadow 0.22s ease;
+}
+
+
+/*
+   Very subtle lighting inside the card.
+*/
+
+.donor-kpi-card::before {
+    content: "";
+
+    position: absolute;
+
+    top: -50px;
+    right: -50px;
+
+    width: 130px;
+    height: 130px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.05);
+
+    pointer-events: none;
+}
+
+
+.donor-kpi-card:hover {
+    transform:
+        translateY(-3px);
+
+    border-color:
+        rgba(255, 255, 255, 0.38);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(16, 47, 73, 0.62),
+            rgba(18, 54, 82, 0.40)
+        );
+
+    box-shadow:
+        0 16px 35px
+        rgba(0, 0, 0, 0.15),
+        inset 0 1px 0
+        rgba(255, 255, 255, 0.14);
+}
+
+
+/* ==========================================================
+   KPI TOP SECTION
+========================================================== */
+
+.donor-kpi-top {
+    position: relative;
+    z-index: 1;
+
+    width: 100%;
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+}
+
+
+/* ==========================================================
+   KPI ICON
+========================================================== */
+
+.donor-kpi-icon {
+    width: 50px;
+    height: 50px;
+
+    flex:
+        0
+        0
+        50px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 50%;
+
+    background: #ef2933;
+
+    color: #ffffff;
+
+    box-shadow:
+        0 7px 18px
+        rgba(0, 0, 0, 0.13);
+}
+
+
+.donor-kpi-icon svg {
+    width: 23px;
+    height: 23px;
+}
+
+
+/* Available Donors */
+
+.donor-kpi-icon.available {
+    background: #3478f6;
+}
+
+
+/* Blood Groups */
+
+.donor-kpi-icon.groups {
+    background: #18b968;
+}
+
+
+/* Total Donations */
+
+.donor-kpi-icon.donations {
+    background: #a53fe0;
+}
+
+
+/* New Donors */
+
+.donor-kpi-icon.new-donors {
+    background: #ff9418;
+}
+
+
+/* ==========================================================
+   KPI INFORMATION
+========================================================== */
+
+.donor-kpi-info {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+}
+
+
+.donor-kpi-label {
+    overflow: hidden;
+
+    color:
+        rgba(255, 255, 255, 0.84);
+
+    font-size: 13px;
+    font-weight: 500;
+
+    line-height: 1.3;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+
+.donor-kpi-value {
+    margin-top: 5px;
+
+    color: #ffffff;
+
+    font-size:
+        clamp(
+            24px,
+            2vw,
+            29px
+        );
+
+    font-weight: 700;
+
+    line-height: 1;
+}
+
+
+/* ==========================================================
+   KPI DESCRIPTION
+========================================================== */
+
+.donor-kpi-description {
+    position: relative;
+    z-index: 1;
+
+    margin:
+        17px
+        0
+        0;
+
+    color:
+        rgba(255, 255, 255, 0.62);
+
+    font-size: 12px;
+    font-weight: 400;
+
+    line-height: 1.45;
+}
+
+
+/* ==========================================================
+   KPI RESPONSIVENESS
+========================================================== */
+
+/*
+   Large donor area:
+   Prefer all 5 cards in one row.
+*/
+
+@container donor-module (min-width: 1200px) {
+
+    .donor-kpi-grid {
+        grid-template-columns:
+            repeat(
+                5,
+                minmax(0, 1fr)
+            );
+    }
+
+}
+
+
+/*
+   Medium donor area:
+   3 cards per row where possible.
+*/
+
+@container donor-module (max-width: 1199px) {
+
+    .donor-kpi-grid {
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(0, 1fr)
+            );
+    }
+
+}
+
+
+/*
+   Prevent the final cards from becoming awkwardly huge.
+
+   When there are five cards:
+   first row = 3
+   second row = 2 balanced cards.
+*/
+
+@container donor-module (min-width: 751px) and (max-width: 1199px) {
+
+    .donor-kpi-card:nth-child(4) {
+        grid-column:
+            1 / 2;
+    }
+
+}
+
+
+/*
+   Tablet:
+   Two cards per row.
+*/
+
+@container donor-module (max-width: 750px) {
+
+    .donor-kpi-grid {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+
+        gap: 14px;
+    }
+
+
+    .donor-kpi-card {
+        min-height: 140px;
+
+        padding: 18px;
+    }
+
+
+    .donor-kpi-icon {
+        width: 46px;
+        height: 46px;
+
+        flex-basis: 46px;
+    }
+
+}
+
+
+/*
+   Mobile:
+   One clean card per row.
+*/
+
+@container donor-module (max-width: 460px) {
+
+    .donor-kpi-grid {
+        grid-template-columns: 1fr;
+
+        gap: 12px;
+    }
+
+
+    .donor-kpi-card {
+        min-height: 125px;
+
+        padding: 16px;
+    }
+
+
+    .donor-kpi-description {
+        margin-top: 14px;
+    }
+
+}
+/* ==========================================================
+   6. DONOR DATA PANEL
+========================================================== */
+
+.donor-data-panel {
+    width: 100%;
+    min-width: 0;
+
+    overflow: hidden;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.26);
+
+    border-radius: 14px;
+
+    background:
+        rgba(10, 29, 48, 0.48);
+
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+
+    box-shadow:
+        0 12px 32px
+        rgba(0, 0, 0, 0.12);
+}
+
+
+/* ==========================================================
+   7. SEARCH AND FILTER TOOLBAR
+========================================================== */
+
+.donor-toolbar {
+    width: 100%;
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    padding: 16px;
+}
+
+
+/* --------------------------
+   Search
+-------------------------- */
+
+.donor-search {
+    flex: 1 1 420px;
+
+    max-width: 520px;
+    min-width: 220px;
+
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding:
+        0
+        16px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.24);
+
+    border-radius: 10px;
+
+    background:
+        rgba(8, 27, 46, 0.72);
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.donor-search:focus-within {
+    border-color:
+        rgba(255, 255, 255, 0.55);
+
+    background:
+        rgba(8, 27, 46, 0.86);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(255, 255, 255, 0.08);
+}
+
+
+.donor-search svg {
+    width: 20px;
+    height: 20px;
+
+    flex-shrink: 0;
+
+    color:
+        rgba(255, 255, 255, 0.70);
+}
+
+
+.donor-search input {
+    width: 100%;
+    min-width: 0;
+
+    border: 0;
+    outline: 0;
+
+    background: transparent;
+
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 14px;
+}
+
+
+.donor-search input::placeholder {
+    color:
+        rgba(255, 255, 255, 0.58);
+}
+
+
+/* --------------------------
+   Filters
+-------------------------- */
+
+.donor-filters {
+    flex: 0 1 auto;
+
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+}
+
+
+.donor-filter {
+    height: 48px;
+
+    min-width: 145px;
+
+    padding:
+        0
+        38px
+        0
+        14px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.24);
+
+    border-radius: 10px;
+
+    background:
+        rgba(8, 27, 46, 0.72);
+
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 13px;
+
+    outline: none;
+
+    cursor: pointer;
+}
+
+
+.donor-filter:focus {
+    border-color:
+        rgba(255, 255, 255, 0.55);
+}
+
+
+.donor-filter option {
+    background: #102237;
+
+    color: #ffffff;
+}
+
+
+/* ==========================================================
+   8. DONOR TABLE
+========================================================== */
+
+/*
+   This wrapper is important.
+
+   On smaller widths the table itself should NOT crush
+   all columns together.
+
+   Instead, only the table area scrolls horizontally.
+*/
+
+.donor-table-wrapper {
+    width: 100%;
+    min-width: 0;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    scrollbar-width: thin;
+}
+
+
+.donor-table {
+    width: 100%;
+
+    /*
+       Minimum width protects all columns.
+
+       On a smaller screen the wrapper scrolls rather
+       than destroying the table layout.
+    */
+
+    min-width: 1050px;
+
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+
+/* --------------------------
+   Table Header
+-------------------------- */
+
+.donor-table thead {
+    background:
+        rgba(244, 247, 251, 0.96);
+}
+
+
+.donor-table th {
+    padding:
+        15px
+        16px;
+
+    color: #334155;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    text-align: left;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.03em;
+
+    white-space: nowrap;
+}
+
+
+/* --------------------------
+   Table Rows
+-------------------------- */
+
+.donor-table tbody tr {
+    border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.10);
+
+    transition:
+        background 0.2s ease;
+}
+
+
+.donor-table tbody tr:hover {
+    background:
+        rgba(255, 255, 255, 0.07);
+}
+
+
+.donor-table td {
+    padding:
+        15px
+        16px;
+
+    color:
+        rgba(255, 255, 255, 0.90);
+
+    font-size: 13px;
+
+    vertical-align: middle;
+
+    white-space: nowrap;
+}
+
+
+/* ==========================================================
+   9. TABLE COMPONENTS
+========================================================== */
+
+/* --------------------------
+   Blood Group Badge
+-------------------------- */
+
+.blood-group-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 42px;
+
+    padding:
+        6px
+        9px;
+
+    border-radius: 7px;
+
+    background:
+        rgba(239, 41, 51, 0.82);
+
+    color: #ffffff;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+/* --------------------------
+   Donor Status
+-------------------------- */
+
+.donor-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding:
+        6px
+        10px;
+
+    border-radius: 7px;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+
+.donor-status.available {
+    background:
+        rgba(22, 163, 74, 0.24);
+
+    color: #86efac;
+}
+
+
+.donor-status.unavailable {
+    background:
+        rgba(245, 158, 11, 0.24);
+
+    color: #fcd34d;
+}
+
+
+.donor-status.in-progress {
+    background:
+        rgba(59, 130, 246, 0.24);
+
+    color: #93c5fd;
+}
+
+
+/* --------------------------
+   Action Buttons
+-------------------------- */
+
+.donor-row-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+}
+
+
+.donor-icon-btn {
+    width: 34px;
+    height: 34px;
+
+    display: inline-grid;
+    place-items: center;
+
+    padding: 0;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.28);
+
+    border-radius: 7px;
+
+    background:
+        rgba(8, 27, 46, 0.55);
+
+    color: #ffffff;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.donor-icon-btn:hover {
+    background:
+        rgba(255, 255, 255, 0.14);
+
+    transform:
+        translateY(-1px);
+}
+
+
+.donor-icon-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+
+/* --------------------------
+   Empty / Loading State
+-------------------------- */
+
+.donor-empty-row td,
+.donor-loading-row td {
+    height: 125px;
+
+    text-align: center;
+
+    color:
+        rgba(255, 255, 255, 0.72);
+}
+
+
+/* ==========================================================
+   9.1 TABLE FOOTER
+========================================================== */
+
+.donor-table-footer {
+    width: 100%;
+
+    min-height: 62px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    padding:
+        12px
+        16px;
+
+    border-top:
+        1px solid
+        rgba(255, 255, 255, 0.12);
+
+    color:
+        rgba(255, 255, 255, 0.76);
+
+    font-size: 12px;
+}
+
+
+/* ==========================================================
+   10. RESPONSIVE DESIGN
+   Uses donor-module container width, not only viewport width.
+========================================================== */
+
+
+/* ----------------------------------------------------------
+   MEDIUM MODULE
+   KPI: 3 + 2
+---------------------------------------------------------- */
+
+@container donor-module (max-width: 1150px) {
+
+    .donor-header {
+        flex-direction: column;
+
+        gap: 18px;
+    }
+
+
+    .donor-heading {
+        flex-basis: auto;
+
+        max-width: 100%;
+    }
+
+
+    .donor-actions {
+        width: 100%;
+
+        justify-content: flex-start;
+    }
+
+
+    .donor-kpi-grid {
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(0, 1fr)
+            );
+    }
+
+
+    .donor-toolbar {
+        flex-wrap: wrap;
+    }
+
+
+    .donor-search {
+        max-width: none;
+    }
+
+}
+
+
+/* ----------------------------------------------------------
+   TABLET MODULE
+   KPI: 2 columns
+---------------------------------------------------------- */
+
+@container donor-module (max-width: 800px) {
+
+    .donor-management {
+        padding: 20px;
+    }
+
+
+    .donor-kpi-grid {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+
+    .donor-kpi-card {
+        min-height: 140px;
+    }
+
+
+    .donor-toolbar {
+        flex-direction: column;
+
+        align-items: stretch;
+    }
+
+
+    .donor-search {
+        flex: none;
+
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+    }
+
+
+    .donor-filters {
+        width: 100%;
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(0, 1fr)
+            );
+    }
+
+
+    .donor-filter {
+        width: 100%;
+        min-width: 0;
+    }
+
+}
+
+
+/* ----------------------------------------------------------
+   SMALL TABLET / LARGE MOBILE
+---------------------------------------------------------- */
+
+@container donor-module (max-width: 600px) {
+
+    .donor-management {
+        padding: 16px;
+    }
+
+
+    .donor-actions {
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+
+    .donor-action-btn {
+        width: 100%;
+
+        padding:
+            0
+            12px;
+    }
+
+
+    .donor-kpi-grid {
+        gap: 12px;
+    }
+
+
+    .donor-kpi-card {
+        min-height: 130px;
+
+        padding: 16px;
+    }
+
+
+    .donor-kpi-icon {
+        width: 42px;
+        height: 42px;
+
+        flex-basis: 42px;
+    }
+
+
+    .donor-kpi-value {
+        font-size: 24px;
+    }
+
+
+    .donor-filters {
+        grid-template-columns: 1fr;
+    }
+
+
+    .donor-table-footer {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+}
+
+
+/* ----------------------------------------------------------
+   MOBILE
+   KPI: 1 column
+---------------------------------------------------------- */
+
+@container donor-module (max-width: 420px) {
+
+    .donor-management {
+        padding: 14px;
+    }
+
+
+    .donor-heading h1 {
+        font-size: 24px;
+    }
+
+
+    .donor-actions {
+        grid-template-columns: 1fr;
+    }
+
+
+    .donor-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .donor-kpi-card {
+        min-height: auto;
+    }
+
+}
+/* ==========================================================
+   DONOR FILTERS - FINAL SELECT FIX
+========================================================== */
+
+.donor-filters select {
+    width: auto;
+    min-width: 150px;
+    height: 48px;
+
+    padding:
+        0
+        42px
+        0
+        16px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.24);
+
+    border-radius: 10px;
+
+    background-color:
+        rgba(8, 27, 46, 0.78);
+
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+
+    outline: none;
+
+    cursor: pointer;
+
+    color-scheme: dark;
+
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.donor-filters select:hover {
+    background-color:
+        rgba(8, 27, 46, 0.90);
+
+    border-color:
+        rgba(255, 255, 255, 0.40);
+}
+
+
+.donor-filters select:focus {
+    border-color:
+        rgba(255, 255, 255, 0.55);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(255, 255, 255, 0.07);
+}
+
+
+/* Dropdown options */
+
+.donor-filters select option {
+    background: #102238;
+
+    color: #ffffff;
+}
+
+
+/* ==========================================================
+   RESPONSIVE FILTERS
+========================================================== */
+
+@container donor-module (max-width: 800px) {
+
+    .donor-filters {
+        width: 100%;
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+        gap: 10px;
+    }
+
+
+    .donor-filters select {
+        width: 100%;
+        min-width: 0;
+    }
+
+}
+
+
+@container donor-module (max-width: 550px) {
+
+    .donor-filters {
+        grid-template-columns: 1fr;
+    }
+
+}   
+/* ==========================================================
+   DONOR TABLE HEADER - FINAL GLASS STYLE
+========================================================== */
+
+.donor-table thead {
+    background:
+        rgba(10, 29, 48, 0.82);
+}
+
+
+.donor-table thead tr {
+    background:
+        rgba(10, 29, 48, 0.82);
+
+    border-top:
+        1px solid
+        rgba(255, 255, 255, 0.12);
+
+    border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.16);
+}
+
+
+.donor-table th {
+    height: 54px;
+
+    padding:
+        0
+        16px;
+
+    background: transparent;
+
+    color:
+        rgba(255, 255, 255, 0.88);
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+
+    line-height: 1;
+
+    text-align: left;
+    vertical-align: middle;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.045em;
+
+    white-space: nowrap;
+}
+
+
+/* Slight visual separation between columns */
+
+.donor-table th + th {
+    border-left:
+        1px solid
+        rgba(255, 255, 255, 0.025);
+}
+
+
+/* ==========================================================
+   TABLE BODY - BETTER GLASS INTEGRATION
+========================================================== */
+
+.donor-table tbody {
+    background:
+        rgba(10, 29, 48, 0.18);
+}
+
+
+.donor-table td {
+    height: 58px;
+
+    padding:
+        0
+        16px;
+
+    color:
+        rgba(255, 255, 255, 0.90);
+
+    vertical-align: middle;
+}
+
+
+.donor-table tbody tr {
+    background:
+        rgba(10, 29, 48, 0.12);
+
+    border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.10);
+}
+
+
+.donor-table tbody tr:hover {
+    background:
+        rgba(255, 255, 255, 0.08);
+}
+
+
+/* Empty/error message */
+
+.donor-table tbody td[colspan] {
+    height: 90px;
+
+    color:
+        rgba(255, 255, 255, 0.72);
+
+    text-align: center;
+}
+/* ==========================================================
+   11. ADD DONOR MODAL
+========================================================== */
+
+body.donor-modal-open {
+    overflow: hidden;
+}
+
+
+.donor-modal-backdrop {
+    position: fixed;
+    z-index: 2000;
+
+    inset: 0;
+
+    display: grid;
+    place-items: center;
+
+    padding: 24px;
+
+    background:
+        rgba(3, 10, 20, 0.72);
+
+    backdrop-filter:
+        blur(8px);
+
+    -webkit-backdrop-filter:
+        blur(8px);
+}
+
+
+/*
+   Important:
+   HTML's hidden attribute must override the display:grid
+   declared above.
+*/
+
+.donor-modal-backdrop[hidden] {
+    display: none;
+}
+
+
+.donor-modal {
+    width: min(900px, 100%);
+    max-height: calc(100vh - 48px);
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.18);
+
+    border-radius: 18px;
+
+    background:
+        rgba(10, 27, 45, 0.97);
+
+    color: #ffffff;
+
+    box-shadow:
+        0 30px 80px
+        rgba(0, 0, 0, 0.42);
+}
+
+
+/* ==========================================================
+   MODAL HEADER
+========================================================== */
+
+.donor-modal-header {
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 24px 26px 20px;
+
+    border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.10);
+}
+
+
+.donor-modal-eyebrow {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #ff5b64;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+
+.donor-modal-header h2 {
+    margin: 0;
+
+    font-size: 25px;
+    line-height: 1.2;
+}
+
+
+.donor-modal-header p {
+    margin: 7px 0 0;
+
+    color:
+        rgba(255, 255, 255, 0.62);
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+.donor-modal-close {
+    width: 40px;
+    height: 40px;
+
+    flex: 0 0 40px;
+
+    display: grid;
+    place-items: center;
+
+    padding: 0;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.16);
+
+    border-radius: 9px;
+
+    background:
+        rgba(255, 255, 255, 0.06);
+
+    color: #ffffff;
+
+    cursor: pointer;
+}
+
+
+.donor-modal-close:hover {
+    background:
+        rgba(255, 255, 255, 0.12);
+}
+
+
+.donor-modal-close svg {
+    width: 19px;
+    height: 19px;
+}
+
+
+/* ==========================================================
+   MODAL BODY
+========================================================== */
+
+.donor-form {
+    min-height: 0;
+
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+
+.donor-modal-body {
+    min-height: 0;
+
+    overflow-y: auto;
+
+    padding: 24px 26px;
+
+    scrollbar-width: thin;
+}
+
+
+/* ==========================================================
+   FORM SECTIONS
+========================================================== */
+
+.donor-form-section + .donor-form-section {
+    margin-top: 28px;
+
+    padding-top: 26px;
+
+    border-top:
+        1px solid
+        rgba(255, 255, 255, 0.09);
+}
+
+
+.donor-form-section-heading {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 12px;
+
+    margin-bottom: 18px;
+}
+
+
+.donor-form-section-heading > svg {
+    width: 20px;
+    height: 20px;
+
+    flex: 0 0 20px;
+
+    margin-top: 2px;
+
+    color: #ff4b55;
+}
+
+
+.donor-form-section-heading h3 {
+    margin: 0;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+
+.donor-form-section-heading p {
+    margin: 4px 0 0;
+
+    color:
+        rgba(255, 255, 255, 0.55);
+
+    font-size: 12px;
+}
+
+
+/* ==========================================================
+   FORM GRID
+========================================================== */
+
+.donor-form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+
+    gap: 17px;
+}
+
+
+.donor-form-field {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+
+.donor-form-field-wide {
+    grid-column: 1 / -1;
+}
+
+
+.donor-form-field > span {
+    color:
+        rgba(255, 255, 255, 0.78);
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+.donor-form-field > span strong {
+    color: #ff4b55;
+}
+
+
+/* ==========================================================
+   INPUTS
+========================================================== */
+
+.donor-form-field input,
+.donor-form-field select,
+.donor-form-field textarea {
+    width: 100%;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.16);
+
+    border-radius: 9px;
+
+    outline: none;
+
+    background:
+        rgba(4, 18, 32, 0.72);
+
+    color: #ffffff;
+
+    font: inherit;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+
+.donor-form-field input,
+.donor-form-field select {
+    height: 46px;
+
+    padding:
+        0
+        13px;
+}
+
+
+.donor-form-field textarea {
+    min-height: 86px;
+
+    padding: 12px 13px;
+
+    resize: vertical;
+
+    line-height: 1.5;
+}
+
+
+.donor-form-field select {
+    color-scheme: dark;
+}
+
+
+.donor-form-field select option {
+    background: #102238;
+
+    color: #ffffff;
+}
+
+
+.donor-form-field input:focus,
+.donor-form-field select:focus,
+.donor-form-field textarea:focus {
+    border-color:
+        rgba(255, 75, 85, 0.75);
+
+    background:
+        rgba(4, 18, 32, 0.90);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(255, 75, 85, 0.10);
+}
+
+
+/* ==========================================================
+   YES / NO CHOICES
+========================================================== */
+
+.donor-choice-group {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+
+    gap: 10px;
+}
+
+
+.donor-choice-group label {
+    position: relative;
+
+    cursor: pointer;
+}
+
+
+.donor-choice-group input {
+    position: absolute;
+
+    width: 1px;
+    height: 1px;
+
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+
+.donor-choice-group span {
+    min-height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.16);
+
+    border-radius: 9px;
+
+    background:
+        rgba(4, 18, 32, 0.62);
+
+    color:
+        rgba(255, 255, 255, 0.74);
+
+    font-size: 13px;
+    font-weight: 600;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.donor-choice-group input:checked + span {
+    border-color:
+        rgba(239, 41, 51, 0.82);
+
+    background:
+        rgba(239, 41, 51, 0.20);
+
+    color: #ffffff;
+}
+
+
+.donor-choice-group input:focus-visible + span {
+    box-shadow:
+        0 0 0 3px
+        rgba(239, 41, 51, 0.15);
+}
+
+
+/* ==========================================================
+   FORM MESSAGE
+========================================================== */
+
+.donor-form-message {
+    margin-top: 22px;
+
+    padding: 12px 14px;
+
+    border-radius: 9px;
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+.donor-form-message.error {
+    border:
+        1px solid
+        rgba(248, 113, 113, 0.35);
+
+    background:
+        rgba(127, 29, 29, 0.24);
+
+    color: #fecaca;
+}
+
+
+.donor-form-message.success {
+    border:
+        1px solid
+        rgba(74, 222, 128, 0.30);
+
+    background:
+        rgba(20, 83, 45, 0.25);
+
+    color: #bbf7d0;
+}
+
+
+/* ==========================================================
+   MODAL FOOTER
+========================================================== */
+
+.donor-modal-footer {
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    padding: 16px 26px;
+
+    border-top:
+        1px solid
+        rgba(255, 255, 255, 0.10);
+
+    background:
+        rgba(7, 22, 38, 0.94);
+}
+
+
+.donor-modal-btn {
+    min-height: 44px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    padding:
+        0
+        18px;
+
+    border-radius: 9px;
+
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+
+.donor-modal-btn.secondary {
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.18);
+
+    background:
+        rgba(255, 255, 255, 0.06);
+}
+
+
+.donor-modal-btn.primary {
+    border:
+        1px solid
+        #ef2933;
+
+    background: #ef2933;
+}
+
+
+.donor-modal-btn.primary:hover {
+    background: #dc2029;
+
+    border-color: #dc2029;
+}
+
+
+.donor-modal-btn:disabled {
+    opacity: 0.58;
+
+    cursor: not-allowed;
+}
+
+
+.donor-modal-btn svg {
+    width: 17px;
+    height: 17px;
+}
+
+
+/* ==========================================================
+   MODAL RESPONSIVENESS
+========================================================== */
+
+@media (max-width: 700px) {
+
+    .donor-modal-backdrop {
+        padding: 12px;
+    }
+
+
+    .donor-modal {
+        max-height:
+            calc(100vh - 24px);
+
+        border-radius: 14px;
+    }
+
+
+    .donor-modal-header {
+        padding:
+            20px
+            18px
+            17px;
+    }
+
+
+    .donor-modal-body {
+        padding:
+            20px
+            18px;
+    }
+
+
+    .donor-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .donor-form-field-wide {
+        grid-column: auto;
+    }
+
+
+    .donor-modal-footer {
+        padding:
+            14px
+            18px;
+    }
+
+}
+
+
+@media (max-width: 430px) {
+
+    .donor-modal-backdrop {
+        padding: 0;
+    }
+
+
+    .donor-modal {
+        width: 100%;
+        height: 100%;
+        max-height: none;
+
+        border: 0;
+        border-radius: 0;
+    }
+
+
+    .donor-modal-footer {
+        display: grid;
+
+        grid-template-columns:
+            1fr
+            1fr;
+    }
+
+
+    .donor-modal-btn {
+        width: 100%;
+
+        padding:
+            0
+            12px;
+    }
+
+}
+/* ==========================================================
+   12. VIEW DONOR
+========================================================== */
+
+.donor-view-modal {
+    width: min(860px, 100%);
+}
+
+
+/* ==========================================================
+   LOADING / ERROR
+========================================================== */
+
+.donor-view-loading {
+    min-height: 280px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-direction: column;
+
+    gap: 12px;
+
+    color:
+        rgba(255, 255, 255, 0.68);
+}
+
+
+.donor-view-loading svg {
+    width: 28px;
+    height: 28px;
+
+    animation:
+        donor-view-spin
+        0.9s
+        linear
+        infinite;
+}
+
+
+@keyframes donor-view-spin {
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+
+
+.donor-view-error {
+    min-height: 250px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    text-align: center;
+}
+
+
+.donor-view-error svg {
+    width: 30px;
+    height: 30px;
+
+    color: #ff5b64;
+}
+
+
+.donor-view-error span {
+    color:
+        rgba(255, 255, 255, 0.60);
+
+    font-size: 13px;
+}
+
+
+/* ==========================================================
+   PROFILE HERO
+========================================================== */
+
+.donor-profile-hero {
+    display: flex;
+    align-items: center;
+
+    gap: 18px;
+
+    padding: 20px;
+
+    margin-bottom: 26px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.12);
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(239, 41, 51, 0.13),
+            rgba(255, 255, 255, 0.035)
+        );
+}
+
+
+.donor-profile-avatar {
+    width: 64px;
+    height: 64px;
+
+    flex: 0 0 64px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 50%;
+
+    background: #ef2933;
+
+    color: #ffffff;
+}
+
+
+.donor-profile-avatar svg {
+    width: 29px;
+    height: 29px;
+}
+
+
+.donor-profile-main {
+    min-width: 0;
+}
+
+
+.donor-profile-code {
+    color: #ff777e;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 0.06em;
+}
+
+
+.donor-profile-main h3 {
+    margin:
+        4px
+        0
+        10px;
+
+    color: #ffffff;
+
+    font-size: 23px;
+}
+
+
+.donor-profile-badges {
+    display: flex;
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+
+/* ==========================================================
+   DETAIL SECTIONS
+========================================================== */
+
+.donor-detail-section + .donor-detail-section {
+    margin-top: 26px;
+
+    padding-top: 24px;
+
+    border-top:
+        1px solid
+        rgba(255, 255, 255, 0.09);
+}
+
+
+.donor-detail-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+
+    gap: 12px;
+}
+
+
+.donor-detail-item {
+    min-width: 0;
+
+    padding: 14px 15px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.09);
+
+    border-radius: 10px;
+
+    background:
+        rgba(4, 18, 32, 0.45);
+}
+
+
+.donor-detail-label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color:
+        rgba(255, 255, 255, 0.48);
+
+    font-size: 10px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.05em;
+}
+
+
+.donor-detail-value {
+    overflow-wrap: anywhere;
+
+    color:
+        rgba(255, 255, 255, 0.90);
+
+    font-size: 13px;
+    font-weight: 500;
+
+    line-height: 1.5;
+}
+
+
+/* ==========================================================
+   RESPONSIVE VIEW
+========================================================== */
+
+@media (max-width: 600px) {
+
+    .donor-profile-hero {
+        align-items: flex-start;
+
+        padding: 16px;
+    }
+
+
+    .donor-profile-avatar {
+        width: 52px;
+        height: 52px;
+
+        flex-basis: 52px;
+    }
+
+
+    .donor-profile-main h3 {
+        font-size: 19px;
+    }
+
+
+    .donor-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+/* ==========================================================
+   EDIT DONOR - THREE OPTION HEALTH CHOICES
+========================================================== */
+
+#editDonorModal .donor-choice-group {
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0, 1fr)
+        );
+}
+
+
+@media (max-width: 500px) {
+
+    #editDonorModal .donor-choice-group {
+        grid-template-columns: 1fr;
+    }
+
+}

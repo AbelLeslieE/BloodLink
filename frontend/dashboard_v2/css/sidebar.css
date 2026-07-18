@@ -1,0 +1,865 @@
+/* ==========================================================
+   BLOODLINK SIDEBAR
+   File: sidebar.css
+
+   Responsibilities:
+   - Sidebar structure
+   - Brand section
+   - Navigation groups
+   - Navigation states
+   - User profile
+   - Logout
+   - Collapsed state
+   - Mobile sidebar drawer
+========================================================== */
+
+
+/* ==========================================================
+   1. SIDEBAR CONTAINER
+========================================================== */
+
+.sidebar {
+    width: var(--sidebar-width);
+    height: 100vh;
+
+    position: sticky;
+    top: 0;
+    left: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    background: var(--sidebar-bg);
+    color: var(--text-white);
+
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+
+    overflow: hidden;
+
+    transition:
+        width var(--transition),
+        transform var(--transition);
+
+    z-index: 1000;
+}
+
+
+/* ==========================================================
+   2. SIDEBAR HEADER / LOGO
+========================================================== */
+
+.sidebar-logo {
+    flex-shrink: 0;
+
+    padding: var(--space-lg);
+
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+
+.sidebar-brand {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    gap: var(--space-md);
+
+    min-width: 0;
+}
+
+
+/* ==========================================================
+   3. LOGO ICON
+========================================================== */
+
+.logo-icon {
+    width: 52px;
+    height: 52px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: var(--radius-md);
+
+    background: var(--primary);
+
+    box-shadow: var(--shadow-md);
+
+    transition:
+        transform var(--transition),
+        background var(--transition);
+}
+
+
+.sidebar-brand:hover .logo-icon {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+}
+
+
+.logo-icon svg {
+    width: 26px;
+    height: 26px;
+
+    color: var(--text-white);
+}
+
+
+/* ==========================================================
+   4. LOGO TEXT
+========================================================== */
+
+.logo-text {
+    min-width: 0;
+
+    white-space: nowrap;
+
+    transition:
+        opacity var(--transition),
+        transform var(--transition);
+}
+
+
+.logo-text h2 {
+    font-size: var(--font-xl);
+    font-weight: 800;
+
+    line-height: 1.2;
+
+    color: var(--text-white);
+}
+
+
+.logo-text p {
+    margin-top: var(--space-xs);
+
+    font-size: var(--font-xs);
+    font-weight: 500;
+
+    color: var(--text-muted);
+}
+
+
+/* ==========================================================
+   5. NAVIGATION CONTAINER
+========================================================== */
+
+.sidebar-nav {
+    flex: 1;
+    min-height: 0;
+
+    padding:
+        var(--space-md)
+        var(--space-md);
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    scrollbar-width: thin;
+    scrollbar-color:
+        var(--sidebar-hover)
+        transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+    width: 5px;
+}
+
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: var(--sidebar-hover);
+
+    border-radius: var(--radius-pill);
+}
+
+
+/* ==========================================================
+   6. NAVIGATION GROUP
+========================================================== */
+
+.nav-group {
+    margin-bottom: var(--space-md);
+}
+
+.nav-group:last-child {
+    margin-bottom: 0;
+}
+
+
+/* ==========================================================
+   7. NAVIGATION GROUP TITLE
+========================================================== */
+
+.nav-group-title {
+    display: block;
+
+    padding:
+        0
+        var(--space-md)
+        var(--space-sm);
+
+    font-size: var(--font-xs);
+    font-weight: 700;
+
+    letter-spacing: 0.08em;
+
+    color: var(--text-muted);
+
+    white-space: nowrap;
+
+    transition:
+        opacity var(--transition),
+        transform var(--transition);
+}
+
+
+/* ==========================================================
+   8. NAVIGATION ITEM
+========================================================== */
+
+.nav-item {
+    width: 100%;
+    min-height: 46px;
+
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    gap: var(--space-md);
+
+    padding:
+        0
+        var(--space-md);
+
+    margin-bottom: var(--space-xs);
+
+    border-radius: var(--radius-md);
+
+    color: var(--text-muted);
+
+    font-size: var(--font-sm);
+    font-weight: 500;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        background var(--transition),
+        color var(--transition),
+        transform var(--transition);
+}
+
+
+.nav-item:last-child {
+    margin-bottom: 0;
+}
+
+
+/* ==========================================================
+   9. NAVIGATION ICON
+========================================================== */
+
+.nav-item svg {
+    width: 21px;
+    height: 21px;
+
+    flex-shrink: 0;
+
+    transition: transform var(--transition);
+}
+
+
+/* ==========================================================
+   10. NAVIGATION LABEL
+========================================================== */
+
+.nav-item span {
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    transition:
+        opacity var(--transition),
+        transform var(--transition);
+}
+
+
+/* ==========================================================
+   11. NAVIGATION HOVER
+========================================================== */
+
+.nav-item:hover {
+    background: var(--sidebar-hover);
+
+    color: var(--text-white);
+
+    transform: translateX(3px);
+}
+
+
+.nav-item:hover svg {
+    transform: scale(1.08);
+}
+
+
+/* ==========================================================
+   12. ACTIVE NAVIGATION ITEM
+========================================================== */
+
+.nav-item.active {
+    background: var(--sidebar-active);
+
+    color: var(--text-white);
+
+    box-shadow: var(--shadow-md);
+
+    font-weight: 600;
+}
+
+
+.nav-item.active::before {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    top: 50%;
+
+    width: 3px;
+    height: 24px;
+
+    border-radius:
+        0
+        var(--radius-pill)
+        var(--radius-pill)
+        0;
+
+    background: var(--text-white);
+
+    transform: translateY(-50%);
+}
+
+
+/* ==========================================================
+   13. SIDEBAR FOOTER
+========================================================== */
+
+.sidebar-footer {
+    flex-shrink: 0;
+
+    padding: var(--space-md);
+
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+    background: var(--sidebar-bg);
+}
+
+
+/* ==========================================================
+   14. PROFILE CARD
+========================================================== */
+
+.profile-card {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    gap: var(--space-md);
+
+    padding: var(--space-sm);
+
+    margin-bottom: var(--space-sm);
+
+    border-radius: var(--radius-md);
+
+    background: transparent;
+
+    color: inherit;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        background var(--transition),
+        transform var(--transition);
+}
+
+
+.profile-card:hover {
+    background: var(--sidebar-hover);
+}
+
+
+/* ==========================================================
+   15. PROFILE AVATAR
+========================================================== */
+
+.profile-avatar {
+    width: 44px;
+    height: 44px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: var(--primary);
+
+    color: var(--text-white);
+
+    font-size: var(--font-md);
+    font-weight: 700;
+}
+
+
+/* ==========================================================
+   16. PROFILE DETAILS
+========================================================== */
+
+.profile-details {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    transition:
+        opacity var(--transition),
+        transform var(--transition);
+}
+
+
+.profile-details strong {
+    overflow: hidden;
+
+    color: var(--text-white);
+
+    font-size: var(--font-sm);
+    font-weight: 600;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+
+.profile-details small {
+    margin-top: 3px;
+
+    overflow: hidden;
+
+    color: var(--text-muted);
+
+    font-size: var(--font-xs);
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+
+/* ==========================================================
+   17. PROFILE CHEVRON
+========================================================== */
+
+.profile-chevron {
+    width: 18px;
+    height: 18px;
+
+    flex-shrink: 0;
+
+    color: var(--text-muted);
+
+    transition:
+        opacity var(--transition),
+        transform var(--transition);
+}
+
+
+.profile-card:hover .profile-chevron {
+    color: var(--text-white);
+
+    transform: translateX(2px);
+}
+
+
+/* ==========================================================
+   18. LOGOUT BUTTON
+========================================================== */
+
+.logout-btn {
+    width: 100%;
+    min-height: 46px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: var(--space-sm);
+
+    padding:
+        0
+        var(--space-md);
+
+    border-radius: var(--radius-md);
+
+    background: transparent;
+
+    color: var(--text-muted);
+
+    font-size: var(--font-sm);
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background var(--transition),
+        color var(--transition),
+        transform var(--transition);
+}
+
+
+.logout-btn:hover {
+    background: var(--primary);
+
+    color: var(--text-white);
+}
+
+
+.logout-btn svg {
+    width: 19px;
+    height: 19px;
+
+    flex-shrink: 0;
+}
+
+
+/* ==========================================================
+   19. COLLAPSED SIDEBAR
+========================================================== */
+
+.dashboard.sidebar-collapsed {
+    grid-template-columns:
+        var(--sidebar-collapsed-width)
+        minmax(0, 1fr);
+}
+
+
+.dashboard.sidebar-collapsed .sidebar {
+    width: var(--sidebar-collapsed-width);
+}
+
+
+/* ==========================================================
+   20. COLLAPSED BRAND
+========================================================== */
+
+.dashboard.sidebar-collapsed .sidebar-logo {
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+}
+
+
+.dashboard.sidebar-collapsed .sidebar-brand {
+    justify-content: center;
+}
+
+
+.dashboard.sidebar-collapsed .logo-text {
+    width: 0;
+
+    opacity: 0;
+
+    overflow: hidden;
+
+    pointer-events: none;
+
+    transform: translateX(-8px);
+}
+
+
+/* ==========================================================
+   21. COLLAPSED NAVIGATION
+========================================================== */
+
+.dashboard.sidebar-collapsed .sidebar-nav {
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+}
+
+
+.dashboard.sidebar-collapsed .nav-group-title {
+    height: 1px;
+
+    padding: 0;
+
+    margin:
+        var(--space-sm)
+        0;
+
+    overflow: hidden;
+
+    opacity: 0;
+}
+
+
+.dashboard.sidebar-collapsed .nav-item {
+    justify-content: center;
+
+    gap: 0;
+
+    padding:
+        0
+        var(--space-sm);
+}
+
+
+.dashboard.sidebar-collapsed .nav-item span {
+    width: 0;
+
+    opacity: 0;
+
+    overflow: hidden;
+
+    pointer-events: none;
+}
+
+
+.dashboard.sidebar-collapsed .nav-item:hover {
+    transform: none;
+}
+
+
+/* ==========================================================
+   22. COLLAPSED FOOTER
+========================================================== */
+
+.dashboard.sidebar-collapsed .sidebar-footer {
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+}
+
+
+.dashboard.sidebar-collapsed .profile-card {
+    justify-content: center;
+
+    gap: 0;
+
+    padding:
+        var(--space-sm)
+        0;
+}
+
+
+.dashboard.sidebar-collapsed .profile-details,
+.dashboard.sidebar-collapsed .profile-chevron {
+    width: 0;
+
+    opacity: 0;
+
+    overflow: hidden;
+
+    pointer-events: none;
+}
+
+
+.dashboard.sidebar-collapsed .logout-btn {
+    padding:
+        0
+        var(--space-sm);
+}
+
+
+.dashboard.sidebar-collapsed .logout-btn span {
+    display: none;
+}
+
+
+/* ==========================================================
+   23. SIDEBAR OVERLAY
+========================================================== */
+
+.sidebar-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(15, 23, 42, 0.55);
+
+    opacity: 0;
+    visibility: hidden;
+
+    pointer-events: none;
+
+    transition:
+        opacity var(--transition),
+        visibility var(--transition);
+
+    z-index: 990;
+}
+
+
+/* ==========================================================
+   24. MOBILE SIDEBAR
+========================================================== */
+
+@media (max-width: 1024px) {
+
+    .sidebar {
+        position: fixed;
+
+        top: 0;
+        bottom: 0;
+        left: 0;
+
+        width: min(
+            var(--sidebar-width),
+            86vw
+        );
+
+        transform: translateX(-100%);
+
+        box-shadow: var(--shadow-xl);
+    }
+
+
+    .dashboard.sidebar-collapsed .sidebar {
+        width: min(
+            var(--sidebar-width),
+            86vw
+        );
+    }
+
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+
+    .sidebar-overlay.active {
+        opacity: 1;
+        visibility: visible;
+
+        pointer-events: auto;
+    }
+
+
+    /*
+       Desktop collapsed styling must not hide
+       sidebar content when the sidebar becomes
+       a mobile drawer.
+    */
+
+    .dashboard.sidebar-collapsed .sidebar-brand {
+        justify-content: flex-start;
+    }
+
+
+    .dashboard.sidebar-collapsed .logo-text {
+        width: auto;
+
+        opacity: 1;
+
+        overflow: visible;
+
+        pointer-events: auto;
+
+        transform: none;
+    }
+
+
+    .dashboard.sidebar-collapsed .nav-group-title {
+        height: auto;
+
+        padding:
+            0
+            var(--space-md)
+            var(--space-sm);
+
+        margin: 0;
+
+        overflow: visible;
+
+        opacity: 1;
+    }
+
+
+    .dashboard.sidebar-collapsed .nav-item {
+        justify-content: flex-start;
+
+        gap: var(--space-md);
+
+        padding:
+            0
+            var(--space-md);
+    }
+
+
+    .dashboard.sidebar-collapsed .nav-item span {
+        width: auto;
+
+        opacity: 1;
+
+        overflow: visible;
+
+        pointer-events: auto;
+    }
+
+
+    .dashboard.sidebar-collapsed .profile-card {
+        justify-content: flex-start;
+
+        gap: var(--space-md);
+
+        padding: var(--space-sm);
+    }
+
+
+    .dashboard.sidebar-collapsed .profile-details {
+        width: auto;
+
+        opacity: 1;
+
+        overflow: visible;
+
+        pointer-events: auto;
+    }
+
+
+    .dashboard.sidebar-collapsed .profile-chevron {
+        width: 18px;
+
+        opacity: 1;
+
+        overflow: visible;
+
+        pointer-events: auto;
+    }
+
+
+    .dashboard.sidebar-collapsed .logout-btn {
+        padding:
+            0
+            var(--space-md);
+    }
+
+
+    .dashboard.sidebar-collapsed .logout-btn span {
+        display: inline;
+    }
+
+}

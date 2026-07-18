@@ -1,0 +1,201 @@
+/* ==========================================
+   GLOBAL TABLE SYSTEM
+========================================== */
+
+.table-card{
+
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:var(--radius-lg);
+
+    overflow:hidden;
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+/* ==========================================
+   TABLE HEADER
+========================================== */
+
+.table-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:20px 24px;
+
+    border-bottom:1px solid var(--border);
+
+}
+
+.table-header h3{
+
+    font-size:20px;
+
+    font-weight:700;
+
+    color:var(--text);
+
+}
+
+.table-header p{
+
+    color:#64748B;
+
+    font-size:14px;
+
+}
+
+/* ==========================================
+   TABLE WRAPPER
+========================================== */
+
+.table-wrapper{
+
+    width:100%;
+
+    overflow-x:auto;
+
+    overflow-y:hidden;
+
+}
+
+/* ==========================================
+   TABLE
+========================================== */
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    min-width:900px;
+
+}
+
+thead{
+
+    background:#F8FAFC;
+
+}
+
+thead th{
+
+    padding:16px 20px;
+
+    text-align:left;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    color:#475569;
+
+    border-bottom:1px solid var(--border);
+
+    white-space:nowrap;
+
+}
+
+tbody td{
+
+    padding:18px 20px;
+
+    border-bottom:1px solid #EEF2F7;
+
+    font-size:15px;
+
+    color:#334155;
+
+}
+
+tbody tr{
+
+    transition:.2s ease;
+
+}
+
+tbody tr:hover{
+
+    background:#F8FAFC;
+
+}
+
+/* ==========================================
+   STATUS BADGES
+========================================== */
+
+.status{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:6px 12px;
+
+    border-radius:999px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+.status.open{
+
+    background:#DBEAFE;
+
+    color:#2563EB;
+
+}
+
+.status.closed{
+
+    background:#DCFCE7;
+
+    color:#16A34A;
+
+}
+
+.status.pending{
+
+    background:#FEF3C7;
+
+    color:#D97706;
+
+}
+
+.status.critical{
+
+    background:#FEE2E2;
+
+    color:#DC2626;
+
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width:768px){
+
+    .table-header{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:12px;
+
+    }
+
+}

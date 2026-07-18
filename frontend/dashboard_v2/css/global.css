@@ -1,0 +1,29 @@
+
+.qr-result-card{
+    margin-top:15px;
+    padding:20px;
+    border-radius:15px;
+    background:#fff;
+    box-shadow:0 4px 15px rgba(0,0,0,.12);
+}
+.qr-result-card h3{
+    margin-bottom:15px;
+    text-align:center;
+}
+.qr-item{
+    display:flex;
+    justify-content:space-between;
+    padding:10px 0;
+    border-bottom:1px solid #eee;
+    gap:10px;
+}
+.qr-item span{
+    font-weight:600;
+}
+.qr-item b{
+    text-align:right;
+}
+@media(max-width:600px){
+ .qr-item{flex-direction:column;}
+ .qr-item b{text-align:left;}
+}

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>BloodLink | Login</title>
+
+    <!-- Google Font -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <!-- Font Awesome -->
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <!-- Login CSS -->
+
+    <link rel="stylesheet"
+        href="/static/dashboard_v2/css/login.css">
+</head>
+
+<body>
+
+    <!-- ==========================================
+         MAIN CONTAINER
+    =========================================== -->
+
+    <main class="login-container">
+
+        <!-- ======================================
+             LEFT SECTION
+        ======================================= -->
+
+        <section class="left-section">
+            <!-- Background image only -->
+        </section>
+
+        <!-- ======================================
+             LOGIN CARD
+        ======================================= -->
+
+        <section class="login-section">
+
+            <div class="login-card">
+
+                <!-- Avatar -->
+
+                <div class="avatar">
+
+                    <i class="fa-regular fa-user"></i>
+
+                </div>
+
+                <!-- Title -->
+
+                <h2>
+
+                    Welcome Back
+
+                </h2>
+
+                <p class="subtitle">
+
+                    Sign in to access the Blood Bank Management System
+
+                </p>
+
+                <!-- Login Form -->
+
+                <form id="loginForm">
+
+                <h3 class="sr-only">
+                    Login Form
+                </h3>
+
+                    <!-- Username -->
+
+                    <label for="username">
+
+                        Username
+
+                    </label>
+
+                    <div class="input-group">
+
+                        <i class="fa-regular fa-user"></i>
+
+                        <input
+
+                            id="username"
+
+                            type="text"
+
+                            placeholder="Enter your username"
+
+                            required>
+
+                    </div>
+
+                    <!-- Password -->
+
+                    <label for="password">
+
+                        Password
+
+                    </label>
+
+                    <div class="input-group">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        <input
+
+                            id="password"
+
+                            type="password"
+
+                            placeholder="Enter your password"
+
+                            required>
+
+                        <button
+
+                            type="button"
+
+                            id="togglePassword"
+
+                            class="toggle-password">
+
+                            <i class="fa-regular fa-eye"></i>
+
+                        </button>
+
+                    </div>
+
+                    <!-- Message -->
+
+                    <div
+
+                        id="message"
+
+                        class="message">
+
+                    </div>
+
+                    <!-- Login Button -->
+
+                    <button
+
+                        class="login-btn"
+
+                        type="submit">
+
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i>
+
+                        LOGIN
+
+                    </button>
+
+                </form>
+
+                <!-- Footer -->
+
+                <footer class="footer">
+
+                <p>© 2026 BloodLink</p>
+
+                <p>Developed for NSS Volunteers</p>
+
+                <span>Version 2.0</span>
+
+            </footer>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="/static/dashboard_v2/js/login.js"></script>
+
+</body>
+
+</html>

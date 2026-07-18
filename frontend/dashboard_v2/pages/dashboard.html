@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <!-- ==========================================================
+         META
+    =========================================================== -->
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="BloodLink - Blood Donation Management System"
+    >
+
+    <title>BloodLink | Admin Dashboard</title>
+
+
+    <!-- ==========================================================
+         GOOGLE FONT
+    =========================================================== -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- ==========================================================
+         FONT AWESOME
+    =========================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    >
+
+
+    <!-- ==========================================================
+         LUCIDE ICONS
+    =========================================================== -->
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+
+    <!-- ==========================================================
+         BLOODLINK STYLES
+    =========================================================== -->
+
+    <link rel="stylesheet" href="/static/dashboard_v2/css/theme.css">
+
+    <link rel="stylesheet" href="/static/dashboard_v2/css/layout.css">
+
+    <link rel="stylesheet" href="/static/dashboard_v2/css/sidebar.css">
+
+    <link rel="stylesheet" href="/static/dashboard_v2/css/topbar.css">
+
+    <link rel="stylesheet" href="/static/dashboard_v2/css/components.css">
+
+    <link rel="stylesheet" href="/static/dashboard_v2/css/dashboard.css">
+
+    <link rel="stylesheet" href="/static/dashboard_v2/css/tables.css">
+
+
+    <link
+        rel="stylesheet"
+        href="/static/dashboard_v2/css/donor_management.css"
+    >
+    <link rel="stylesheet" href="/static/dashboard_v2/css/responsive.css">
+
+    <link
+    rel="stylesheet"
+    href="/static/dashboard_v2/css/blood_requests.css"
+
+</head>
+
+
+<body class="auth-pending">
+    <!-- ==========================================================
+         APPLICATION SHELL
+    =========================================================== -->
+
+    <div class="dashboard">
+
+
+        <!-- ======================================================
+             SIDEBAR
+        ======================================================= -->
+
+        <aside
+            class="sidebar"
+            id="sidebar"
+            aria-label="Main navigation"
+        >
+
+
+            <!-- ==================================================
+                 SIDEBAR BRAND
+            =================================================== -->
+
+            <div class="sidebar-logo">
+
+                <a
+                    href="#"
+                    class="sidebar-brand"
+                    data-page="dashboard"
+                    aria-label="BloodLink Dashboard"
+                >
+
+                    <div
+                        class="logo-icon"
+                        aria-hidden="true"
+                    >
+
+                        <i data-lucide="droplets"></i>
+
+                    </div>
+
+
+                    <div class="logo-text">
+
+                        <h2>
+                            BloodLink
+                        </h2>
+
+                        <p>
+                            Blood Donation Management
+                        </p>
+
+                    </div>
+
+                </a>
+
+            </div>
+
+
+            <!-- ==================================================
+                 SIDEBAR NAVIGATION
+            =================================================== -->
+
+            <nav
+                class="sidebar-nav"
+                id="sidebar-nav"
+                aria-label="Dashboard navigation"
+            >
+
+                <!-- Generated dynamically by sidebar.js -->
+
+            </nav>
+
+
+            <!-- ==================================================
+                 SIDEBAR FOOTER
+            =================================================== -->
+
+            <div class="sidebar-footer">
+
+
+                <!-- User Profile -->
+
+                <button
+                    type="button"
+                    class="profile-card"
+                    data-page="profile"
+                    aria-label="Open profile"
+                >
+
+                    <div
+                        class="profile-avatar"
+                        id="sidebarAvatar"
+                        aria-hidden="true"
+                    >
+                        A
+                    </div>
+
+
+                    <div class="profile-details">
+
+                        <strong id="sidebarUser">
+                            Administrator
+                        </strong>
+
+                        <small id="sidebarRole">
+                            Admin
+                        </small>
+
+                    </div>
+
+
+                    <i
+                        class="profile-chevron"
+                        data-lucide="chevron-right"
+                        aria-hidden="true"
+                    ></i>
+
+                </button>
+
+
+                <!-- Logout -->
+
+                <button
+                    type="button"
+                    class="logout-btn"
+                    id="logoutButton"
+                >
+
+                    <i
+                        data-lucide="log-out"
+                        aria-hidden="true"
+                    ></i>
+
+                    <span>
+                        Logout
+                    </span>
+
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <!-- ======================================================
+             MOBILE SIDEBAR OVERLAY
+        ======================================================= -->
+
+        <div
+            class="sidebar-overlay"
+            id="sidebarOverlay"
+            aria-hidden="true"
+        ></div>
+
+
+        <!-- ======================================================
+             MAIN APPLICATION AREA
+        ======================================================= -->
+
+        <div class="main-layout">
+
+
+            <!-- ==================================================
+                 TOPBAR
+            =================================================== -->
+
+            <header class="topbar">
+
+
+                <!-- Topbar Left -->
+
+                <div class="topbar-left">
+
+                    <button
+                        type="button"
+                        class="menu-toggle"
+                        id="sidebarToggle"
+                        aria-label="Toggle sidebar"
+                        aria-expanded="false"
+                    >
+
+                        <i data-lucide="menu"></i>
+
+                    </button>
+
+
+                    <div class="page-title">
+
+                        <h1>
+                            Good Morning 👋
+                        </h1>
+
+                        <p id="todayDate">
+                            Saturday, 18 July 2026
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Topbar Search -->
+
+                <div class="topbar-center">
+
+                    <div class="search-box">
+
+                        <i
+                            data-lucide="search"
+                            aria-hidden="true"
+                        ></i>
+
+                        <input
+                            type="search"
+                            placeholder="Search donors, requests, volunteers..."
+                            aria-label="Search BloodLink"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- Topbar Right -->
+
+                <div class="topbar-right">
+
+                    <button
+                        type="button"
+                        class="icon-button"
+                        aria-label="Notifications"
+                    >
+
+                        <i data-lucide="bell"></i>
+
+                        <span
+                            class="notification-badge"
+                            id="notificationCount"
+                        >
+                            0
+                        </span>
+
+                    </button>
+
+
+                    <div class="topbar-profile">
+
+                        <div
+                            class="profile-avatar"
+                            id="topAvatar"
+                        >
+                            A
+                        </div>
+
+
+                        <div class="profile-info">
+
+                            <strong id="topUser">
+                                Administrator
+                            </strong>
+
+                            <small>
+                                BloodLink Admin
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+
+
+            <!-- ==================================================
+                MAIN APPLICATION CONTENT
+            =================================================== -->
+
+            <main class="main-content">
+
+                <!-- ==================================================
+                    DASHBOARD VIEW
+
+                    Contains the existing dashboard.
+                    This view is shown when Dashboard is selected.
+                =================================================== -->
+
+                <div
+                    id="dashboardView"
+                    class="application-view"
+                >
+
+                    <div class="dashboard-grid">
+
+
+                    <!-- ==================================================
+                         HERO SECTION
+                    =================================================== -->
+
+                    <section class="dashboard-hero">
+
+                        <div class="hero-content">
+
+
+                            <div class="hero-text">
+
+                                <span class="hero-badge">
+                                    BloodLink Management System
+                                </span>
+
+
+                                <h1>
+
+                                    Welcome back,
+
+                                    <span id="currentUser">
+                                        Administrator
+                                    </span>
+
+                                </h1>
+
+
+                                <p>
+
+                                    Monitor blood donations, manage requests,
+                                    coordinate donors and save lives from one place.
+
+                                </p>
+
+                            </div>
+
+
+                            <div class="hero-actions">
+
+                                <button
+                                    type="button"
+                                    class="primary-btn"
+                                    id="newRequestButton"
+                                >
+
+                                    <i data-lucide="plus"></i>
+
+                                    <span>
+                                        New Blood Request
+                                    </span>
+
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    class="secondary-btn"
+                                    id="registerDonorButton"
+                                >
+
+                                    <i data-lucide="user-plus"></i>
+
+                                    <span>
+                                        Register Donor
+                                    </span>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- ==================================================
+                         KPI SECTION
+                    =================================================== -->
+
+                    <section
+                        class="kpi-section"
+                        aria-label="Dashboard statistics"
+                    >
+
+                        <div class="kpi-grid">
+
+
+                            <!-- Total Donors -->
+
+                            <article class="kpi-card">
+
+                                <div class="kpi-icon">
+
+                                    <i data-lucide="users"></i>
+
+                                </div>
+
+
+                                <div class="kpi-content">
+
+                                    <span>
+                                        Total Donors
+                                    </span>
+
+                                    <h2 id="totalDonors">
+                                        0
+                                    </h2>
+
+                                </div>
+
+                            </article>
+
+
+                            <!-- Blood Units -->
+
+                            <article class="kpi-card">
+
+                                <div class="kpi-icon">
+
+                                    <i data-lucide="droplets"></i>
+
+                                </div>
+
+
+                                <div class="kpi-content">
+
+                                    <span>
+                                        Blood Units
+                                    </span>
+
+                                    <h2 id="bloodUnits">
+                                        0
+                                    </h2>
+
+                                </div>
+
+                            </article>
+
+
+                            <!-- Active Requests -->
+
+                            <article class="kpi-card">
+
+                                <div class="kpi-icon">
+
+                                    <i data-lucide="heart-pulse"></i>
+
+                                </div>
+
+
+                                <div class="kpi-content">
+
+                                    <span>
+                                        Active Requests
+                                    </span>
+
+                                    <h2 id="activeRequests">
+                                        0
+                                    </h2>
+
+                                </div>
+
+                            </article>
+
+
+                            <!-- Today's Donations -->
+
+                            <article class="kpi-card">
+
+                                <div class="kpi-icon">
+
+                                    <i data-lucide="calendar-check"></i>
+
+                                </div>
+
+
+                                <div class="kpi-content">
+
+                                    <span>
+                                        Today's Donations
+                                    </span>
+
+                                    <h2 id="todayDonations">
+                                        0
+                                    </h2>
+
+                                </div>
+
+                            </article>
+
+
+                            <!-- Emergency Cases -->
+
+                            <article class="kpi-card">
+
+                                <div class="kpi-icon">
+
+                                    <i data-lucide="ambulance"></i>
+
+                                </div>
+
+
+                                <div class="kpi-content">
+
+                                    <span>
+                                        Emergency Cases
+                                    </span>
+
+                                    <h2 id="emergencyCases">
+                                        0
+                                    </h2>
+
+                                </div>
+
+                            </article>
+
+
+                            <!-- Success Rate -->
+
+                            <article class="kpi-card">
+
+                                <div class="kpi-icon">
+
+                                    <i data-lucide="activity"></i>
+
+                                </div>
+
+
+                                <div class="kpi-content">
+
+                                    <span>
+                                        Success Rate
+                                    </span>
+
+                                    <h2 id="successRate">
+                                        0%
+                                    </h2>
+
+                                </div>
+
+                            </article>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- ==================================================
+                         ANALYTICS
+                    =================================================== -->
+
+                    <section class="analytics-section">
+
+                        <div class="analytics-grid">
+
+
+                            <!-- Monthly Donations -->
+
+                            <article class="chart-card">
+
+                                <div class="card-header">
+
+                                    <h3>
+                                        Monthly Blood Donations
+                                    </h3>
+
+                                </div>
+
+
+                                <canvas
+                                    id="monthlyDonationChart"
+                                    aria-label="Monthly blood donations chart"
+                                ></canvas>
+
+                            </article>
+
+
+                            <!-- Blood Group Distribution -->
+
+                            <article class="chart-card">
+
+                                <div class="card-header">
+
+                                    <h3>
+                                        Blood Group Distribution
+                                    </h3>
+
+                                </div>
+
+
+                                <canvas
+                                    id="bloodGroupChart"
+                                    aria-label="Blood group distribution chart"
+                                ></canvas>
+
+                            </article>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- ==================================================
+                         REQUESTS + ACTIVITY
+                    =================================================== -->
+
+                                        <div class="dashboard-row">
+
+
+                                <!-- Quick Actions -->
+
+                                <section class="quick-actions">
+
+                                    <div class="section-header">
+
+                                        <h3>
+                                            Quick Actions
+                                        </h3>
+
+                                    </div>
+
+
+                                    <div class="action-grid">
+
+                                        <!-- Generated dynamically -->
+
+                                    </div>
+
+                                </section>
+
+
+                                <!-- System Status -->
+
+                                <section class="system-status">
+
+                                    <div class="section-header">
+
+                                        <h3>
+                                            System Status
+                                        </h3>
+
+                                    </div>
+
+
+                                    <div id="systemHealth">
+
+                                        <!-- Dynamic content -->
+
+                                    </div>
+
+                                </section>
+
+                            </div>
+
+
+                            <!-- ==================================================
+                                END DASHBOARD GRID
+                            =================================================== -->
+
+                        </div>
+
+
+                        <!-- ==================================================
+                            END DASHBOARD VIEW
+                        =================================================== -->
+
+                    </div>
+
+
+                    <!-- ==================================================
+                        DYNAMIC MODULE VIEW
+
+                        Blood Requests, Donors, Donations, Campaigns,
+                        Reports and other modules will render here.
+                    =================================================== -->
+
+                    <div
+                        id="moduleView"
+                        class="application-view"
+                        hidden
+                    ></div>
+
+
+                </main>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================================
+         JAVASCRIPT LIBRARIES
+    =========================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+    <!-- ==========================================================
+         BLOODLINK JAVASCRIPT
+    =========================================================== -->
+
+    <!-- ==========================================================
+     BLOODLINK JAVASCRIPT
+=========================================================== -->
+
+    <script
+        type="module"
+        src="/static/dashboard_v2/js/auth-guard.js"
+    ></script>
+
+    <script
+        type="module"
+        src="/static/dashboard_v2/js/sidebar.js"
+    ></script>
+
+    <script
+        type="module"
+        src="/static/dashboard_v2/js/router.js"
+    ></script>
+    <script
+        type="module"
+        src="/static/dashboard_v2/js/blood-requests.js"
+    ></script>
+    <script
+        type="module"
+        src="/static/dashboard_v2/js/donor_management.js"
+    ></script>
+    <script
+        type="module"
+        src="/static/dashboard_v2/js/dashboard.js"
+    ></script>
+
+
+    <!-- ==========================================================
+         INITIAL ICON RENDER
+    =========================================================== -->
+
+    <script>
+
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,745 @@
+/*==================================================
+  QR GENERATE MODAL
+==================================================*/
+
+.qr-modal-overlay {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(10px);
+
+    opacity: 0;
+    visibility: hidden;
+    transition: all .25s ease;
+
+    z-index: 9999;
+}
+
+.qr-modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.qr-modal {
+
+    width: min(1500px, 96vw);
+    max-height: 92vh;
+
+    background: #ffffff;
+    border-radius: 28px;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    box-shadow: 0 25px 80px rgba(15,23,42,.18);
+}
+/*==================================================
+  HEADER
+==================================================*/
+
+.qr-modal-header{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:38px 48px;
+
+    border-bottom:1px solid #edf2f7;
+}
+
+.qr-header-left{
+
+    display:flex;
+    align-items:center;
+    gap:22px;
+}
+
+.qr-header-icon{
+
+    width:72px;
+    height:72px;
+
+    border-radius:18px;
+
+    background:#eef4ff;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    color:#2563eb;
+}
+
+.qr-header-icon svg{
+
+    width:34px;
+    height:34px;
+}
+
+.qr-modal-header h2{
+
+    margin:0;
+
+    font-size:38px;
+
+    font-weight:800;
+
+    color:#172554;
+}
+
+.qr-modal-header p{
+
+    margin-top:8px;
+
+    color:#64748b;
+
+    font-size:18px;
+}
+
+.qr-close-btn{
+
+    width:64px;
+    height:64px;
+
+    border:none;
+
+    border-radius:18px;
+
+    background:#f1f5f9;
+
+    cursor:pointer;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    transition:.25s;
+}
+
+.qr-close-btn:hover{
+
+    background:#e2e8f0;
+}
+/*==================================================
+  TOOLBAR
+==================================================*/
+
+.qr-modal-toolbar{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:30px;
+
+    padding:30px 48px;
+}
+
+.qr-search-wrapper{
+
+    flex:1;
+
+    max-width:720px;
+
+    position:relative;
+}
+
+.qr-search-wrapper svg{
+
+    position:absolute;
+
+    left:22px;
+
+    top:50%;
+
+    transform:translateY(-50%);
+
+    color:#64748b;
+}
+
+.qr-search-wrapper input{
+
+    width:100%;
+
+    height:64px;
+
+    border-radius:18px;
+
+    border:1px solid #dbe5f0;
+
+    padding-left:60px;
+
+    font-size:18px;
+
+    outline:none;
+}
+
+.qr-total-assets-card{
+
+    width:290px;
+
+    height:96px;
+
+    border-radius:18px;
+
+    border:1px solid #dbe5f0;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+    padding:22px;
+}
+
+.asset-card-icon{
+
+    width:56px;
+
+    height:56px;
+
+    border-radius:16px;
+
+    background:#eef4ff;
+
+    color:#2563eb;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+}
+
+.qr-total-assets-card span{
+
+    display:block;
+
+    color:#64748b;
+}
+
+.qr-total-assets-card strong{
+
+    display:block;
+
+    font-size:34px;
+
+    color:#2563eb;
+
+    font-weight:700;
+}
+/*==================================================
+TABLE
+==================================================*/
+
+.qr-table-wrapper{
+
+    flex:1;
+
+    margin:0 48px;
+
+    border:1px solid #e2e8f0;
+
+    border-radius:20px;
+
+    background:#fff;
+
+    overflow-y:auto;
+    overflow-x:hidden;
+
+    min-height:250px;
+}
+
+.qr-select-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    table-layout:fixed;
+
+}
+
+.qr-select-table thead{
+
+    position:sticky;
+
+    top:0;
+
+    background:#fff;
+
+    z-index:10;
+
+}
+
+.qr-select-table thead th{
+
+    padding:18px 16px;
+
+    font-size:14px;
+
+    font-weight:700;
+
+    color:#334155;
+
+    text-align:left;
+
+    border-bottom:1px solid #e2e8f0;
+
+}
+
+.qr-select-table tbody tr{
+
+    height:72px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+    border-bottom:1px solid #edf2f7;
+
+}
+
+.qr-select-table tbody tr:hover{
+
+    background:#f8fbff;
+
+}
+
+.qr-select-table tbody tr.selected{
+
+    background:#eef5ff;
+
+    box-shadow:inset 4px 0 0 #2563eb;
+
+}
+
+.qr-select-table td{
+
+    padding:0 16px;
+
+    vertical-align:middle;
+
+    font-size:15px;
+
+    color:#334155;
+
+}
+
+.asset-code{
+
+    font-weight:700;
+
+    color:#1e3a8a;
+
+}
+/*==================================================
+RADIO
+==================================================*/
+
+.qr-select-column{
+
+    width:48px;
+
+    text-align:center;
+
+}
+
+.qr-radio{
+
+    width:18px;
+
+    height:18px;
+
+    border-radius:50%;
+
+    border:2px solid #cbd5e1;
+
+    margin:auto;
+
+    transition:.2s;
+
+}
+
+.qr-table-row.selected .qr-radio{
+
+    border-color:#2563eb;
+
+    background:#2563eb;
+
+    box-shadow:inset 0 0 0 4px white;
+
+}
+/*==================================================
+STATUS
+==================================================*/
+
+.status-pill{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    padding:6px 14px;
+
+    border-radius:999px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+.status-pill.active{
+
+    color:#16a34a;
+
+    background:#effdf3;
+
+}
+
+.status-dot{
+
+    width:8px;
+
+    height:8px;
+
+    border-radius:50%;
+
+    background:#22c55e;
+
+}
+/*==================================================
+ARROW
+==================================================*/
+
+.qr-arrow{
+
+    text-align:center;
+
+    color:#64748b;
+
+}
+/*==================================================
+FOOTER
+==================================================*/
+
+.qr-footer{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:24px;
+
+    padding:24px 48px;
+
+    flex-shrink:0;
+}.selected-equipment-card,
+.qr-preview-card{
+
+    border:1px solid #e2e8f0;
+
+    border-radius:18px;
+
+    background:#fff;
+
+    min-height:160px;
+
+    padding:24px;
+
+}
+.card-title{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin-bottom:18px;
+
+    font-weight:700;
+
+    color:#1e293b;
+
+}
+.empty-selection,
+.empty-preview{
+
+    height:100%;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+
+    color:#64748b;
+
+}
+
+.empty-selection h3,
+.empty-preview h3{
+
+    margin:10px 0 6px;
+
+    color:#1e293b;
+
+}
+.equipment-info{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:16px;
+
+}
+
+.equipment-info span{
+
+    display:block;
+
+    font-size:13px;
+
+    color:#64748b;
+
+}
+
+.equipment-info strong{
+
+    display:block;
+
+    margin-top:4px;
+
+    color:#0f172a;
+
+}
+.qr-modal-actions{
+
+    flex-shrink:0;
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:16px;
+
+    padding:20px 48px;
+
+    border-top:1px solid #e2e8f0;
+
+    background:#fff;
+}
+/*==================================================
+FIXED SECTIONS
+==================================================*/
+
+.qr-modal-header,
+.qr-modal-toolbar{
+
+    flex-shrink:0;
+
+}
+/*==================================================
+MODAL BODY
+==================================================*/
+
+.qr-modal-body{
+
+    flex:1;
+
+    overflow-y:auto;
+
+    overflow-x:hidden;
+
+    padding-bottom:20px;
+}
+.qr-modal-body::-webkit-scrollbar{
+
+    width:10px;
+
+}
+
+.qr-modal-body::-webkit-scrollbar-track{
+
+    background:#f1f5f9;
+
+}
+
+.qr-modal-body::-webkit-scrollbar-thumb{
+
+    background:#cbd5e1;
+
+    border-radius:999px;
+
+}
+
+.qr-modal-body::-webkit-scrollbar-thumb:hover{
+
+    background:#94a3b8;
+
+}
+/* ==========================================
+   GENERATED QR
+========================================== */
+
+.generated-qr{
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+
+    height:100%;
+
+}
+
+.generated-qr-image{
+
+    width:220px;
+    height:220px;
+
+    object-fit:contain;
+
+    padding:14px;
+
+    background:white;
+
+    border:1px solid #e2e8f0;
+
+    border-radius:16px;
+
+}
+
+.generated-qr h3{
+
+    margin:0;
+
+    font-size:22px;
+
+    color:#172554;
+
+}
+
+.generated-qr p{
+
+    margin:0;
+
+    color:#64748b;
+
+}
+/* ==========================================
+   QR SCANNER MODAL
+========================================== */
+
+.qr-scanner-overlay{
+
+    position:fixed;
+    inset:0;
+
+    background:rgba(15,23,42,.65);
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    z-index:99999;
+
+    backdrop-filter:blur(8px);
+
+}
+
+.qr-scanner-modal{
+
+    width:520px;
+    max-width:95vw;
+
+    background:#fff;
+
+    border-radius:22px;
+
+    overflow:hidden;
+
+    box-shadow:0 25px 70px rgba(0,0,0,.25);
+
+}
+
+.qr-scanner-header{
+
+    padding:22px 28px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    border-bottom:1px solid #e5e7eb;
+
+}
+
+.qr-scanner-header h2{
+
+    margin:0;
+    font-size:24px;
+
+}
+
+.qr-scanner-header button{
+
+    border:none;
+    background:none;
+
+    font-size:28px;
+
+    cursor:pointer;
+
+}
+
+.qr-scanner-body{
+
+    padding:25px;
+
+    text-align:center;
+
+}
+
+#qr-reader{
+
+    width:100%;
+
+    max-width:360px;
+
+    margin:auto;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+}
+
+.scanner-note{
+
+    margin-top:18px;
+
+    color:#64748b;
+
+}

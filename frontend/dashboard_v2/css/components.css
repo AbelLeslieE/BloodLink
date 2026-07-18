@@ -1,0 +1,314 @@
+/* ==========================================================
+   BLOODLINK UI COMPONENTS
+========================================================== */
+
+
+/* ==========================================================
+   CARD
+========================================================== */
+
+.card{
+
+    background:var(--surface);
+
+    border:1px solid var(--border);
+
+    border-radius:var(--radius-lg);
+
+    box-shadow:var(--shadow-sm);
+
+    transition:var(--transition);
+
+}
+
+.card:hover{
+
+    box-shadow:var(--shadow-md);
+
+}
+
+
+/* ==========================================================
+   CARD HEADER
+========================================================== */
+
+.card-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:24px;
+
+    border-bottom:1px solid var(--border);
+
+}
+
+.card-title{
+
+    font-size:18px;
+
+    font-weight:700;
+
+    color:var(--text-primary);
+
+}
+
+.card-subtitle{
+
+    margin-top:4px;
+
+    color:var(--text-secondary);
+
+    font-size:14px;
+
+}
+
+
+/* ==========================================================
+   CARD BODY
+========================================================== */
+
+.card-body{
+
+    padding:24px;
+
+}
+
+
+/* ==========================================================
+   CARD FOOTER
+========================================================== */
+
+.card-footer{
+
+    padding:20px 24px;
+
+    border-top:1px solid var(--border);
+
+}
+
+
+/* ==========================================================
+   PRIMARY BUTTON
+========================================================== */
+
+.btn{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:10px;
+
+    height:46px;
+
+    padding:0 20px;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    transition:var(--transition);
+
+}
+
+.btn-primary{
+
+    background:var(--primary);
+
+    color:white;
+
+}
+
+.btn-primary:hover{
+
+    background:var(--primary-hover);
+
+}
+
+.btn-secondary{
+
+    background:white;
+
+    color:var(--text-primary);
+
+    border:1px solid var(--border);
+
+}
+
+.btn-secondary:hover{
+
+    background:var(--surface-secondary);
+
+}
+
+
+/* ==========================================================
+   STATUS BADGES
+========================================================== */
+
+.badge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:6px 12px;
+
+    border-radius:999px;
+
+    font-size:12px;
+
+    font-weight:600;
+
+}
+
+.badge-success{
+
+    background:var(--success-light);
+
+    color:var(--success);
+
+}
+
+.badge-warning{
+
+    background:var(--warning-light);
+
+    color:var(--warning);
+
+}
+
+.badge-danger{
+
+    background:var(--danger-light);
+
+    color:var(--danger);
+
+}
+
+.badge-info{
+
+    background:var(--secondary-light);
+
+    color:var(--secondary);
+
+}
+
+
+/* ==========================================================
+   SECTION TITLE
+========================================================== */
+
+.section-title{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:20px;
+
+}
+
+.section-title h2{
+
+    font-size:24px;
+
+    font-weight:700;
+
+}
+
+.section-title p{
+
+    color:var(--text-secondary);
+
+    margin-top:4px;
+
+}
+
+
+/* ==========================================================
+   EMPTY STATE
+========================================================== */
+
+.empty-state{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:16px;
+
+    min-height:300px;
+
+    text-align:center;
+
+}
+
+.empty-state h3{
+
+    font-size:22px;
+
+    color:var(--text-primary);
+
+}
+
+.empty-state p{
+
+    color:var(--text-secondary);
+
+    max-width:400px;
+
+}
+
+
+/* ==========================================================
+   LOADER
+========================================================== */
+
+.loader{
+
+    width:42px;
+
+    height:42px;
+
+    border:4px solid var(--border);
+
+    border-top-color:var(--primary);
+
+    border-radius:50%;
+
+    animation:spin 1s linear infinite;
+
+}
+
+@keyframes spin{
+
+    from{
+
+        transform:rotate(0deg);
+
+    }
+
+    to{
+
+        transform:rotate(360deg);
+
+    }
+
+}
