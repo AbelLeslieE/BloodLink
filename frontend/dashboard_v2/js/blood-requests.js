@@ -97,7 +97,7 @@ async function loadBloodRequests() {
 
 
         console.error(
-            "BloodLink: Failed to load blood requests.",
+            "Pranadan: Failed to load blood requests.",
             response.status,
             errorData
         );
@@ -125,7 +125,7 @@ async function loadBloodRequests() {
 
 
     console.log(
-        "BloodLink: Blood requests loaded:",
+        "Pranadan: Blood requests loaded:",
         bloodRequests
     );
 

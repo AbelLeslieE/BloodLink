@@ -338,7 +338,7 @@ function getAddDonorModalTemplate() {
 
                         <p>
                             Register a new donor in the
-                            BloodLink donor database.
+                            Pranadan donor database.
                         </p>
 
                     </div>
@@ -907,7 +907,7 @@ function getViewDonorModalTemplate() {
 
                         <p>
                             Complete donor information stored
-                            in BloodLink.
+                            in Pranadan.
                         </p>
 
                     </div>
@@ -1003,7 +1003,7 @@ function getEditDonorModalTemplate() {
 
                         <p id="editDonorDescription">
                             Update donor information stored
-                            in BloodLink.
+                            in Pranadan.
                         </p>
 
                     </div>
