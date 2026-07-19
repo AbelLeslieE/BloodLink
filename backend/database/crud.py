@@ -255,7 +255,11 @@ def get_donor_by_phone(
 
     return database_session.scalar(statement)
 
-
+def get_eligible_donors(
+    database_session: Session,
+    compatible_groups: list[str],
+) -> list[Donor]:
+    ...
 def get_donor_by_email(
     database_session: Session,
     email: str,
@@ -309,6 +313,29 @@ def update_donor(
     )
 
     return donor
+# ==========================================================
+# DELETE DONOR
+# ==========================================================
+
+def delete_donor(
+    database_session: Session,
+    donor: Donor,
+) -> None:
+    """
+    Permanently delete a donor record.
+    """
+
+    try:
+
+        database_session.delete(donor)
+
+        database_session.commit()
+
+    except SQLAlchemyError:
+
+        database_session.rollback()
+
+        raise
 # ==========================================================
 # BLOOD REQUEST CRUD
 # ==========================================================

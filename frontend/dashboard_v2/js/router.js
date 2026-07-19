@@ -32,6 +32,8 @@ const AVAILABLE_PAGES = new Set([
 
     "donors",
 
+    "findMatch",
+
     "donationHistory",
 
     "campaigns",

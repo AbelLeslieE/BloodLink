@@ -947,33 +947,47 @@
    Instead, only the table area scrolls horizontally.
 */
 
+/* ==========================================================
+   DONOR TABLE WRAPPER
+========================================================== */
+
 .donor-table-wrapper {
+
     width: 100%;
-    min-width: 0;
 
-    overflow-x: auto;
-    overflow-y: hidden;
+    margin-top: 24px;
 
-    scrollbar-width: thin;
+    background: rgba(58, 85, 114, 0.65);
+
+    backdrop-filter: blur(12px);
+
+    border-radius: 22px;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(255,255,255,.08);
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.18);
+
 }
 
+
+/* ==========================================================
+   DONOR TABLE
+========================================================== */
 
 .donor-table {
+
     width: 100%;
 
-    /*
-       Minimum width protects all columns.
-
-       On a smaller screen the wrapper scrolls rather
-       than destroying the table layout.
-    */
-
-    min-width: 1050px;
+    min-width: 1450px;
 
     border-collapse: collapse;
-    border-spacing: 0;
-}
 
+    table-layout: fixed;
+
+}
 
 /* --------------------------
    Table Header
@@ -1549,6 +1563,11 @@
 .donor-table thead {
     background:
         rgba(10, 29, 48, 0.82);
+        position: sticky;
+
+        top: 0;
+
+        z-index: 20;
 }
 
 
@@ -2611,5 +2630,70 @@ body.donor-modal-open {
     #editDonorModal .donor-choice-group {
         grid-template-columns: 1fr;
     }
+
+}
+/* ==========================================================
+   TABLE SCROLL AREA
+========================================================== */
+
+.donor-table-scroll {
+
+    max-height: 560px;
+
+    overflow: auto;
+
+    width: 100%;
+
+}
+/* ==========================================================
+   CUSTOM SCROLLBAR
+========================================================== */
+
+.donor-table-scroll::-webkit-scrollbar {
+
+    width: 10px;
+
+}
+
+.donor-table-scroll::-webkit-scrollbar-track {
+
+    background: transparent;
+
+}
+
+.donor-table-scroll::-webkit-scrollbar-thumb {
+
+    background: rgba(255,255,255,.22);
+
+    border-radius: 50px;
+
+}
+
+.donor-table-scroll::-webkit-scrollbar-thumb:hover {
+
+    background: rgba(255,255,255,.38);
+
+}
+/* Horizontal Scrollbar */
+
+.donor-table-scroll::-webkit-scrollbar {
+
+    width: 10px;
+
+    height: 10px;
+
+}
+
+.donor-table-scroll::-webkit-scrollbar-thumb {
+
+    background: rgba(255,255,255,.25);
+
+    border-radius: 100px;
+
+}
+
+.donor-table-scroll::-webkit-scrollbar-thumb:hover {
+
+    background: rgba(255,255,255,.45);
 
 }

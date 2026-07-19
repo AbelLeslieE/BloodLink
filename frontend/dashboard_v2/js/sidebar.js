@@ -116,16 +116,17 @@ const navigationConfig = {
                 },
 
                 {
+                    label: "Find Match",
+                    icon: "target",
+                    page: "findMatch"
+                },
+                {
                     label: "Donation History",
                     icon: "heart-handshake",
                     page: "donationHistory"
-                },
-
-                {
-                    label: "Campaigns",
-                    icon: "calendar-days",
-                    page: "campaigns"
                 }
+
+                
 
             ]
 
@@ -142,12 +143,7 @@ const navigationConfig = {
                     page: "notifications"
                 },
 
-                {
-                    label: "Reports",
-                    icon: "chart-no-axes-combined",
-                    page: "reports"
-                },
-
+                
                 {
                     label: "Users",
                     icon: "user-cog",
@@ -163,11 +159,7 @@ const navigationConfig = {
 
             items: [
 
-                {
-                    label: "Profile",
-                    icon: "circle-user-round",
-                    page: "profile"
-                },
+                
 
                 {
                     label: "Settings",

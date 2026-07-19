@@ -71,6 +71,12 @@ function getDonorModuleTemplate() {
                             <i data-lucide="upload"></i>
                             Import Excel
                         </button>
+                        <input
+                            type="file"
+                            id="importDonorFile"
+                            accept=".xlsx,.xls"
+                            hidden
+                        >
 
 
                         <button
@@ -227,37 +233,47 @@ function getDonorModuleTemplate() {
                     </div>
 
 
+                    <!-- ==========================================
+                        DONOR TABLE
+                    ========================================== -->
+
                     <div class="donor-table-wrapper">
+
+                    <div class="donor-table-scroll">
 
                         <table class="donor-table">
 
                             <thead>
 
                                 <tr>
+
                                     <th>Donor ID</th>
                                     <th>Name</th>
                                     <th>Blood Group</th>
                                     <th>Gender</th>
                                     <th>Age</th>
-                                    <th>Phone Number</th>
-                                    <th>Email ID</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
                                     <th>Last Donation</th>
                                     <th>Status</th>
                                     <th>Actions</th>
+
                                 </tr>
 
                             </thead>
 
-
                             <tbody id="donorTableBody">
 
                                 <tr>
-                                    <td
-                                        colspan="10"
-                                        class="donor-table-message"
-                                    >
+
+                                    <td colspan="10" class="donor-loading-row">
+
+                                        <i data-lucide="loader-circle"></i>
+
                                         Loading donors...
+
                                     </td>
+
                                 </tr>
 
                             </tbody>
@@ -265,6 +281,8 @@ function getDonorModuleTemplate() {
                         </table>
 
                     </div>
+
+                </div>
 
 
                     <footer class="donor-table-footer">
@@ -1904,7 +1922,60 @@ function validateAddDonorPayload(
 
 }
 
+// ==========================================================
+// DELETE DONOR
+// ==========================================================
 
+async function deleteDonor(donorId) {
+
+    const confirmed = confirm(
+        "Are you sure you want to delete this donor?"
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+
+        const response =
+            await authenticatedFetch(
+                `${DONOR_API_URL}/${donorId}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+        if (!response) {
+            return;
+        }
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to delete donor."
+            );
+
+        }
+
+        await loadDonors();
+
+        alert(
+            "Donor deleted successfully."
+        );
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to delete donor."
+        );
+
+    }
+
+}
 // ==========================================================
 // EXTRACT API ERROR
 // ==========================================================
@@ -1963,7 +2034,68 @@ async function getApiErrorMessage(
 
 }
 
+// ==========================================================
+// EXPORT DONORS
+// ==========================================================
 
+async function exportDonorsToExcel() {
+
+    try {
+
+        const response =
+            await authenticatedFetch(
+                `${DONOR_API_URL}/export`
+            );
+
+        if (!response) {
+            return;
+        }
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Export failed."
+            );
+
+        }
+
+        const blob =
+            await response.blob();
+
+        const url =
+            window.URL.createObjectURL(blob);
+
+        const link =
+            document.createElement("a");
+
+        link.href = url;
+
+        link.download =
+            "bloodlink_donors.xlsx";
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        window.URL.revokeObjectURL(url);
+
+    }
+    catch (error) {
+
+        console.error(
+            "Export failed:",
+            error
+        );
+
+        alert(
+            "Unable to export donor data."
+        );
+
+    }
+
+}
 // ==========================================================
 // SUBMIT ADD DONOR
 // ==========================================================
@@ -2226,6 +2358,7 @@ export async function loadDonorManagement() {
         window.lucide.createIcons();
     }
 
+
     bindDonorEvents();
 
     await loadDonors();
@@ -2327,15 +2460,25 @@ function renderDonorTable(
     if (!donors.length) {
 
         tableBody.innerHTML = `
-            <tr>
-                <td
-                    colspan="10"
-                    class="donor-table-message"
-                >
-                    No donor records found.
-                </td>
-            </tr>
+
+        <tr>
+
+            <td
+                colspan="10"
+                class="donor-table-message"
+            >
+
+                No donors found.
+
+            </td>
+
+        </tr>
+
         `;
+
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
 
         if (summary) {
             summary.textContent =
@@ -2370,89 +2513,114 @@ function renderDonorTable(
 // CREATE DONOR ROW
 // ==========================================================
 
-function createDonorRow(
-    donor
-) {
+function createDonorRow(donor) {
 
     const age = calculateAge(
         donor.date_of_birth
     );
 
-    const statusClass = getStatusClass(
-        donor.status
-    );
+    const statusClass =
+        getStatusClass(
+            donor.status
+        );
 
     return `
+
         <tr>
 
             <td>
-                <span class="donor-code">
-                    ${escapeHtml(donor.donor_code)}
-                </span>
+                ${escapeHtml(donor.donor_code)}
             </td>
 
             <td>
-                <span class="donor-name">
-                    ${escapeHtml(donor.full_name)}
-                </span>
+                ${escapeHtml(donor.full_name)}
             </td>
 
             <td>
+
                 <span class="blood-group-badge">
-                    ${escapeHtml(donor.blood_group)}
+
+                    ${displayValue(
+                        donor.blood_group
+                    )}
+
                 </span>
+
             </td>
 
             <td>
-                ${displayValue(donor.gender)}
+
+                ${displayValue(
+                    donor.gender
+                )}
+
             </td>
 
             <td>
+
                 ${age ?? "—"}
+
             </td>
 
             <td>
-                ${displayValue(donor.phone)}
+
+                ${displayValue(
+                    donor.phone
+                )}
+
             </td>
 
             <td>
-                ${displayValue(donor.email)}
+
+                ${displayValue(
+                    donor.email
+                )}
+
             </td>
 
             <td>
-                ${formatDate(donor.last_donation_date)}
+
+                ${formatDate(
+                    donor.last_donation_date
+                )}
+
             </td>
 
             <td>
 
                 <span class="donor-status ${statusClass}">
-                    ${escapeHtml(
-                        donor.status || "Not Recorded"
+
+                    ${displayValue(
+                        donor.status
                     )}
+
                 </span>
 
             </td>
 
             <td>
 
-                <div class="donor-row-actions">
+                <div class="donor-action-group">
 
                     <button
-                        type="button"
                         class="donor-icon-btn"
                         data-donor-view="${donor.id}"
-                        aria-label="View donor"
                     >
                         <i data-lucide="eye"></i>
                     </button>
 
                     <button
-                        type="button"
                         class="donor-icon-btn"
                         data-donor-edit="${donor.id}"
-                        aria-label="Edit donor"
                     >
                         <i data-lucide="pencil"></i>
+                    </button>
+
+                    <button
+                        class="donor-icon-btn donor-delete-btn"
+                        data-donor-delete="${donor.id}"
+                    >
+                        <i data-lucide="trash-2"></i>
                     </button>
 
                 </div>
@@ -2460,7 +2628,9 @@ function createDonorRow(
             </td>
 
         </tr>
+
     `;
+
 }
 
 
@@ -3639,7 +3809,28 @@ function bindDonorEvents() {
             );
 
     });
+    document
+    .getElementById("importDonorsButton")
+    ?.addEventListener(
+        "click",
+        () => {
 
+            document
+                .getElementById(
+                    "importDonorFile"
+                )
+                ?.click();
+
+        }
+    );
+
+
+    document
+        .getElementById("importDonorFile")
+        ?.addEventListener(
+            "change",
+            handleImportDonors
+        );
 
     // ======================================================
     // DONOR TABLE ACTIONS
@@ -3711,11 +3902,46 @@ function bindDonorEvents() {
                     }
 
                 }
+                // -----------------------------
+                // DELETE DONOR
+                // -----------------------------
+
+                const deleteButton =
+                    event.target.closest(
+                        "[data-donor-delete]"
+                    );
+
+                if (deleteButton) {
+
+                    const donorId =
+                        Number(
+                            deleteButton.dataset.donorDelete
+                        );
+
+                    if (
+                        Number.isInteger(donorId) &&
+                        donorId > 0
+                    ) {
+
+                        deleteDonor(
+                            donorId
+                        );
+
+                    }
+
+                    return;
+
+                }
 
             }
         );
 
-
+    document
+    .getElementById("exportDonorsButton")
+    ?.addEventListener(
+        "click",
+        exportDonorsToExcel
+    );    
     // ======================================================
     // VIEW DONOR EVENTS
     // ======================================================
@@ -4039,6 +4265,78 @@ window.addEventListener(
 
     }
 );
+// ==========================================================
+// IMPORT DONORS
+// ==========================================================
+
+async function handleImportDonors(
+    event
+) {
+
+    const file =
+        event.target.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    const formData =
+        new FormData();
+
+    formData.append(
+        "file",
+        file
+    );
+
+    try {
+
+        const response =
+            await authenticatedFetch(
+                `${DONOR_API_URL}/import`,
+                {
+                    method: "POST",
+                    body: formData,
+                }
+            );
+
+        if (!response) {
+            return;
+        }
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Import failed."
+            );
+
+        }
+
+        const result =
+            await response.json();
+
+        alert(
+            result.message
+        );
+
+        await loadDonors();
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to import donors."
+        );
+
+    }
+    finally {
+
+        event.target.value = "";
+
+    }
+
+}
 // ==========================================================
 // SUBMIT EDIT DONOR
 // ==========================================================

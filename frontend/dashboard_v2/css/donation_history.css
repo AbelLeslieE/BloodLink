@@ -1,1 +1,1630 @@
+/* ========================================================================
+   BloodLink - Donation History
+   File : donation_history.css
+   ======================================================================== */
 
+/* ========================================================================
+   Root Variables
+   ======================================================================== */
+
+:root{
+
+    --primary:#DC2626;
+    --primary-dark:#B91C1C;
+
+    --secondary:#2563EB;
+
+    --success:#16A34A;
+    --warning:#F59E0B;
+    --purple:#7C3AED;
+
+    --heading:#0F172A;
+    --text:#334155;
+    --muted:#64748B;
+
+    --glass:rgba(255,255,255,.18);
+    --glass-border:rgba(255,255,255,.35);
+
+    --shadow:
+        0 10px 35px rgba(15,23,42,.10);
+
+    --radius:22px;
+
+}
+
+/* ========================================================================
+   Page Background
+   ======================================================================== */
+
+.donation-history-page{
+
+    min-height:100vh;
+
+    padding:32px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:28px;
+
+    background:
+        linear-gradient(
+            rgba(255,255,255,.18),
+            rgba(255,255,255,.22)
+        ),
+        url("../../assets/history.png");
+
+    background-size:cover;
+
+    background-position:center;
+
+    background-repeat:no-repeat;
+
+    background-attachment:fixed;
+
+}
+
+/* ========================================================================
+   Glass Card
+   ======================================================================== */
+
+.glass-card{
+
+    background:rgba(255,255,255,.16);
+
+    backdrop-filter:blur(24px);
+
+    -webkit-backdrop-filter:blur(24px);
+
+    border:1px solid rgba(255,255,255,.28);
+
+    border-radius:22px;
+
+    box-shadow:
+
+        0 10px 35px rgba(15,23,42,.12),
+
+        inset 0 1px rgba(255,255,255,.35);
+
+    transition:.30s;
+
+}
+
+.glass-card:hover{
+
+    background:rgba(255,255,255,.20);
+
+    transform:translateY(-2px);
+
+}
+/* ========================================================================
+   Hero
+   ======================================================================== */
+
+.dh-hero{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:26px 32px;
+
+    transition:.30s;
+
+    background:rgba(255,255,255,.14);
+
+    backdrop-filter:blur(24px);
+
+}
+
+.dh-hero:hover{
+
+    transform:translateY(-2px);
+
+}
+
+.dh-hero-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:22px;
+
+}
+
+.dh-hero-icon{
+
+    width:74px;
+
+    height:74px;
+
+    border-radius:20px;
+
+    background:linear-gradient(
+        135deg,
+        #2563EB,
+        #60A5FA
+    );
+
+    color:#fff;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:30px;
+
+    box-shadow:
+
+        0 12px 30px rgba(37,99,235,.35);
+
+}
+
+.dh-hero-text h1{
+
+    margin:0;
+
+    color:var(--heading);
+
+    font-size:2rem;
+
+    font-weight:700;
+
+    letter-spacing:.3px;
+
+}
+
+.dh-hero-text p{
+
+    margin-top:8px;
+
+    color:var(--muted);
+
+    font-size:.98rem;
+
+}
+
+/* ========================================================================
+   KPI Grid
+   ======================================================================== */
+
+.dh-kpi-grid{
+
+    display:grid;
+
+    grid-template-columns:
+
+        repeat(4,1fr);
+
+    gap:24px;
+
+}
+
+/* ========================================================================
+   KPI Card
+   ======================================================================== */
+
+.dh-kpi-card{
+
+    padding:28px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+    background:rgba(255,255,255,.14);
+
+    backdrop-filter:blur(22px);
+
+    transition:.25s;
+
+    cursor:pointer;
+
+}
+
+.dh-kpi-card:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:
+
+        0 16px 40px rgba(0,0,0,.12);
+
+}
+
+.dh-kpi-icon{
+
+    width:68px;
+
+    height:68px;
+
+    border-radius:18px;
+
+    color:white;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:26px;
+
+    flex-shrink:0;
+
+}
+
+.dh-kpi-icon.blue{
+
+    background:linear-gradient(
+        135deg,
+        #2563EB,
+        #60A5FA
+    );
+
+}
+
+.dh-kpi-icon.green{
+
+    background:linear-gradient(
+        135deg,
+        #16A34A,
+        #4ADE80
+    );
+
+}
+
+.dh-kpi-icon.purple{
+
+    background:linear-gradient(
+        135deg,
+        #7C3AED,
+        #A78BFA
+    );
+
+}
+
+.dh-kpi-icon.orange{
+
+    background:linear-gradient(
+        135deg,
+        #F59E0B,
+        #FBBF24
+    );
+
+}
+
+.dh-kpi-content{
+
+    flex:1;
+
+}
+
+.dh-kpi-content span{
+
+    display:block;
+
+    color:var(--muted);
+
+    font-size:.92rem;
+
+    margin-bottom:8px;
+
+    font-weight:500;
+
+}
+
+.dh-kpi-content h2{
+
+    margin:0;
+
+    font-size:2rem;
+
+    font-weight:700;
+
+    color:var(--heading);
+
+    line-height:1;
+
+}
+
+.dh-kpi-content small{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:6px;
+
+    margin-top:12px;
+
+    font-size:.84rem;
+
+}
+
+.positive{
+
+    color:var(--success);
+
+}
+
+.negative{
+
+    color:var(--primary);
+
+}
+
+/* ========================================================================
+   Shared Section Titles
+   ======================================================================== */
+
+.section-title{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:22px;
+
+}
+
+.section-title h2{
+
+    margin:0;
+
+    font-size:1.25rem;
+
+    color:var(--heading);
+
+    font-weight:700;
+
+}
+
+.sidebar-title{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:18px;
+
+}
+
+.sidebar-title h3{
+
+    margin:0;
+
+    font-size:1.08rem;
+
+    color:var(--heading);
+
+    font-weight:700;
+
+}
+/* ========================================================================
+   Filter Bar
+   ======================================================================== */
+
+.dh-filter-bar{
+
+    display:grid;
+
+    grid-template-columns:
+        2fr
+        1fr
+        1fr
+        1fr
+        auto
+        auto;
+
+    gap:18px;
+
+    align-items:center;
+
+    padding:22px 24px;
+
+    background:rgba(255,255,255,.14);
+
+    backdrop-filter:blur(22px);
+
+}
+
+/* ========================================================================
+   Search Box
+   ======================================================================== */
+
+.dh-search{
+
+    position:relative;
+
+    display:flex;
+
+    align-items:center;
+
+}
+
+.dh-search i{
+
+    position:absolute;
+
+    left:18px;
+
+    color:var(--muted);
+
+    font-size:.95rem;
+
+}
+
+.dh-search input{
+
+    width:100%;
+
+    height:52px;
+
+    padding-left:48px;
+
+    padding-right:18px;
+
+    border:none;
+
+    outline:none;
+
+    border-radius:14px;
+
+    background:rgba(255,255,255,.18);
+
+    color:var(--heading);
+
+    font-size:.95rem;
+
+    transition:.25s;
+
+}
+
+.dh-search input:focus{
+
+    background:rgba(255,255,255,.25);
+
+    box-shadow:
+        0 0 0 3px rgba(37,99,235,.15);
+
+}
+
+/* ========================================================================
+   Selects
+   ======================================================================== */
+
+.dh-filter-bar select{
+
+    width:100%;
+
+    height:52px;
+
+    border:none;
+
+    outline:none;
+
+    border-radius:14px;
+
+    background:rgba(255,255,255,.18);
+
+    padding:0 16px;
+
+    color:var(--heading);
+
+    font-size:.95rem;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+}
+
+.dh-filter-bar select:focus{
+
+    background:rgba(255,255,255,.25);
+
+    box-shadow:
+        0 0 0 3px rgba(37,99,235,.15);
+
+}
+
+/* ========================================================================
+   Date Input
+   ======================================================================== */
+
+.dh-filter-bar input[type="date"]{
+
+    width:100%;
+
+    height:52px;
+
+    border:none;
+
+    outline:none;
+
+    border-radius:14px;
+
+    background:rgba(255,255,255,.18);
+
+    padding:0 16px;
+
+    color:var(--heading);
+
+    transition:.25s;
+
+}
+
+.dh-filter-bar input[type="date"]:focus{
+
+    background:rgba(255,255,255,.25);
+
+    box-shadow:
+        0 0 0 3px rgba(37,99,235,.15);
+
+}
+
+/* ========================================================================
+   Buttons
+   ======================================================================== */
+
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.btn-danger{
+
+    height:52px;
+
+    padding:0 22px;
+
+    border:none;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+    font-size:.92rem;
+
+    font-weight:600;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:8px;
+
+    transition:.25s;
+
+}
+
+.btn-primary{
+
+    background:linear-gradient(
+        135deg,
+        var(--primary),
+        var(--primary-dark)
+    );
+
+    color:white;
+
+}
+
+.btn-primary:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 10px 25px rgba(220,38,38,.30);
+
+}
+
+.btn-secondary{
+
+    background:rgba(255,255,255,.25);
+
+    color:var(--heading);
+
+}
+
+.btn-secondary:hover{
+
+    background:#f1f5f9;
+
+}
+
+.btn-success{
+
+    background:#16A34A;
+
+    color:white;
+
+}
+
+.btn-success:hover{
+
+    transform:translateY(-2px);
+
+}
+
+.btn-danger{
+
+    background:#DC2626;
+
+    color:white;
+
+}
+
+.btn-danger:hover{
+
+    transform:translateY(-2px);
+
+}
+
+/* ========================================================================
+   Main Layout
+   ======================================================================== */
+
+.dh-layout{
+
+    display:grid;
+
+    grid-template-columns:
+
+        minmax(0,3fr)
+        340px;
+
+    gap:24px;
+
+    align-items:start;
+
+}
+
+/* ========================================================================
+   Main Content
+   ======================================================================== */
+
+.dh-main{
+
+    min-width:0;
+
+}
+
+.dh-main>.glass-card{
+
+    padding:26px;
+
+}
+
+/* ========================================================================
+   Sidebar
+   ======================================================================== */
+
+.dh-sidebar{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:22px;
+
+}
+
+.dh-sidebar>.glass-card{
+
+    padding:24px;
+
+    background:rgba(255,255,255,.14);
+
+}
+
+/* ========================================================================
+   Table Wrapper
+   ======================================================================== */
+
+.dh-table-wrapper{
+
+    width:100%;
+
+    overflow-x:auto;
+
+    overflow-y:hidden;
+
+    border-radius:16px;
+
+}
+
+/* ========================================================================
+   Custom Scrollbar
+   ======================================================================== */
+
+.dh-table-wrapper::-webkit-scrollbar{
+
+    height:8px;
+
+}
+
+.dh-table-wrapper::-webkit-scrollbar-thumb{
+
+    background:#cbd5e1;
+
+    border-radius:10px;
+
+}
+
+.dh-table-wrapper::-webkit-scrollbar-track{
+
+    background:transparent;
+
+}
+
+/* ========================================================================
+   Sidebar Select
+   ======================================================================== */
+
+.sidebar-title select{
+
+    border:none;
+
+    outline:none;
+
+    background:rgba(255,255,255,.18);
+
+    border-radius:10px;
+
+    padding:8px 12px;
+
+    color:var(--heading);
+
+}
+
+/* ========================================================================
+   Link Button
+   ======================================================================== */
+
+.link-btn{
+
+    border:none;
+
+    background:none;
+
+    color:var(--secondary);
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    transition:.2s;
+
+}
+
+.link-btn:hover{
+
+    opacity:.75;
+
+}
+
+/* ========================================================================
+   Export Card
+   ======================================================================== */
+
+.export-card h3{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin-bottom:12px;
+
+    color:var(--heading);
+
+}
+
+.export-card p{
+
+    color:var(--muted);
+
+    line-height:1.6;
+
+    margin-bottom:18px;
+
+}
+
+.export-buttons{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+
+}
+/* ========================================================================
+   Donation Table
+   ======================================================================== */
+
+.dh-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    min-width:980px;
+
+    background:transparent;
+
+}
+
+.dh-table thead{
+
+    background:rgba(255,255,255,.18);
+
+    backdrop-filter:blur(18px);
+
+}
+
+.dh-table thead th{
+
+    padding:18px 20px;
+
+    text-align:left;
+
+    color:var(--heading);
+
+    font-size:.9rem;
+
+    font-weight:700;
+
+    border-bottom:1px solid rgba(0,0,0,.08);
+
+    white-space:nowrap;
+
+}
+
+.dh-table tbody td{
+
+    padding:18px 20px;
+
+    color:var(--text);
+
+    font-size:.93rem;
+
+    border-bottom:1px solid rgba(148,163,184,.18);
+
+    vertical-align:middle;
+
+    transition:.2s;
+
+}
+
+.dh-table tbody tr{
+
+    transition:.25s;
+
+}
+
+.dh-table tbody tr{
+
+    background:transparent;
+
+}
+
+.dh-table tbody tr:hover{
+
+    background:rgba(255,255,255,.10);
+
+}
+
+.dh-table tbody tr:last-child td{
+
+    border-bottom:none;
+
+}
+
+/* ========================================================================
+   Blood Group Badge
+   ======================================================================== */
+
+.blood-badge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    min-width:54px;
+
+    height:30px;
+
+    padding:0 12px;
+
+    border-radius:999px;
+
+    font-size:.82rem;
+
+    font-weight:700;
+
+    color:#fff;
+
+    letter-spacing:.3px;
+
+}
+
+.Aplus,
+.Aminus{
+
+    background:#EF4444;
+
+}
+
+.Bplus,
+.Bminus{
+
+    background:#2563EB;
+
+}
+
+.ABplus,
+.ABminus{
+
+    background:#7C3AED;
+
+}
+
+.Oplus,
+.Ominus{
+
+    background:#16A34A;
+
+}
+
+/* ========================================================================
+   Donation Type
+   ======================================================================== */
+
+.donation-type{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:6px 14px;
+
+    border-radius:999px;
+
+    font-size:.8rem;
+
+    font-weight:600;
+
+}
+
+.donation-type.voluntary{
+
+    color:#166534;
+
+    background:#DCFCE7;
+
+}
+
+.donation-type.replacement{
+
+    color:#92400E;
+
+    background:#FEF3C7;
+
+}
+
+/* ========================================================================
+   View Button
+   ======================================================================== */
+
+.table-view-btn{
+
+    width:40px;
+
+    height:40px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#EFF6FF;
+
+    color:#2563EB;
+
+    cursor:pointer;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    transition:.25s;
+
+}
+
+.table-view-btn:hover{
+
+    background:#2563EB;
+
+    color:#fff;
+
+    transform:scale(1.08);
+
+}
+
+/* ========================================================================
+   Pagination
+   ======================================================================== */
+
+.dh-pagination{
+
+    margin-top:22px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:20px;
+
+    flex-wrap:wrap;
+
+}
+
+.dh-record-count{
+
+    color:var(--muted);
+
+    font-size:.9rem;
+
+}
+
+#dhPagination{
+
+    display:flex;
+
+    gap:8px;
+
+    align-items:center;
+
+}
+
+.page-btn{
+
+    width:38px;
+
+    height:38px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:rgba(255,255,255,.25);
+
+    color:var(--heading);
+
+    cursor:pointer;
+
+    transition:.25s;
+
+    font-weight:600;
+
+}
+
+.page-btn:hover{
+
+    background:#E2E8F0;
+
+}
+
+.page-btn.active{
+
+    background:var(--secondary);
+
+    color:#fff;
+
+}
+
+/* ========================================================================
+   Empty State
+   ======================================================================== */
+
+.dh-empty{
+
+    padding:60px 20px;
+
+    text-align:center;
+
+    color:var(--muted);
+
+}
+
+.dh-empty i{
+
+    font-size:3rem;
+
+    margin-bottom:18px;
+
+    color:#CBD5E1;
+
+}
+
+.dh-empty h3{
+
+    margin-bottom:10px;
+
+    color:var(--heading);
+
+}
+
+.dh-empty p{
+
+    max-width:420px;
+
+    margin:auto;
+
+    line-height:1.7;
+
+}
+
+/* ========================================================================
+   Table Animations
+   ======================================================================== */
+
+.dh-table tbody tr{
+
+    animation:fadeRow .35s ease;
+
+}
+
+@keyframes fadeRow{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(10px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+/* ========================================================================
+   Donation Summary
+   ======================================================================== */
+
+#donationSummary{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:16px;
+
+}
+
+.summary-row{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:12px 0;
+
+    border-bottom:1px solid rgba(148,163,184,.18);
+
+}
+
+.summary-row:last-child{
+
+    border-bottom:none;
+
+}
+
+.summary-row span{
+
+    color:var(--muted);
+
+    font-size:.92rem;
+
+}
+
+.summary-row strong{
+
+    color:var(--heading);
+
+    font-size:.95rem;
+
+    font-weight:700;
+
+}
+
+/* ========================================================================
+   Recent Donors
+   ======================================================================== */
+
+#recentDonors{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:14px;
+
+}
+
+.recent-donor{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    padding:12px;
+
+    border-radius:14px;
+
+    transition:.25s;
+
+}
+
+.recent-donor:hover{
+
+    background:rgba(255,255,255,.45);
+
+}
+
+.recent-avatar{
+
+    width:46px;
+
+    height:46px;
+
+    border-radius:50%;
+
+    background:linear-gradient(
+        135deg,
+        var(--secondary),
+        #60A5FA
+    );
+
+    color:#fff;
+
+    font-weight:700;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    flex-shrink:0;
+
+    font-size:1rem;
+
+}
+
+.recent-info{
+
+    flex:1;
+
+}
+
+.recent-info strong{
+
+    display:block;
+
+    color:var(--heading);
+
+    font-size:.95rem;
+
+    margin-bottom:3px;
+
+}
+
+.recent-info small{
+
+    color:var(--muted);
+
+    font-size:.82rem;
+
+}
+
+/* ========================================================================
+   Export Card
+   ======================================================================== */
+
+.export-card{
+
+    text-align:center;
+
+}
+
+.export-card h3{
+
+    justify-content:center;
+
+}
+
+.export-buttons button{
+
+    width:100%;
+
+}
+
+/* ========================================================================
+   Responsive
+   ======================================================================== */
+
+@media (max-width:1400px){
+
+    .dh-layout{
+
+        grid-template-columns:1fr 320px;
+
+    }
+
+}
+
+@media (max-width:1200px){
+
+    .dh-kpi-grid{
+
+        grid-template-columns:repeat(2,1fr);
+
+    }
+
+    .dh-filter-bar{
+
+        grid-template-columns:
+            repeat(2,1fr);
+
+    }
+
+    .btn-primary,
+    .btn-secondary{
+
+        width:100%;
+
+    }
+
+}
+
+@media (max-width:992px){
+
+    .donation-history-page{
+
+        padding:22px;
+
+    }
+
+    .dh-layout{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .dh-sidebar{
+
+        order:2;
+
+    }
+
+    .dh-main{
+
+        order:1;
+
+    }
+
+}
+
+@media (max-width:768px){
+
+    .dh-hero{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:18px;
+
+    }
+
+    .dh-kpi-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .dh-filter-bar{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .dh-search input,
+    .dh-filter-bar select,
+    .dh-filter-bar input[type="date"]{
+
+        width:100%;
+
+    }
+
+    .dh-main>.glass-card{
+
+        padding:18px;
+
+    }
+
+    .dh-sidebar>.glass-card{
+
+        padding:18px;
+
+    }
+
+}
+
+@media (max-width:576px){
+
+    .donation-history-page{
+
+        padding:16px;
+
+        gap:20px;
+
+    }
+
+    .dh-hero{
+
+        padding:20px;
+
+    }
+
+    .dh-hero-icon{
+
+        width:60px;
+
+        height:60px;
+
+        font-size:24px;
+
+    }
+
+    .dh-hero-text h1{
+
+        font-size:1.55rem;
+
+    }
+
+    .dh-kpi-card{
+
+        padding:18px;
+
+    }
+
+    .dh-kpi-icon{
+
+        width:56px;
+
+        height:56px;
+
+        font-size:22px;
+
+    }
+
+    .dh-kpi-content h2{
+
+        font-size:1.6rem;
+
+    }
+
+    .dh-pagination{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+}
+
+/* ========================================================================
+   Smooth Animations
+   ======================================================================== */
+
+.glass-card{
+
+    animation:cardFade .45s ease;
+
+}
+
+@keyframes cardFade{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(15px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+button,
+input,
+select{
+
+    transition:
+        background .25s,
+        color .25s,
+        border-color .25s,
+        box-shadow .25s,
+        transform .25s;
+
+}
+
+button:active{
+
+    transform:scale(.97);
+
+}
+.donation-history-page::before{
+
+    content:"";
+
+    position:fixed;
+
+    inset:0;
+
+    background:
+
+        radial-gradient(circle at top left,
+            rgba(255,255,255,.12),
+            transparent 40%),
+
+        radial-gradient(circle at bottom right,
+            rgba(37,99,235,.12),
+            transparent 45%);
+
+    pointer-events:none;
+
+}

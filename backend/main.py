@@ -20,7 +20,9 @@ from backend.routers.auth import router as auth_router
 from backend.routers.blood_requests import router as blood_requests_router
 from backend.routers.donors import router as donors_router
 logger = logging.getLogger(__name__)
-
+from backend.routers.donor_matching import (
+    router as donor_matching_router,
+)
 # ==========================================================
 # Paths
 # ==========================================================
@@ -74,6 +76,9 @@ app.include_router(
 )
 app.include_router(
     donors_router
+)
+app.include_router(
+    donor_matching_router
 )
 # ==========================================================
 # Static Files

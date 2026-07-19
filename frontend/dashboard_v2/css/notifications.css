@@ -1,0 +1,1487 @@
+/* ==========================================================
+   BloodLink - Notifications Module
+   File: notifications.css
+   Description:
+   Donor Response Center Styling
+========================================================== */
+
+
+/* ==========================================================
+   1. Notifications Page
+========================================================== */
+
+.notifications-page{
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+    min-height:100%;
+    padding:30px;
+
+    background:
+        linear-gradient(
+            rgba(8,18,40,.82),
+            rgba(5,12,30,.90)
+        ),
+        url("/static/assets/noti.png");
+
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    background-attachment:fixed;
+}
+
+
+/* ==========================================================
+   2. Shared Glass Card
+========================================================== */
+
+.notifications-page .glass-card{
+
+    background:rgba(255,255,255,.08);
+
+    backdrop-filter:blur(18px);
+
+    -webkit-backdrop-filter:blur(18px);
+
+    border:1px solid rgba(255,255,255,.14);
+
+    border-radius:22px;
+
+    box-shadow:0 15px 35px rgba(0,0,0,.18);
+
+}
+
+
+/* ==========================================================
+   3. Hero Section
+========================================================== */
+
+.notifications-hero{
+
+    padding:34px;
+
+    overflow:hidden;
+
+    position:relative;
+
+}
+
+
+.notifications-hero::before{
+
+    content:"";
+
+    position:absolute;
+
+    top:-140px;
+
+    right:-100px;
+
+    width:320px;
+
+    height:320px;
+
+    border-radius:50%;
+
+    background:rgba(59,130,246,.10);
+
+    filter:blur(12px);
+
+}
+
+
+.hero-content{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:40px;
+
+    position:relative;
+
+    z-index:2;
+
+}
+
+
+.hero-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:24px;
+
+}
+
+
+.hero-icon{
+
+    width:82px;
+
+    height:82px;
+
+    border-radius:22px;
+
+    background:linear-gradient(
+        135deg,
+        #2563eb,
+        #3b82f6
+    );
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:34px;
+
+    box-shadow:
+        0 10px 30px rgba(37,99,235,.35);
+
+}
+
+
+.hero-text h1{
+
+    margin:0;
+
+    color:#fff;
+
+    font-size:2rem;
+
+    font-weight:700;
+
+}
+
+
+.hero-text p{
+
+    margin-top:12px;
+
+    max-width:620px;
+
+    color:#CBD5E1;
+
+    line-height:1.7;
+
+    font-size:.98rem;
+
+}
+
+
+.hero-actions{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:16px;
+
+}
+
+
+/* ==========================================================
+   4. KPI Section
+========================================================== */
+
+.notification-kpis{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:22px;
+
+}
+
+
+.kpi-card{
+
+    padding:24px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:20px;
+
+    position:relative;
+
+    overflow:hidden;
+
+    transition:.30s;
+
+}
+
+
+.kpi-card:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:
+        0 18px 40px rgba(0,0,0,.25);
+
+}
+
+
+.kpi-card::after{
+
+    content:"";
+
+    position:absolute;
+
+    right:-35px;
+
+    bottom:-35px;
+
+    width:120px;
+
+    height:120px;
+
+    border-radius:50%;
+
+    background:rgba(255,255,255,.05);
+
+}
+
+
+.kpi-icon{
+
+    width:64px;
+
+    height:64px;
+
+    border-radius:18px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:26px;
+
+    background:rgba(255,255,255,.10);
+
+    color:#fff;
+
+    flex-shrink:0;
+
+}
+
+
+.kpi-info{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+
+.kpi-info h2{
+
+    margin:0;
+
+    color:#fff;
+
+    font-size:2rem;
+
+    font-weight:700;
+
+}
+
+
+.kpi-info span{
+
+    margin-top:6px;
+
+    color:#CBD5E1;
+
+    font-size:.92rem;
+
+}
+
+
+/* ==========================================================
+   5. Primary & Secondary Buttons
+========================================================== */
+
+.primary-btn{
+
+    border:none;
+
+    outline:none;
+
+    cursor:pointer;
+
+    padding:13px 24px;
+
+    border-radius:16px;
+
+    background:linear-gradient(
+        135deg,
+        #2563eb,
+        #3b82f6
+    );
+
+    color:#fff;
+
+    font-weight:600;
+
+    transition:.30s;
+
+}
+
+
+.primary-btn:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:
+        0 10px 24px rgba(37,99,235,.35);
+
+}
+
+
+.secondary-btn{
+
+    border:none;
+
+    outline:none;
+
+    cursor:pointer;
+
+    padding:13px 24px;
+
+    border-radius:16px;
+
+    background:rgba(255,255,255,.08);
+
+    color:#fff;
+
+    border:1px solid rgba(255,255,255,.15);
+
+    transition:.30s;
+
+}
+
+
+.secondary-btn:hover{
+
+    background:rgba(255,255,255,.14);
+
+}
+/* ==========================================================
+   6. Toolbar
+========================================================== */
+
+.notifications-toolbar{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:20px;
+
+    padding:22px 26px;
+
+    flex-wrap:wrap;
+
+}
+
+.toolbar-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+    flex:1;
+
+    flex-wrap:wrap;
+
+}
+
+.toolbar-right{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:16px;
+
+}
+
+
+/* ==========================================================
+   Search Input
+========================================================== */
+
+#responseSearch{
+
+    flex:1;
+
+    min-width:280px;
+
+    padding:14px 18px;
+
+    border-radius:16px;
+
+    border:1px solid rgba(255,255,255,.12);
+
+    background:rgba(255,255,255,.08);
+
+    color:#ffffff;
+
+    outline:none;
+
+    transition:.30s;
+
+}
+
+#responseSearch::placeholder{
+
+    color:#94A3B8;
+
+}
+
+#responseSearch:focus{
+
+    border-color:#3B82F6;
+
+    box-shadow:0 0 0 3px rgba(59,130,246,.18);
+
+}
+
+
+/* ==========================================================
+   Select Box
+========================================================== */
+
+#responseStatusFilter{
+
+    min-width:180px;
+
+    padding:14px 18px;
+
+    border-radius:16px;
+
+    border:1px solid rgba(255,255,255,.12);
+
+    background:rgba(255,255,255,.08);
+
+    color:#ffffff;
+
+    outline:none;
+
+    cursor:pointer;
+
+}
+
+#responseStatusFilter option{
+
+    background:#152238;
+
+    color:#ffffff;
+
+}
+
+
+/* ==========================================================
+   7. Main Layout
+========================================================== */
+
+.notifications-layout{
+
+    display:grid;
+
+    grid-template-columns:1.15fr .85fr;
+
+    gap:26px;
+
+    align-items:start;
+
+}
+
+
+/* ==========================================================
+   Left Response Panel
+========================================================== */
+
+.response-list{
+
+    min-height:720px;
+
+    padding:24px;
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.section-title{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:20px;
+
+}
+
+.section-title h2{
+
+    margin:0;
+
+    color:#ffffff;
+
+    font-size:1.35rem;
+
+    font-weight:700;
+
+}
+
+
+/* ==========================================================
+   Response Container
+========================================================== */
+
+.response-list-container{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+}
+
+
+/* ==========================================================
+   Right Details Panel
+========================================================== */
+
+.response-details{
+
+    min-height:720px;
+
+    padding:30px;
+
+    position:sticky;
+
+    top:20px;
+
+}
+
+
+/* ==========================================================
+   Empty Details
+========================================================== */
+
+.empty-details{
+
+    height:100%;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+
+    gap:18px;
+
+}
+
+.empty-icon{
+
+    width:90px;
+
+    height:90px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:38px;
+
+    background:rgba(255,255,255,.08);
+
+    border:1px solid rgba(255,255,255,.12);
+
+}
+
+.empty-details h2{
+
+    margin:0;
+
+    color:#ffffff;
+
+}
+
+.empty-details p{
+
+    max-width:320px;
+
+    line-height:1.7;
+
+    color:#CBD5E1;
+
+}
+
+
+/* ==========================================================
+   Pagination
+========================================================== */
+
+.pagination-section{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:22px;
+
+    padding-bottom:15px;
+
+}
+
+.pagination-btn{
+
+    padding:12px 24px;
+
+    border:none;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+    background:rgba(255,255,255,.08);
+
+    color:#ffffff;
+
+    border:1px solid rgba(255,255,255,.12);
+
+    transition:.30s;
+
+}
+
+.pagination-btn:hover{
+
+    background:rgba(255,255,255,.14);
+
+}
+
+.page-indicator{
+
+    color:#CBD5E1;
+
+    font-weight:500;
+
+}
+/* ==========================================================
+   8. Donor Response Cards
+========================================================== */
+
+.donor-response-card{
+
+    position:relative;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+    padding:22px;
+
+    border-radius:20px;
+
+    background:rgba(255,255,255,.05);
+
+    border:1px solid rgba(255,255,255,.08);
+
+    cursor:pointer;
+
+    transition:
+        transform .25s ease,
+        box-shadow .25s ease,
+        border-color .25s ease,
+        background .25s ease;
+
+}
+
+.donor-response-card:hover{
+
+    transform:translateY(-4px);
+
+    background:rgba(255,255,255,.08);
+
+    border-color:rgba(59,130,246,.45);
+
+    box-shadow:
+        0 14px 30px rgba(0,0,0,.20);
+
+}
+
+.donor-response-card.active{
+
+    background:rgba(59,130,246,.12);
+
+    border-color:#3B82F6;
+
+    box-shadow:
+        0 0 0 1px rgba(59,130,246,.30),
+        0 18px 40px rgba(0,0,0,.25);
+
+}
+
+
+/* ==========================================================
+   Card Top
+========================================================== */
+
+.response-card-top{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+}
+
+.response-avatar{
+
+    width:64px;
+
+    height:64px;
+
+    border-radius:18px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:28px;
+
+    background:linear-gradient(
+        135deg,
+        rgba(37,99,235,.85),
+        rgba(59,130,246,.95)
+    );
+
+    box-shadow:
+        0 10px 25px rgba(37,99,235,.35);
+
+    flex-shrink:0;
+
+}
+
+.response-information{
+
+    flex:1;
+
+}
+
+.response-information h3{
+
+    margin:0;
+
+    color:#ffffff;
+
+    font-size:1.1rem;
+
+    font-weight:700;
+
+}
+
+.response-information p{
+
+    margin-top:6px;
+
+    color:#CBD5E1;
+
+    font-size:.9rem;
+
+}
+
+
+/* ==========================================================
+   Status Badge
+========================================================== */
+
+.status-badge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:8px;
+
+    min-width:120px;
+
+    padding:8px 16px;
+
+    border-radius:999px;
+
+    font-size:.78rem;
+
+    font-weight:700;
+
+    letter-spacing:.5px;
+
+    text-transform:uppercase;
+
+}
+
+.status-badge.accepted{
+
+    background:rgba(34,197,94,.18);
+
+    color:#4ADE80;
+
+    border:1px solid rgba(74,222,128,.35);
+
+}
+
+.status-badge.pending{
+
+    background:rgba(234,179,8,.18);
+
+    color:#FACC15;
+
+    border:1px solid rgba(250,204,21,.35);
+
+}
+
+.status-badge.declined{
+
+    background:rgba(239,68,68,.18);
+
+    color:#F87171;
+
+    border:1px solid rgba(248,113,113,.35);
+
+}
+
+
+/* ==========================================================
+   Card Middle
+========================================================== */
+
+.response-card-middle{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:18px;
+
+}
+
+.response-card-middle div{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:6px;
+
+}
+
+.response-card-middle strong{
+
+    color:#94A3B8;
+
+    font-size:.8rem;
+
+    text-transform:uppercase;
+
+    letter-spacing:.6px;
+
+}
+
+.response-card-middle span{
+
+    color:#ffffff;
+
+    font-weight:600;
+
+}
+
+
+/* ==========================================================
+   Card Footer
+========================================================== */
+
+.response-card-footer{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding-top:16px;
+
+    border-top:1px solid rgba(255,255,255,.08);
+
+    color:#CBD5E1;
+
+    font-size:.84rem;
+
+}
+
+
+/* ==========================================================
+   Details Panel
+========================================================== */
+
+.response-details-content{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:28px;
+
+}
+
+.details-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:20px;
+
+}
+
+.details-header h2{
+
+    margin:0;
+
+    color:#ffffff;
+
+    font-size:1.6rem;
+
+}
+
+
+/* ==========================================================
+   Details Grid
+========================================================== */
+
+.details-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:18px;
+
+}
+
+.details-grid div{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:8px;
+
+    padding:16px;
+
+    border-radius:16px;
+
+    background:rgba(255,255,255,.05);
+
+    border:1px solid rgba(255,255,255,.08);
+
+}
+
+.details-grid label{
+
+    color:#94A3B8;
+
+    font-size:.78rem;
+
+    text-transform:uppercase;
+
+    letter-spacing:.6px;
+
+}
+
+.details-grid span{
+
+    color:#ffffff;
+
+    font-weight:600;
+
+    word-break:break-word;
+
+}
+
+
+/* ==========================================================
+   Action Buttons
+========================================================== */
+
+.details-actions{
+
+    display:flex;
+
+    gap:16px;
+
+    flex-wrap:wrap;
+
+}
+
+
+/* ==========================================================
+   Empty List
+========================================================== */
+
+.empty-response-list{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    text-align:center;
+
+    gap:18px;
+
+    min-height:350px;
+
+}
+
+.empty-response-list .empty-icon{
+
+    width:90px;
+
+    height:90px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:40px;
+
+    background:rgba(255,255,255,.08);
+
+    border:1px solid rgba(255,255,255,.12);
+
+}
+
+.empty-response-list h3{
+
+    margin:0;
+
+    color:#ffffff;
+
+}
+
+.empty-response-list p{
+
+    max-width:320px;
+
+    color:#CBD5E1;
+
+    line-height:1.7;
+
+}   
+/* ==========================================================
+   9. Scrollbars
+========================================================== */
+
+.response-list-container{
+
+    max-height:720px;
+
+    overflow-y:auto;
+
+    padding-right:8px;
+
+}
+
+.response-list-container::-webkit-scrollbar{
+
+    width:8px;
+
+}
+
+.response-list-container::-webkit-scrollbar-track{
+
+    background:transparent;
+
+}
+
+.response-list-container::-webkit-scrollbar-thumb{
+
+    background:rgba(255,255,255,.15);
+
+    border-radius:20px;
+
+}
+
+.response-list-container::-webkit-scrollbar-thumb:hover{
+
+    background:rgba(59,130,246,.55);
+
+}
+
+
+/* ==========================================================
+   10. Decorative Glow Effects
+========================================================== */
+
+.kpi-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    border-radius:22px;
+
+    background:linear-gradient(
+        135deg,
+        rgba(59,130,246,.08),
+        transparent 70%
+    );
+
+    pointer-events:none;
+
+}
+
+.response-details::before{
+
+    content:"";
+
+    position:absolute;
+
+    top:-100px;
+
+    right:-80px;
+
+    width:220px;
+
+    height:220px;
+
+    border-radius:50%;
+
+    background:rgba(59,130,246,.08);
+
+    filter:blur(40px);
+
+    pointer-events:none;
+
+}
+
+.response-list{
+
+    position:relative;
+
+    overflow:hidden;
+
+}
+
+.response-list::after{
+
+    content:"";
+
+    position:absolute;
+
+    bottom:-140px;
+
+    left:-120px;
+
+    width:260px;
+
+    height:260px;
+
+    border-radius:50%;
+
+    background:rgba(59,130,246,.05);
+
+    filter:blur(50px);
+
+    pointer-events:none;
+
+}
+
+
+/* ==========================================================
+   11. Smooth Animations
+========================================================== */
+
+@keyframes fadeUp{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(15px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+.notifications-page > *{
+
+    animation:fadeUp .45s ease;
+
+}
+
+.donor-response-card{
+
+    animation:fadeUp .35s ease;
+
+}
+
+.response-details-content{
+
+    animation:fadeUp .25s ease;
+
+}
+
+
+/* ==========================================================
+   12. Focus States
+========================================================== */
+
+button:focus-visible,
+
+input:focus-visible,
+
+select:focus-visible{
+
+    outline:none;
+
+    box-shadow:
+        0 0 0 3px rgba(59,130,246,.28);
+
+}
+
+
+/* ==========================================================
+   13. Responsive (Tablet)
+========================================================== */
+
+@media (max-width:1200px){
+
+    .notifications-layout{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .response-details{
+
+        position:static;
+
+        min-height:auto;
+
+    }
+
+}
+
+
+/* ==========================================================
+   Responsive (Small Tablet)
+========================================================== */
+
+@media (max-width:900px){
+
+    .notification-kpis{
+
+        grid-template-columns:repeat(2,1fr);
+
+    }
+
+    .hero-content{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+    .notifications-toolbar{
+
+        flex-direction:column;
+
+        align-items:stretch;
+
+    }
+
+    .toolbar-left{
+
+        flex-direction:column;
+
+        align-items:stretch;
+
+    }
+
+    #responseSearch{
+
+        min-width:100%;
+
+    }
+
+    #responseStatusFilter{
+
+        width:100%;
+
+    }
+
+    .details-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+}
+
+
+/* ==========================================================
+   Responsive (Mobile)
+========================================================== */
+
+@media (max-width:640px){
+
+    .notifications-page{
+
+        padding:18px;
+
+        gap:20px;
+
+    }
+
+    .notification-kpis{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .hero-left{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+    .hero-icon{
+
+        width:68px;
+
+        height:68px;
+
+        font-size:28px;
+
+    }
+
+    .hero-text h1{
+
+        font-size:1.6rem;
+
+    }
+
+    .response-card-top{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+    .response-card-middle{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .response-card-footer{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:8px;
+
+    }
+
+    .details-header{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+    .details-actions{
+
+        flex-direction:column;
+
+    }
+
+    .details-actions button{
+
+        width:100%;
+
+    }
+
+    .pagination-section{
+
+        flex-direction:column;
+
+    }
+
+}

@@ -26,17 +26,34 @@
 
 }
 
-.blood-requests-module {
+.blood-requests-module{
 
-    width: 100%;
+    width:100%;
 
-    padding: var(--page-padding);
+    min-height:100vh;
 
-    display: flex;
+    padding:32px;
 
-    flex-direction: column;
+    display:flex;
 
-    gap: var(--space-lg);
+    flex-direction:column;
+
+    gap:26px;
+
+    background:
+        linear-gradient(
+            rgba(8,20,40,.18),
+            rgba(8,20,40,.22)
+        ),
+        url("/static/assets/blood.png");
+
+    background-size:cover;
+
+    background-position:center;
+
+    background-repeat:no-repeat;
+
+    background-attachment:fixed;
 
 }
 
@@ -45,25 +62,31 @@
    2. PAGE HEADER
 ========================================================== */
 
-.module-header {
+.module-header{
 
-    display: flex;
+    display:flex;
 
-    align-items: center;
+    justify-content:space-between;
 
-    justify-content: space-between;
+    align-items:center;
 
-    gap: var(--space-lg);
+    gap:var(--space-lg);
 
-    padding: 28px 30px;
+    padding:28px 30px;
 
-    background: var(--surface);
+    background:rgba(255,255,255,.08);
 
-    border: 1px solid var(--border);
+    backdrop-filter:blur(18px);
 
-    border-radius: var(--radius-lg);
+    -webkit-backdrop-filter:blur(18px);
 
-    box-shadow: var(--shadow-sm);
+    border:1px solid rgba(255,255,255,.16);
+
+    border-radius:22px;
+
+    box-shadow:
+
+        0 15px 35px rgba(0,0,0,.18);
 
 }
 
@@ -79,7 +102,7 @@
 
     margin-bottom: var(--space-sm);
 
-    color: var(--primary);
+    color:#60A5FA;
 
     font-size: var(--font-xs);
 
@@ -93,7 +116,7 @@
 
 .module-heading h1 {
 
-    color: var(--text-primary);
+    color:white;
 
     font-size: var(--font-2xl);
 
@@ -109,8 +132,7 @@
 
     margin-top: var(--space-sm);
 
-    color: var(--text-secondary);
-
+    color:#E2E8F0;
     font-size: var(--font-sm);
 
     line-height: 1.7;
@@ -211,53 +233,59 @@
    5. SUMMARY CARD
 ========================================================== */
 
-.request-summary-card {
+.request-summary-card{
 
-    min-width: 0;
+    position:relative;
 
-    min-height: 145px;
+    overflow:hidden;
 
-    padding: 22px;
+    min-height:145px;
 
-    display: flex;
+    padding:24px;
 
-    align-items: flex-start;
+    display:flex;
 
-    gap: var(--space-md);
+    gap:18px;
 
-    position: relative;
+    background:rgba(255,255,255,.08);
 
-    overflow: hidden;
+    backdrop-filter:blur(18px);
 
-    background: var(--surface);
+    border:1px solid rgba(255,255,255,.16);
 
-    border: 1px solid var(--border);
+    border-radius:22px;
 
-    border-radius: var(--radius-lg);
+    box-shadow:
 
-    box-shadow: var(--shadow-sm);
+        0 12px 30px rgba(0,0,0,.18);
 
-    transition:
-        transform var(--transition),
-        box-shadow var(--transition);
+    transition:.35s;
 
 }
 
-.request-summary-card::before {
+.request-summary-card:hover{
 
-    content: "";
+    transform:translateY(-6px);
 
-    position: absolute;
+}
 
-    top: 0;
+.request-summary-card::before{
 
-    left: 0;
+    content:"";
 
-    right: 0;
+    position:absolute;
 
-    height: 3px;
+    width:170px;
 
-    background: var(--primary);
+    height:170px;
+
+    right:-60px;
+
+    top:-60px;
+
+    border-radius:50%;
+
+    background:rgba(255,255,255,.08);
 
 }
 
@@ -311,7 +339,7 @@
 
 .request-summary-card span {
 
-    color: var(--text-secondary);
+    color:#CBD5E1;
 
     font-size: var(--font-sm);
 
@@ -323,7 +351,7 @@
 
     margin-top: 5px;
 
-    color: var(--text-primary);
+    color:white;
 
     font-size: var(--font-2xl);
 
@@ -347,43 +375,46 @@
 
 
 /* ==========================================================
-   6. REQUEST MANAGEMENT CARD
+   REQUEST MANAGEMENT GLASS CARD
 ========================================================== */
 
-.request-management-card {
+.request-management-card{
 
-    min-width: 0;
+    min-width:0;
 
-    overflow: hidden;
+    overflow:hidden;
 
-    background: var(--surface);
+    background:rgba(255,255,255,.08);
 
-    border: 1px solid var(--border);
+    backdrop-filter:blur(18px);
 
-    border-radius: var(--radius-lg);
+    -webkit-backdrop-filter:blur(18px);
 
-    box-shadow: var(--shadow-sm);
+    border:1px solid rgba(255,255,255,.16);
+
+    border-radius:24px;
+
+    box-shadow:
+        0 15px 35px rgba(0,0,0,.18);
 
 }
 
 
-/* ==========================================================
-   7. TOOLBAR
-========================================================== */
+.request-toolbar{
 
-.request-toolbar {
+    padding:22px;
 
-    padding: 20px 22px;
+    display:flex;
 
-    display: flex;
+    align-items:center;
 
-    align-items: center;
+    justify-content:space-between;
 
-    justify-content: space-between;
+    gap:var(--space-md);
 
-    gap: var(--space-md);
+    background:transparent;
 
-    border-bottom: 1px solid var(--border);
+    border-bottom:1px solid rgba(255,255,255,.12);
 
 }
 
@@ -392,42 +423,38 @@
    8. SEARCH
 ========================================================== */
 
-.request-search {
+.request-search{
 
-    width: 100%;
+    width:100%;
 
-    max-width: 420px;
+    max-width:420px;
 
-    height: 46px;
+    height:48px;
 
-    display: flex;
+    display:flex;
 
-    align-items: center;
+    align-items:center;
 
-    gap: 10px;
+    gap:10px;
 
-    padding: 0 15px;
+    padding:0 16px;
 
-    background: var(--surface-secondary);
+    background:rgba(255,255,255,.08);
 
-    border: 1px solid var(--border);
+    backdrop-filter:blur(15px);
 
-    border-radius: var(--radius-md);
+    border:1px solid rgba(255,255,255,.15);
 
-    transition:
-        border-color var(--transition),
-        background var(--transition),
-        box-shadow var(--transition);
+    border-radius:16px;
 
 }
+.request-search:focus-within{
 
-.request-search:focus-within {
+    background:rgba(255,255,255,.10);
 
-    background: var(--surface);
+    border-color:rgba(255,255,255,.35);
 
-    border-color: var(--primary);
-
-    box-shadow: 0 0 0 3px var(--primary-light);
+    box-shadow:none;
 
 }
 
@@ -443,17 +470,21 @@
 
 }
 
-.request-search input {
+.request-search input{
 
-    width: 100%;
+    width:100%;
 
-    min-width: 0;
+    background:transparent;
 
-    background: transparent;
+    color:#FFFFFF;
 
-    color: var(--text-primary);
+    font-size:15px;
 
-    font-size: var(--font-sm);
+}
+
+.request-search input::placeholder{
+
+    color:#CBD5E1;
 
 }
 
@@ -480,43 +511,45 @@
 
 }
 
-.request-filters select {
+.request-filters select{
 
-    height: 46px;
+    height:48px;
 
-    min-width: 145px;
+    min-width:150px;
 
-    padding: 0 36px 0 14px;
+    padding:0 36px 0 14px;
 
-    background: var(--surface);
+    background:rgba(255,255,255,.08);
 
-    color: var(--text-secondary);
+    backdrop-filter:blur(15px);
 
-    border: 1px solid var(--border);
+    color:#F8FAFC;
 
-    border-radius: var(--radius-md);
+    border:1px solid rgba(255,255,255,.15);
 
-    font-size: var(--font-sm);
-
-    cursor: pointer;
-
-    transition:
-        border-color var(--transition),
-        box-shadow var(--transition);
+    border-radius:16px;
 
 }
 
-.request-filters select:hover {
+.request-filters select:hover{
 
-    border-color: var(--text-muted);
+    border-color:rgba(255,255,255,.30);
 
 }
 
-.request-filters select:focus {
+.request-filters select:focus{
 
-    border-color: var(--primary);
+    border-color:rgba(255,255,255,.35);
 
-    box-shadow: 0 0 0 3px var(--primary-light);
+    box-shadow:none;
+
+}
+
+.request-filters option{
+
+    background:#172B4D;
+
+    color:#FFFFFF;
 
 }
 
@@ -548,45 +581,41 @@
 
 }
 
-.request-table thead {
+.request-table thead{
 
-    background: var(--surface-secondary);
+    background:rgba(255,255,255,.08);
 
-}
-
-.request-table th {
-
-    padding: 15px 18px;
-
-    color: var(--text-secondary);
-
-    border-bottom: 1px solid var(--border);
-
-    font-size: var(--font-xs);
-
-    font-weight: 700;
-
-    text-align: left;
-
-    text-transform: uppercase;
-
-    letter-spacing: 0.04em;
-
-    white-space: nowrap;
+    backdrop-filter:blur(12px);
 
 }
 
-.request-table td {
+.request-table th{
 
-    padding: 18px;
+    color:#F8FAFC;
 
-    color: var(--text-secondary);
+    font-weight:700;
 
-    border-bottom: 1px solid var(--border-light);
+    font-size:13px;
 
-    font-size: var(--font-sm);
+    text-transform:uppercase;
 
-    vertical-align: middle;
+    letter-spacing:.06em;
+
+}
+
+.request-table td{
+
+    color:#F8FAFC;
+
+}
+
+.request-table td:nth-child(4),
+
+.request-table td:nth-child(5){
+
+    color:#F8FAFC;
+
+    font-weight:500;
 
 }
 
@@ -596,9 +625,9 @@
 
 }
 
-.request-table tbody tr:hover {
+.request-table tbody tr:hover{
 
-    background: var(--surface-secondary);
+    background:rgba(255,255,255,.06);
 
 }
 
@@ -613,15 +642,15 @@
    12. REQUEST ID
 ========================================================== */
 
-.request-id {
+.request-id{
 
-    color: var(--text-primary);
+    color:#FFFFFF;
 
-    font-size: var(--font-sm);
+    font-size:var(--font-sm);
 
-    font-weight: 700;
+    font-weight:700;
 
-    white-space: nowrap;
+    white-space:nowrap;
 
 }
 
@@ -640,21 +669,21 @@
 
 }
 
-.request-patient strong {
+.request-patient strong{
 
-    color: var(--text-primary);
+    color:#FFFFFF;
 
-    font-size: var(--font-sm);
+    font-size:15px;
 
-    font-weight: 600;
+    font-weight:700;
 
 }
 
-.request-patient span {
+.request-patient span{
 
-    color: var(--text-muted);
+    color:#CBD5E1;
 
-    font-size: var(--font-xs);
+    font-size:13px;
 
 }
 
