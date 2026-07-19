@@ -8,45 +8,68 @@
    1. DASHBOARD GRID
 ========================================================== */
 
-.dashboard-grid {
-    width: 100%;
-    max-width: var(--content-max-width);
+.dashboard-grid{
 
-    margin: 0 auto;
-    padding: var(--page-padding);
+    width:100%;
 
-    display: flex;
-    flex-direction: column;
+    max-width:var(--content-max-width);
 
-    gap: var(--space-lg);
+    margin:auto;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:var(--space-lg);
+
 }
+#dashboardView{
 
+    min-height:100vh;
 
+    padding:32px;
+
+    background:
+        linear-gradient(
+            rgba(8,20,40,.30),
+            rgba(8,20,40,.35)
+        ),
+        url("/static/assets/dashboard.png");
+
+    background-size:cover;
+
+    background-position:center;
+
+    background-repeat:no-repeat;
+
+    background-attachment:fixed;
+
+}
 /* ==========================================================
    2. HERO SECTION
 ========================================================== */
 
-.dashboard-hero {
-    position: relative;
+.dashboard-hero{
 
-    width: 100%;
+    position:relative;
 
-    padding: 36px 40px;
+    overflow:hidden;
 
-    border-radius: var(--radius-xl);
+    background:rgba(255,255,255,.08);
 
-    background:
-        linear-gradient(
-            135deg,
-            var(--primary),
-            var(--primary-hover)
-        );
+    backdrop-filter:blur(14px);
 
-    color: var(--text-white);
 
-    overflow: hidden;
+    -webkit-backdrop-filter:blur(20px);
 
-    box-shadow: var(--shadow-md);
+    border:1px solid rgba(255,255,255,.14);
+
+    border-radius:24px;
+
+    box-shadow:
+
+        0 18px 45px rgba(0,0,0,.18);
+
 }
 
 
@@ -237,61 +260,65 @@
    7. KPI CARD
 ========================================================== */
 
-.kpi-card {
-    min-width: 0;
-    min-height: 145px;
+.kpi-card{
 
-    position: relative;
+    position:relative;
 
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    overflow:hidden;
 
-    gap: var(--space-md);
+    padding:24px;
 
-    padding: var(--space-lg);
+    display:flex;
 
-    border: 1px solid var(--border);
+    align-items:center;
 
-    border-radius: var(--radius-lg);
+    gap:18px;
 
-    background: var(--surface);
+    background:rgba(255,255,255,.08);
 
-    box-shadow: var(--shadow-sm);
+    backdrop-filter:blur(20px);
 
-    overflow: hidden;
+    border:1px solid rgba(255,255,255,.16);
 
-    transition:
-        transform var(--transition),
-        box-shadow var(--transition),
-        border-color var(--transition);
+    border-radius:22px;
+
+    box-shadow:
+
+        0 15px 35px rgba(15,23,42,.15);
+
+    transition:.35s;
+
 }
+.kpi-card::before{
 
+    content:"";
 
-.kpi-card:hover {
-    transform: translateY(-4px);
+    position:absolute;
 
-    box-shadow: var(--shadow-md);
+    width:170px;
 
-    border-color: var(--primary-light);
+    height:170px;
+
+    right:-60px;
+
+    top:-60px;
+
+    border-radius:50%;
+
+    background:rgba(255,255,255,.08);
+
 }
+.kpi-card:hover{
 
+    transform:translateY(-6px);
+
+    background:rgba(255,255,255,.13);
+
+}
 
 /* Small accent */
 
-.kpi-card::before {
-    content: "";
 
-    position: absolute;
-
-    top: 0;
-    left: 0;
-
-    width: 100%;
-    height: 3px;
-
-    background: var(--primary);
-}
 
 
 /* ==========================================================
@@ -334,10 +361,10 @@
 
     margin-bottom: var(--space-xs);
 
-    color: var(--text-secondary);
+    color:#E2E8F0;
 
     font-size: var(--font-sm);
-    font-weight: 500;
+    font-weight: 600;
 
     white-space: nowrap;
 
@@ -346,13 +373,14 @@
 }
 
 
-.kpi-content h2 {
-    color: var(--text-primary);
+.kpi-content h2{
 
-    font-size: var(--font-2xl);
-    font-weight: 800;
+    color:white;
 
-    line-height: 1.2;
+    font-size:2.2rem;
+
+    font-weight:800;
+
 }
 
 
@@ -376,20 +404,21 @@
 }
 
 
-.chart-card {
-    min-width: 0;
+.chart-card{
 
-    padding: var(--space-lg);
+    background:rgba(255,255,255,.08);
 
-    border: 1px solid var(--border);
+    backdrop-filter:blur(14px);
 
-    border-radius: var(--radius-lg);
+    border:1px solid rgba(255,255,255,.14);
 
-    background: var(--surface);
+    border-radius:22px;
 
-    box-shadow: var(--shadow-sm);
+    box-shadow:
+
+        0 12px 30px rgba(15,23,42,.15);
+
 }
-
 
 .chart-card canvas {
     width: 100% !important;
@@ -447,18 +476,20 @@
 .requests-section,
 .activity-section,
 .quick-actions,
-.system-status {
-    min-width: 0;
+.system-status{
 
-    padding: var(--space-lg);
+    background:rgba(255,255,255,.08);
 
-    border: 1px solid var(--border);
+    backdrop-filter:blur(14px);
 
-    border-radius: var(--radius-lg);
+    border:1px solid rgba(255,255,255,.14);
 
-    background: var(--surface);
+    border-radius:22px;
 
-    box-shadow: var(--shadow-sm);
+    box-shadow:
+
+        0 12px 30px rgba(15,23,42,.15);
+
 }
 
 

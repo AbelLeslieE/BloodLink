@@ -1,0 +1,1119 @@
+/* ========================================================================
+   BloodLink - Users Management
+   File : users.css
+======================================================================== */
+
+/* ========================================================================
+   Root Variables
+======================================================================== */
+
+:root{
+
+    --primary:#DC2626;
+    --primary-dark:#B91C1C;
+
+    --secondary:#2563EB;
+
+    --success:#16A34A;
+
+    --warning:#F59E0B;
+
+    --heading:#0F172A;
+
+    --text:#334155;
+
+    --muted:#64748B;
+
+}
+
+/* ========================================================================
+   Main Page
+======================================================================== */
+
+.users-page{
+
+    min-height:100vh;
+
+    padding:32px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:28px;
+
+    background:
+        linear-gradient(
+            rgba(8,20,45,.18),
+            rgba(8,20,45,.22)
+        ),
+        url("../../assets/user.png");
+
+    background-size:cover;
+
+    background-position:center;
+
+    background-repeat:no-repeat;
+
+    background-attachment:fixed;
+
+}
+
+/* ========================================================================
+   Glass Card
+======================================================================== */
+
+.glass-card{
+
+    background:rgba(255,255,255,.08);
+
+    backdrop-filter:blur(18px);
+
+    -webkit-backdrop-filter:blur(18px);
+
+    border:1px solid rgba(255,255,255,.18);
+
+    border-radius:22px;
+
+    box-shadow:
+
+        0 8px 28px rgba(15,23,42,.18),
+
+        inset 0 1px rgba(255,255,255,.18);
+
+}
+
+/* ========================================================================
+   Hero
+======================================================================== */
+
+.users-hero{
+
+    padding:28px 34px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+.users-hero-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:22px;
+
+}
+
+.users-hero-icon{
+
+    width:72px;
+
+    height:72px;
+
+    border-radius:18px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:linear-gradient(
+        135deg,
+        #2563EB,
+        #60A5FA
+    );
+
+    color:white;
+
+    font-size:28px;
+
+}
+
+.users-hero-text h1{
+
+    margin:0;
+
+    font-size:2rem;
+
+    color:var(--heading);
+
+}
+
+.users-hero-text p{
+
+    color:#E2E8F0;
+
+    font-size:1.05rem;
+
+}
+
+
+/* ========================================================================
+   KPI Grid
+======================================================================== */
+
+.users-kpi-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:22px;
+
+}
+
+/* ========================================================================
+   KPI Card
+======================================================================== */
+
+.users-kpi-card{
+
+    padding:24px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:20px;
+
+    background:rgba(255,255,255,.10);
+
+    backdrop-filter:blur(18px);
+
+    transition:.25s;
+
+}
+
+.users-kpi-card:hover{
+
+    transform:translateY(-4px);
+
+}
+
+.users-kpi-icon{
+
+    width:66px;
+
+    height:66px;
+
+    border-radius:18px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    color:white;
+
+    font-size:24px;
+
+}
+
+.users-kpi-icon.blue{
+
+    background:#2563EB;
+
+}
+
+.users-kpi-icon.green{
+
+    background:#16A34A;
+
+}
+
+.users-kpi-icon.red{
+
+    background:#DC2626;
+
+}
+
+.users-kpi-icon.orange{
+
+    background:#F59E0B;
+
+}
+
+.users-kpi-content{
+
+    flex:1;
+
+}
+
+.users-kpi-content span{
+
+    color:#E2E8F0;
+
+    font-weight:500;
+
+}
+
+.users-kpi-content h2{
+
+    color:#FFFFFF;
+
+    font-size:2.2rem;
+
+    font-weight:800;
+
+}
+.users-kpi-content small{
+
+    color:var(--success);
+
+    display:flex;
+
+    align-items:center;
+
+    gap:6px;
+
+}
+/* ========================================================================
+   Filter Bar
+======================================================================== */
+
+.users-filter{
+
+    display:grid;
+
+    grid-template-columns:
+        2fr
+        1fr
+        1fr
+        1fr
+        auto;
+
+    gap:18px;
+
+    align-items:center;
+
+    padding:22px 24px;
+
+}
+
+.users-search{
+
+    position:relative;
+
+}
+
+.users-search i{
+
+    position:absolute;
+
+    left:18px;
+
+    top:50%;
+
+    transform:translateY(-50%);
+
+    color:var(--muted);
+
+}
+
+.users-search input{
+
+    width:100%;
+
+    height:52px;
+
+    border:none;
+
+    outline:none;
+
+    border-radius:14px;
+
+    padding-left:48px;
+
+    padding-right:16px;
+
+    background:rgba(255,255,255,.18);
+
+    backdrop-filter:blur(18px);
+
+    color:var(--heading);
+
+}
+
+.users-filter select{
+
+    height:52px;
+
+    border:none;
+
+    outline:none;
+
+    border-radius:14px;
+
+    padding:0 16px;
+
+    background:rgba(255,255,255,.18);
+
+    backdrop-filter:blur(18px);
+
+    color:var(--heading);
+
+}
+
+.btn-primary{
+
+    height:52px;
+
+    padding:0 24px;
+
+    border:none;
+
+    border-radius:14px;
+
+    background:linear-gradient(
+        135deg,
+        #DC2626,
+        #B91C1C
+    );
+
+    color:white;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:8px;
+
+    transition:.25s;
+
+}
+
+.btn-primary:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 10px 25px rgba(220,38,38,.30);
+
+}
+
+/* ========================================================================
+   Main Layout
+======================================================================== */
+
+.users-layout{
+
+    display:grid;
+
+    grid-template-columns:
+
+        minmax(0,4fr)
+        330px;
+
+    gap:24px;
+
+    align-items:start;
+
+}
+
+.users-main{
+
+    padding:26px;
+
+}
+
+.users-sidebar{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:22px;
+
+}
+
+.users-sidebar .glass-card{
+
+    padding:22px;
+
+}
+
+/* ========================================================================
+   Section Titles
+======================================================================== */
+
+.section-title{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:20px;
+
+}
+
+.section-title h2{
+
+    margin:0;
+
+    font-size:1.2rem;
+
+    color:white;
+
+}
+
+.sidebar-title{
+
+    margin-bottom:18px;
+
+}
+
+.sidebar-title h3{
+
+    margin:0;
+
+    color:white;
+
+}
+
+/* ========================================================================
+   Table
+======================================================================== */
+
+.users-table-wrapper{
+
+    width:100%;
+
+    overflow-x:auto;
+
+}
+
+.users-table{
+
+    width:100%;
+
+    min-width:900px;
+
+    border-collapse:collapse;
+
+}
+
+.users-table thead{
+
+    background:rgba(255,255,255,.18);
+
+    backdrop-filter:blur(18px);
+
+}
+
+.users-table thead th{
+
+    padding:18px;
+
+    text-align:left;
+
+    color:var(--heading);
+
+    border-bottom:1px solid rgba(255,255,255,.25);
+
+}
+
+.users-table tbody td{
+
+    padding:18px;
+
+    border-bottom:1px solid rgba(255,255,255,.15);
+
+    color:var(--text);
+
+}
+
+.users-table tbody tr{
+
+    transition:.25s;
+
+}
+
+.users-table tbody tr:hover{
+
+    background:rgba(255,255,255,.10);
+
+}
+
+/* ========================================================================
+   User Cell
+======================================================================== */
+
+.user-info{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+}
+
+.user-avatar{
+
+    width:42px;
+
+    height:42px;
+
+    border-radius:50%;
+
+    background:linear-gradient(
+        135deg,
+        #2563EB,
+        #60A5FA
+    );
+
+    color:white;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-weight:700;
+
+}
+
+/* ========================================================================
+   Role Badges
+======================================================================== */
+
+.role-badge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:6px 14px;
+
+    border-radius:999px;
+
+    font-size:.82rem;
+
+    font-weight:600;
+
+}
+
+.role-badge.manager{
+
+    background:#FEE2E2;
+
+    color:#991B1B;
+
+}
+
+.role-badge.bme{
+
+    background:#DBEAFE;
+
+    color:#1D4ED8;
+
+}
+
+.role-badge.user{
+
+    background:#DCFCE7;
+
+    color:#166534;
+
+}
+
+/* ========================================================================
+   Action Buttons
+======================================================================== */
+
+.edit-btn,
+.delete-btn{
+
+    width:38px;
+
+    height:38px;
+
+    border:none;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+    margin-right:8px;
+
+}
+
+.edit-btn{
+
+    background:#EFF6FF;
+
+    color:#2563EB;
+
+}
+
+.edit-btn:hover{
+
+    background:#2563EB;
+
+    color:white;
+
+}
+
+.delete-btn{
+
+    background:#FEE2E2;
+
+    color:#DC2626;
+
+}
+
+.delete-btn:hover{
+
+    background:#DC2626;
+
+    color:white;
+
+}
+/* ========================================================================
+   User Summary
+======================================================================== */
+
+#usersSummary{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:16px;
+
+}
+
+.summary-row{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:12px 0;
+
+    border-bottom:1px solid rgba(255,255,255,.15);
+
+}
+
+.summary-row:last-child{
+
+    border-bottom:none;
+
+}
+
+.summary-row span{
+
+    color:var(--muted);
+
+}
+
+.summary-row strong{
+
+    color:var(--heading);
+
+    font-weight:700;
+
+}
+
+/* ========================================================================
+   Recent Users
+======================================================================== */
+
+#recentUsers{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:14px;
+
+}
+
+.recent-user{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    padding:12px;
+
+    border-radius:14px;
+
+    transition:.25s;
+
+}
+
+.recent-user:hover{
+
+    background:rgba(255,255,255,.10);
+
+}
+
+.recent-avatar{
+
+    width:46px;
+
+    height:46px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-weight:700;
+
+    color:white;
+
+    background:linear-gradient(
+        135deg,
+        #2563EB,
+        #60A5FA
+    );
+
+}
+
+.recent-info{
+
+    flex:1;
+
+}
+
+.recent-info strong{
+
+    display:block;
+
+    color:var(--heading);
+
+    margin-bottom:4px;
+
+}
+
+.recent-info small{
+
+    color:var(--muted);
+
+}
+
+/* ========================================================================
+   Modal Overlay
+======================================================================== */
+
+#userModal{
+
+    position:fixed;
+
+    inset:0;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    z-index:9999;
+
+    pointer-events:none;
+
+}
+
+#userModal .modal{
+
+    width:520px;
+
+    max-width:92%;
+
+    padding:30px;
+
+    background:rgba(255,255,255,.16);
+
+    backdrop-filter:blur(24px);
+
+    -webkit-backdrop-filter:blur(24px);
+
+    border:1px solid rgba(255,255,255,.28);
+
+    border-radius:24px;
+
+    box-shadow:
+
+        0 20px 60px rgba(0,0,0,.18);
+
+    pointer-events:auto;
+
+}
+
+#userModal:empty{
+
+    display:none;
+
+}
+
+#userModal h3{
+
+    margin-bottom:24px;
+
+    color:var(--heading);
+
+    font-size:1.45rem;
+
+}
+
+#userModal input,
+#userModal select{
+
+    width:100%;
+
+    height:50px;
+
+    margin-bottom:16px;
+
+    padding:0 16px;
+
+    border:none;
+
+    outline:none;
+
+    border-radius:14px;
+
+    background:rgba(255,255,255,.18);
+
+    backdrop-filter:blur(18px);
+
+    color:var(--heading);
+
+}
+
+.form-actions{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:12px;
+
+    margin-top:14px;
+
+}
+
+.form-actions button{
+
+    padding:12px 22px;
+
+    border:none;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    transition:.25s;
+
+}
+
+.form-actions button:first-child{
+
+    background:#DC2626;
+
+    color:white;
+
+}
+
+.form-actions button:first-child:hover{
+
+    transform:translateY(-2px);
+
+}
+
+.cancel-btn{
+
+    background:rgba(255,255,255,.22);
+
+    color:var(--heading);
+
+}
+
+.cancel-btn:hover{
+
+    background:rgba(255,255,255,.30);
+
+}
+
+/* ========================================================================
+   Responsive
+======================================================================== */
+
+@media(max-width:1200px){
+
+    .users-kpi-grid{
+
+        grid-template-columns:repeat(2,1fr);
+
+    }
+
+    .users-filter{
+
+        grid-template-columns:repeat(2,1fr);
+
+    }
+
+}
+
+@media(max-width:992px){
+
+    .users-layout{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .users-sidebar{
+
+        order:2;
+
+    }
+
+    .users-main{
+
+        order:1;
+
+    }
+
+}
+
+@media(max-width:768px){
+
+    .users-page{
+
+        padding:18px;
+
+    }
+
+    .users-hero{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:18px;
+
+    }
+
+    .users-kpi-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .users-filter{
+
+        grid-template-columns:1fr;
+
+    }
+
+}
+
+@media(max-width:576px){
+
+    .users-hero{
+
+        padding:22px;
+
+    }
+
+    .users-hero-icon{
+
+        width:58px;
+
+        height:58px;
+
+        font-size:22px;
+
+    }
+
+    .users-hero-text h1{
+
+        color:#FFFFFF;
+
+        font-size:2.6rem;
+
+        font-weight:800;
+
+    }
+
+}
+
+/* ========================================================================
+   Animations
+======================================================================== */
+
+.glass-card{
+
+    animation:usersFade .35s ease;
+
+}
+
+@keyframes usersFade{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(14px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+button{
+
+    transition:
+
+        background .25s,
+
+        color .25s,
+
+        transform .25s;
+
+}
+
+button:active{
+
+    transform:scale(.97);
+
+}

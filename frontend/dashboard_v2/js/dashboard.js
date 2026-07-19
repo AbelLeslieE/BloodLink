@@ -19,7 +19,30 @@ import {
     getDashboardData
 } from "./api.js";
 
+import {
+    loadFindMatch
+} from "./find_match.js";
 
+import {
+    loadDonorManagement
+} from "./donor_management.js";
+
+import {
+    loadDonationHistory,
+    initializeDonationHistory
+} from "./donation_history.js";
+import {
+    loadUsers,
+    initializeUsers
+} from "./usersView.js";
+import {
+    loadSettings,
+    initializeSettings
+} from "./settings.js";
+import {
+    loadNotifications,
+    initializeNotifications
+} from "./notifications.js";
 // ==========================================================
 // 1. DASHBOARD STATE
 // ==========================================================
@@ -689,7 +712,138 @@ function initializeDashboardActions() {
 
 }
 
+// ==========================================================
+// NAVIGATION HANDLER
+// ==========================================================
 
+function handleNavigation(event) {
+
+    const page = event.detail.page;
+
+    const dashboardView =
+        document.getElementById("dashboardView");
+
+    const moduleView =
+        document.getElementById("moduleView");
+
+    if (!dashboardView || !moduleView) {
+        return;
+    }
+
+    // ---------------- Dashboard ----------------
+
+    if (page === "dashboard") {
+
+        dashboardView.hidden = false;
+
+        moduleView.hidden = true;
+
+        moduleView.innerHTML = "";
+
+        return;
+
+    }
+
+    // ---------------- Other Modules ----------------
+
+    dashboardView.hidden = true;
+
+    moduleView.hidden = false;
+
+    switch (page) {
+
+        /* ======================================================
+        Find Match
+        ====================================================== */
+
+        case "findMatch":
+
+            loadFindMatch(moduleView);
+
+            break;
+
+
+        /* ======================================================
+        Donor Management
+        ====================================================== */
+
+        case "donors":
+
+            loadDonorManagement();
+
+            break;
+
+
+        /* ======================================================
+        Donation History
+        ====================================================== */
+
+        case "donationHistory":
+
+            moduleView.innerHTML =
+                loadDonationHistory();
+
+            initializeDonationHistory();
+
+            break;
+        /* ======================================================
+        Users Management
+        ====================================================== */
+        case "users":
+
+            moduleView.innerHTML = loadUsers();
+
+            initializeUsers();
+
+            break;
+        /* ======================================================
+        Settings
+        ====================================================== */
+        case "settings":
+
+            moduleView.innerHTML =  
+                loadSettings();
+
+            initializeSettings();   
+
+            break;    
+        /* ======================================================
+        Notifications
+        ====================================================== */            
+
+
+        case "notifications":
+
+            moduleView.innerHTML =
+                loadNotifications();
+
+            initializeNotifications();
+
+            break;  
+        /* ======================================================
+        Placeholder Modules
+        ====================================================== */
+
+        default:
+
+            moduleView.innerHTML = `
+                <div style="
+                    display:flex;
+                    justify-content:center;
+                    align-items:center;
+                    height:70vh;
+                    color:#0F172A;
+                    font-size:22px;
+                    font-weight:600;
+                ">
+                    ${page} module is under development.
+                </div>
+            `;
+
+            break;
+
+    }
+}
 // ==========================================================
 // 11. INITIALIZE DASHBOARD
 // ==========================================================
@@ -711,6 +865,10 @@ async function initializeDashboard() {
         window.lucide.createIcons();
 
     }
+    window.addEventListener(
+        "bloodlink:navigate",
+        handleNavigation
+    );
 
 }
 

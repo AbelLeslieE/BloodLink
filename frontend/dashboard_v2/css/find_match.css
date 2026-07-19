@@ -1,0 +1,2111 @@
+/* ==========================================================
+   BloodLink - Find Match Module
+   ----------------------------------------------------------
+   PART 1
+   Root Variables
+   Background
+   Overlay
+   Main Layout
+   Glass Cards
+   Header
+========================================================== */
+
+/* ==========================================================
+   ROOT VARIABLES
+========================================================== */
+
+:root {
+
+    --fm-primary: #d62839;
+    --fm-primary-dark: #b81f30;
+
+    --fm-blue: #2563eb;
+    --fm-green: #16a34a;
+    --fm-yellow: #f59e0b;
+
+    --fm-white: #ffffff;
+
+    --fm-text: #102a43;
+    --fm-text-light: #486581;
+    --fm-text-muted: #6b7c93;
+    --fm-heading: #0f172a;
+
+    --fm-border:
+        rgba(255,255,255,0.12);
+
+    --fm-glass:
+        rgba(255,255,255,0.08);
+
+    --fm-glass-dark:
+        rgba(8,20,35,0.55);
+
+    --fm-shadow:
+
+        0 20px 40px rgba(0,0,0,.25);
+
+    --fm-radius:20px;
+
+    --fm-transition:.30s ease;
+
+}
+
+/* ==========================================================
+   PAGE
+========================================================== */
+
+.find-match-page{
+
+    position:relative;
+
+    width:100%;
+
+    min-height:100vh;
+
+    overflow-x:hidden;
+
+    background-image:url("../../assets/find_match.png");
+
+    background-size:cover;
+
+    background-position:center;
+
+    background-repeat:no-repeat;
+
+    background-attachment:fixed;
+
+}
+/* ==========================================================
+   OVERLAY
+========================================================== */
+
+.find-match-overlay{
+
+    position:fixed;
+
+    inset:0;
+
+    background:
+
+        rgba(6,24,52,.28);
+
+    pointer-events:none;
+
+    z-index:1;
+
+}
+
+/* ==========================================================
+   MAIN CONTAINER
+========================================================== */
+
+.find-match-container{
+
+    position:relative;
+
+    z-index:5;
+
+    width:min(1550px,96%);
+
+    margin:auto;
+
+    padding:18px 0 35px;
+
+    background:transparent;
+
+}
+
+/* ==========================================================
+   GLASS CARD
+========================================================== */
+
+.glass-card{
+
+    background:
+
+        rgba(255,255,255,.08);
+
+    backdrop-filter:
+
+        blur(18px);
+
+    -webkit-backdrop-filter:
+
+        blur(18px);
+
+    border:
+
+        1px solid rgba(255,255,255,.18);
+
+    box-shadow:
+
+        0 10px 25px rgba(0,0,0,.15);
+
+}
+
+/* ==========================================================
+   HEADER
+========================================================== */
+
+.fm-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:24px;
+
+    padding:24px 28px;
+
+    margin-bottom:18px;
+
+}
+
+/* ==========================================================
+   LEFT HEADER
+========================================================== */
+
+.fm-header-left{
+
+    flex:1;
+
+}
+
+.fm-page-tag{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    padding:
+
+        7px
+
+        14px;
+
+    border-radius:50px;
+
+    background:
+
+        rgba(214,40,57,.18);
+
+    color:
+
+        #ffd9dd;
+
+    font-size:.78rem;
+
+    font-weight:700;
+
+    letter-spacing:1px;
+
+    text-transform:uppercase;
+
+}
+
+.fm-title{
+
+    margin:12px 0 8px;
+
+    color:var(--fm-heading);
+
+    font-size:2.6rem;
+
+    font-weight:700;
+
+    line-height:1.1;
+
+}
+
+.fm-subtitle{
+
+    max-width:620px;
+
+    color:var(--fm-text);
+
+    font-size:.95rem;
+
+    line-height:1.6;
+
+}
+
+/* ==========================================================
+   RIGHT HEADER
+========================================================== */
+
+.fm-header-right{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:flex-end;
+
+}
+
+/* ==========================================================
+   BUTTONS
+========================================================== */
+
+.primary-btn,
+
+.secondary-btn{
+
+    cursor:pointer;
+
+    border:none;
+
+    outline:none;
+
+    transition:
+
+        var(--fm-transition);
+
+    border-radius:12px;
+
+    font-weight:600;
+
+    padding:
+
+        14px
+
+        24px;
+
+    font-size:.95rem;
+
+}
+
+.primary-btn{
+
+    color:#fff;
+
+    background:
+
+        linear-gradient(
+
+            135deg,
+
+            var(--fm-primary),
+
+            var(--fm-primary-dark)
+
+        );
+
+}
+
+.primary-btn:hover{
+
+    transform:
+
+        translateY(-2px);
+
+    box-shadow:
+
+        0 12px 30px
+
+        rgba(214,40,57,.35);
+
+}
+
+.secondary-btn{
+
+    color:#fff;
+
+    background:
+
+        rgba(255,255,255,.10);
+
+    border:
+
+        1px solid
+
+        rgba(255,255,255,.15);
+
+}
+
+.secondary-btn:hover{
+
+    background:
+
+        rgba(255,255,255,.18);
+
+}
+
+/* ==========================================================
+   SECTION CARD
+========================================================== */
+
+.section-card{
+
+    padding:18px;
+
+}
+
+/* ==========================================================
+   SECTION HEADER
+========================================================== */
+
+.section-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:22px;
+
+}
+
+.section-header h2{
+
+    color:#0f172a;
+
+    font-size:1.15rem;
+
+    font-weight:600;
+
+}
+
+/* ==========================================================
+   BADGES
+========================================================== */
+
+.badge{
+
+    min-width:34px;
+
+    height:34px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:0 12px;
+
+    border-radius:50px;
+
+    color:#991b1b;
+    background:rgba(220,38,38,.15);
+
+    font-weight:700;
+
+}
+/* ==========================================================
+   PART 2
+   KPI Cards
+   Search Panel
+==========================================================*/
+
+/* ==========================================================
+   KPI GRID
+========================================================== */
+
+.kpi-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:16px;
+
+    margin-bottom:18px;
+
+}
+
+/* ==========================================================
+   KPI CARD
+========================================================== */
+
+.kpi-card{
+
+    position:relative;
+
+    overflow:hidden;
+
+    padding:18px;
+
+    transition:all .35s ease;
+
+    min-height:125px;
+
+
+}
+
+.kpi-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background:
+
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.10),
+            rgba(255,255,255,.02)
+        );
+
+    opacity:.5;
+
+    pointer-events:none;
+
+}
+
+.kpi-card:hover{
+
+    transform:translateY(-8px);
+
+    border-color:
+
+        rgba(255,255,255,.25);
+
+    box-shadow:
+
+        0 22px 45px rgba(0,0,0,.35);
+
+}
+
+.kpi-title{
+
+    display:block;
+
+    color:#334e68;
+
+    font-weight:600;
+
+    font-size:.85rem;
+
+    text-transform:uppercase;
+
+    letter-spacing:.8px;
+
+    margin-bottom:18px;
+
+}
+
+.kpi-card h2{
+
+    color:#0f172a;
+
+    font-size:2rem;
+
+    font-weight:700;
+
+    line-height:1;
+
+    margin-top:8px;
+
+}
+
+/* ==========================================================
+   SEARCH PANEL
+========================================================== */
+
+.search-panel{
+
+    padding:18px;
+
+    margin-bottom:18px;
+
+}
+
+/* ==========================================================
+   SEARCH GRID
+========================================================== */
+
+.search-grid{
+
+    display:grid;
+
+    grid-template-columns:
+
+        2fr
+        1fr
+        1.2fr
+        1.6fr
+        auto;
+
+    gap:12px;
+
+}
+
+/* ==========================================================
+   INPUTS
+========================================================== */
+
+.search-input,
+.search-select{
+
+    background:
+
+        rgba(255,255,255,.30);
+
+    border:
+
+        1px solid rgba(255,255,255,.30);
+
+    color:#0f172a;
+    font-weight:500;
+
+}
+
+.search-input::placeholder{
+
+    color:#64748b;
+
+}
+/* ==========================================================
+   PLACEHOLDER
+========================================================== */
+
+.search-input::placeholder{
+
+    color:
+        rgba(255,255,255,.60);
+
+}
+
+/* ==========================================================
+   SELECT OPTIONS
+========================================================== */
+
+.search-select option{
+
+    background:#14263d;
+
+    color:#fff;
+
+}
+
+/* ==========================================================
+   FOCUS
+========================================================== */
+
+.search-input:focus,
+
+.search-select:focus{
+
+    border-color:
+
+        rgba(214,40,57,.65);
+
+    box-shadow:
+
+        0 0 0 4px
+        rgba(214,40,57,.12);
+
+}
+
+/* ==========================================================
+   SEARCH BUTTON
+========================================================== */
+
+#searchButton{
+
+    min-width:140px;
+
+    height:52px;
+
+}
+
+/* ==========================================================
+   SEARCH PANEL HOVER
+========================================================== */
+
+.search-panel:hover{
+
+    border-color:
+
+        rgba(255,255,255,.18);
+
+}
+
+/* ==========================================================
+   SMALL FADE ANIMATION
+========================================================== */
+
+.kpi-card,
+
+.search-panel{
+
+    animation:
+
+        fadeUp .5s ease;
+
+}
+
+@keyframes fadeUp{
+
+    from{
+
+        opacity:0;
+
+        transform:
+
+            translateY(18px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:
+
+            translateY(0);
+
+    }
+
+}
+/* ==========================================================
+   PART 3
+   Main Dashboard Layout
+   Left & Right Columns
+==========================================================*/
+
+/* ==========================================================
+   MAIN GRID
+========================================================== */
+
+.fm-main-grid{
+
+    display:grid;
+
+    grid-template-columns:
+
+        2fr
+        1fr;
+
+    gap:18px;
+
+    margin-bottom:20px;
+
+}
+
+/* ==========================================================
+   COLUMNS
+========================================================== */
+
+.left-column,
+
+.right-column{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:24px;
+
+    min-width:0;
+
+}
+
+/* ==========================================================
+   SECTION CARD
+========================================================== */
+
+.section-card{
+
+    overflow:hidden;
+
+    transition:
+        all .30s ease;
+    background:
+
+        rgba(255,255,255,.18);    
+
+}
+
+.section-card:hover{
+
+    transform:
+        translateY(-4px);
+
+    border-color:
+        rgba(255,255,255,.18);
+
+}
+
+/* ==========================================================
+   REQUEST LIST
+========================================================== */
+
+.request-list{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+    max-height:760px;
+
+    overflow-y:auto;
+
+    padding-right:6px;
+
+}
+
+/* ==========================================================
+   DONOR LIST
+========================================================== */
+
+.donor-list{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+    max-height:640px;
+
+    overflow-y:auto;
+
+    padding-right:6px;
+
+}
+
+/* ==========================================================
+   CUSTOM SCROLLBAR
+========================================================== */
+
+.request-list::-webkit-scrollbar,
+
+.donor-list::-webkit-scrollbar{
+
+    width:8px;
+
+}
+
+.request-list::-webkit-scrollbar-track,
+
+.donor-list::-webkit-scrollbar-track{
+
+    background:
+        rgba(255,255,255,.05);
+
+    border-radius:50px;
+
+}
+
+.request-list::-webkit-scrollbar-thumb,
+
+.donor-list::-webkit-scrollbar-thumb{
+
+    background:
+        rgba(255,255,255,.20);
+
+    border-radius:50px;
+
+}
+
+.request-list::-webkit-scrollbar-thumb:hover,
+
+.donor-list::-webkit-scrollbar-thumb:hover{
+
+    background:
+        rgba(255,255,255,.35);
+
+}
+
+/* ==========================================================
+   BLOOD AVAILABILITY
+========================================================== */
+
+.availability-grid{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(2,1fr);
+
+    gap:14px;
+
+}
+
+.availability-card{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:18px;
+
+    border-radius:14px;
+
+     background:
+
+        rgba(255,255,255,.20);
+
+
+    border:
+
+        1px solid rgba(255,255,255,.28);
+
+    transition:
+        all .25s ease;
+
+}
+
+.availability-card:hover{
+
+    transform:
+        translateY(-3px);
+
+    background:
+
+        rgba(255,255,255,.12);
+
+}
+
+.availability-group{
+
+    color:#0f172a;
+
+    font-weight:700;
+
+    font-size:1rem;
+
+}
+
+.availability-count{
+
+    color:#020273;
+
+    font-size:1.2rem;
+
+    font-weight:700;
+
+}
+/* ==========================================================
+   QUICK ACTIONS
+========================================================== */
+
+.quick-action-grid{
+
+    display:grid;
+
+    gap:14px;
+
+}
+
+.quick-action-grid button{
+
+    width:100%;
+
+    justify-content:center;
+
+}
+
+/* ==========================================================
+   EMPTY STATE
+========================================================== */
+
+.empty-state{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    min-height:180px;
+
+    text-align:center;
+
+    padding:30px;
+
+    color:
+
+        rgba(255,255,255,.65);
+
+    border:
+
+        2px dashed rgba(255,255,255,.12);
+
+    border-radius:16px;
+
+    font-size:.95rem;
+
+    line-height:1.7;
+
+    background:
+
+        rgba(255,255,255,.03);
+
+}
+
+/* ==========================================================
+   LOADING STATE
+========================================================== */
+
+.loading-state{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:18px;
+
+    min-height:220px;
+
+    color:white;
+
+}
+
+.loading-spinner{
+
+    width:42px;
+
+    height:42px;
+
+    border-radius:50%;
+
+    border:
+
+        4px solid rgba(255,255,255,.15);
+
+    border-top:
+
+        4px solid var(--fm-primary);
+
+    animation:
+        spinner 1s linear infinite;
+
+}
+
+@keyframes spinner{
+
+    to{
+
+        transform:
+            rotate(360deg);
+
+    }
+
+}
+/* ==========================================================
+   PART 4
+   Request Cards
+   Donor Cards
+==========================================================*/
+
+/* ==========================================================
+   REQUEST CARD
+========================================================== */
+
+.request-card{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:14px;
+
+    padding:18px;
+
+    border-radius:18px;
+
+    background:
+
+        rgba(255,255,255,.10);
+
+    border:
+
+        1px solid rgba(255,255,255,.30);
+
+}
+
+.request-card:hover{
+
+    transform:translateY(-5px);
+
+    border-color:rgba(214,40,57,.45);
+
+    box-shadow:0 18px 35px rgba(0,0,0,.25);
+
+}
+
+.request-card.active{
+
+    border:2px solid var(--fm-primary);
+
+    background:rgba(214,40,57,.08);
+
+}
+
+/* ==========================================================
+   REQUEST HEADER
+========================================================== */
+
+.request-top{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:16px;
+
+}
+
+.request-avatar{
+
+    width:48px;
+
+    height:58px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:linear-gradient(
+        135deg,
+        var(--fm-primary),
+        #ff6b81
+    );
+
+    color:white;
+
+    font-size:1.1rem;
+
+    font-weight:700;
+
+    flex-shrink:0;
+
+}
+
+.request-header{
+
+    flex:1;
+
+}
+
+.request-header h3{
+
+    color:#0f172a;
+
+    font-size:1.15rem;
+
+    margin-bottom:6px;
+
+}
+
+.request-header p{
+
+    color:#486581;
+
+    font-size:.92rem;
+
+}
+
+/* ==========================================================
+   REQUEST INFO GRID
+========================================================== */
+
+.request-information{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(2,1fr);
+
+    gap:16px;
+
+}
+
+.info-item{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:6px;
+
+}
+
+.info-label{
+
+    color:#64748b;
+
+    font-size:.82rem;
+
+    text-transform:uppercase;
+
+    letter-spacing:.5px;
+
+}
+
+.info-item strong{
+
+    color:#0f172a;
+
+    font-weight:600;
+
+}
+
+/* ==========================================================
+   BLOOD GROUP BADGE
+========================================================== */
+
+.blood-group{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    width:60px;
+
+    padding:6px 10px;
+
+    border-radius:50px;
+
+    background:rgba(214,40,57,.18);
+
+    color:#fff;
+
+    font-weight:700;
+
+}
+
+/* ==========================================================
+   PRIORITY BADGES
+========================================================== */
+
+.priority-badge{
+
+    padding:8px 14px;
+
+    border-radius:50px;
+
+    color:white;
+
+    font-size:.78rem;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    white-space:nowrap;
+
+}
+
+.priority-critical{
+
+    background:#dc2626;
+
+}
+
+.priority-high{
+
+    background:#ea580c;
+
+}
+
+.priority-medium{
+
+    background:#ca8a04;
+
+}
+
+.priority-low{
+
+    background:#16a34a;
+
+}
+
+/* ==========================================================
+   REQUEST FOOTER
+========================================================== */
+
+.request-footer{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+}
+
+/* ==========================================================
+   DONOR CARD
+========================================================== */
+
+.donor-card{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:14px;
+
+    padding:18px;
+
+    border-radius:18px;
+
+    background:
+
+        rgba(255,255,255,.10);
+
+    border:
+
+        1px solid rgba(255,255,255,.30);
+
+}
+
+.donor-card:hover{
+
+    transform:translateY(-5px);
+
+    border-color:rgba(37,99,235,.45);
+
+    box-shadow:0 18px 35px rgba(0,0,0,.25);
+
+}
+
+.donor-card.selected{
+
+    border:2px solid var(--fm-green);
+
+    background:rgba(22,163,74,.08);
+
+}
+
+/* ==========================================================
+   DONOR HEADER
+========================================================== */
+
+.donor-top{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:16px;
+
+}
+
+.donor-avatar{
+
+    width:56px;
+
+    height:56px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:linear-gradient(
+        135deg,
+        var(--fm-blue),
+        #60a5fa
+    );
+
+    color:white;
+
+    font-size:1.3rem;
+
+    font-weight:700;
+
+    flex-shrink:0;
+
+}
+
+.donor-header{
+
+    flex:1;
+
+}
+
+.donor-header h3{
+
+    color:#0f172a;
+
+    margin-bottom:5px;
+
+}
+
+.donor-header p{
+
+    color:#486581;
+
+    font-size:.90rem;
+
+}
+
+/* ==========================================================
+   DONOR INFO
+========================================================== */
+
+.donor-information{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(2,1fr);
+
+    gap:16px;
+
+}
+
+.available{
+
+    color:#4ade80;
+
+}
+
+/* ==========================================================
+   COMPATIBILITY
+========================================================== */
+
+.compatibility-section{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+
+}
+
+.compatibility-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    color:#1e293b;
+
+    font-size:.92rem;
+
+}
+
+.compatibility-bar{
+
+    width:100%;
+
+    height:10px;
+
+    background:rgba(255,255,255,.08);
+
+    border-radius:50px;
+
+    overflow:hidden;
+
+}
+
+.compatibility-fill{
+
+    height:100%;
+
+    border-radius:50px;
+
+    background:linear-gradient(
+        90deg,
+        #22c55e,
+        #4ade80
+    );
+
+    transition:width .6s ease;
+
+}
+
+/* ==========================================================
+   DONOR FOOTER
+========================================================== */
+
+.donor-footer{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+}
+
+.select-donor-btn{
+
+    border:none;
+
+    border-radius:12px;
+
+    padding:12px 18px;
+
+    cursor:pointer;
+
+    background:var(--fm-blue);
+
+    color:white;
+
+    font-weight:600;
+
+    transition:.30s;
+
+}
+
+.select-donor-btn:hover{
+
+    transform:translateY(-2px);
+
+}
+
+.select-donor-btn.selected{
+
+    background:var(--fm-green);
+
+}
+/* ==========================================================
+   PART 5
+   Bottom Action Bar
+   Toast Notifications
+   Utilities
+   Animations
+==========================================================*/
+
+/* ==========================================================
+   BOTTOM ACTION BAR
+========================================================== */
+
+.bottom-action-bar{
+
+    position:sticky;
+
+    bottom:20px;
+
+    z-index:100;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:20px;
+
+    padding:16px 22px;
+
+    margin-top:20px;
+
+}
+
+.selected-info{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    color:white;
+
+    font-size:1rem;
+
+    font-weight:500;
+
+}
+
+.selected-info strong{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    width:36px;
+
+    height:36px;
+
+    border-radius:50%;
+
+    background:var(--fm-primary);
+
+    color:#0f172a;  
+    font-size:1rem;
+
+}
+
+.bottom-actions{
+
+    display:flex;
+
+    gap:14px;
+
+    align-items:center;
+
+}
+
+/* ==========================================================
+   BUTTON IMPROVEMENTS
+========================================================== */
+
+.primary-btn,
+.secondary-btn,
+.select-donor-btn{
+
+    transition:
+        transform .25s ease,
+        box-shadow .25s ease,
+        background .25s ease;
+
+}
+
+.primary-btn:active,
+.secondary-btn:active,
+.select-donor-btn:active{
+
+    transform:scale(.97);
+
+}
+
+/* ==========================================================
+   TOAST CONTAINER
+========================================================== */
+
+.toast-container{
+
+    position:fixed;
+
+    top:25px;
+
+    right:25px;
+
+    z-index:9999;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+
+}
+
+/* ==========================================================
+   TOAST
+========================================================== */
+
+.toast{
+
+    min-width:280px;
+
+    max-width:360px;
+
+    padding:16px 20px;
+
+    border-radius:14px;
+
+    color:white;
+
+    backdrop-filter:blur(18px);
+
+    border:1px solid rgba(255,255,255,.12);
+
+    background:rgba(20,25,35,.92);
+
+    box-shadow:0 15px 35px rgba(0,0,0,.30);
+
+    transform:translateX(120%);
+
+    opacity:0;
+
+    transition:all .35s ease;
+
+}
+
+.toast.show{
+
+    transform:translateX(0);
+
+    opacity:1;
+
+}
+
+.toast.success{
+
+    border-left:5px solid #16a34a;
+
+}
+
+.toast.warning{
+
+    border-left:5px solid #f59e0b;
+
+}
+
+.toast.error{
+
+    border-left:5px solid #dc2626;
+
+}
+
+/* ==========================================================
+   GLASS HOVER EFFECT
+========================================================== */
+
+.glass-card{
+
+    transition:
+
+        transform .30s ease,
+
+        border-color .30s ease,
+
+        box-shadow .30s ease;
+
+}
+
+.glass-card:hover{
+
+    border-color:
+
+        rgba(255,255,255,.18);
+
+}
+
+/* ==========================================================
+   GLOBAL ANIMATIONS
+========================================================== */
+
+@keyframes floatUp{
+
+    from{
+
+        opacity:0;
+
+        transform:
+            translateY(15px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:
+            translateY(0);
+
+    }
+
+}
+
+.request-card,
+.donor-card,
+.kpi-card,
+.section-card{
+
+    animation:
+        floatUp .45s ease;
+
+}
+
+/* ==========================================================
+   BUTTON SHADOWS
+========================================================== */
+
+.primary-btn{
+
+    box-shadow:
+
+        0 10px 25px rgba(214,40,57,.30);
+
+}
+
+.secondary-btn{
+
+    box-shadow:
+
+        0 8px 18px rgba(0,0,0,.15);
+
+}
+
+.select-donor-btn{
+
+    box-shadow:
+
+        0 8px 18px rgba(37,99,235,.25);
+
+}
+
+.select-donor-btn.selected{
+
+    box-shadow:
+
+        0 10px 20px rgba(22,163,74,.25);
+
+}
+
+/* ==========================================================
+   TEXT SELECTION
+========================================================== */
+
+::selection{
+
+    background:
+
+        rgba(214,40,57,.35);
+
+    color:white;
+
+}
+/* ==========================================================
+   PART 6
+   Responsive Design
+   Final Polish
+==========================================================*/
+
+/* ==========================================================
+   LARGE DESKTOP (1600px+)
+========================================================== */
+
+@media (min-width:1600px){
+
+    .find-match-container{
+
+        max-width:1650px;
+
+    }
+
+}
+
+/* ==========================================================
+   LAPTOP (1200px)
+========================================================== */
+
+@media (max-width:1200px){
+
+    .fm-main-grid{
+
+        grid-template-columns:
+            1.4fr
+            1fr;
+
+    }
+
+    .search-grid{
+
+        grid-template-columns:
+            repeat(2,1fr);
+
+    }
+
+    #searchButton{
+
+        grid-column:span 2;
+
+    }
+
+}
+
+/* ==========================================================
+   TABLET (992px)
+========================================================== */
+
+@media (max-width:992px){
+
+    .fm-header{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+    .fm-header-right{
+
+        width:100%;
+
+        justify-content:flex-start;
+
+    }
+
+    .kpi-grid{
+
+        grid-template-columns:
+            repeat(2,1fr);
+
+    }
+
+    .fm-main-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .right-column{
+
+        order:2;
+
+    }
+
+    .left-column{
+
+        order:1;
+
+    }
+
+    .availability-grid{
+
+        grid-template-columns:
+            repeat(4,1fr);
+
+    }
+
+}
+
+/* ==========================================================
+   MOBILE (768px)
+========================================================== */
+
+@media (max-width:768px){
+
+    .find-match-container{
+
+        width:95%;
+
+        padding-top:20px;
+
+    }
+
+    .search-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    #searchButton{
+
+        grid-column:auto;
+
+    }
+
+    .kpi-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .request-information,
+
+    .donor-information{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .bottom-action-bar{
+
+        flex-direction:column;
+
+        align-items:stretch;
+
+    }
+
+    .bottom-actions{
+
+        width:100%;
+
+        display:grid;
+
+        grid-template-columns:1fr;
+
+    }
+
+    .bottom-actions button{
+
+        width:100%;
+
+    }
+
+    .availability-grid{
+
+        grid-template-columns:
+            repeat(2,1fr);
+
+    }
+
+}
+
+/* ==========================================================
+   SMALL MOBILE (480px)
+========================================================== */
+
+@media (max-width:480px){
+
+    .fm-title{
+
+        font-size:1.8rem;
+
+    }
+
+    .fm-subtitle{
+
+        font-size:.9rem;
+
+    }
+
+    .request-top,
+
+    .donor-top{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+    .priority-badge{
+
+        align-self:flex-start;
+
+    }
+
+    .request-footer,
+
+    .donor-footer{
+
+        justify-content:stretch;
+
+    }
+
+    .request-footer button,
+
+    .donor-footer button{
+
+        width:100%;
+
+    }
+
+    .availability-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .toast{
+
+        min-width:unset;
+
+        width:calc(100vw - 30px);
+
+    }
+
+}
+
+/* ==========================================================
+   ACCESSIBILITY
+========================================================== */
+
+button:focus-visible,
+
+input:focus-visible,
+
+select:focus-visible{
+
+    outline:2px solid rgba(255,255,255,.75);
+
+    outline-offset:3px;
+
+}
+
+/* ==========================================================
+   SMOOTH SCROLL
+========================================================== */
+
+html{
+
+    scroll-behavior:smooth;
+
+}
+
+/* ==========================================================
+   FINAL POLISH
+========================================================== */
+
+.request-card,
+
+.donor-card,
+
+.kpi-card,
+
+.section-card,
+
+.search-panel,
+
+.bottom-action-bar{
+
+    will-change:transform;
+
+}
+
+.request-card:hover,
+
+.donor-card:hover{
+
+    cursor:pointer;
+
+}
+
+.primary-btn,
+
+.secondary-btn,
+
+.select-donor-btn{
+
+    user-select:none;
+
+}
+
+.request-list,
+
+.donor-list{
+
+    scroll-behavior:smooth;
+
+}
+
+.find-match-page *{
+
+    box-sizing:border-box;
+
+}
+/* ==========================================================
+   COMPACT MODE
+========================================================== */
+
+.find-match-container{
+
+    transform:scale(.92);
+
+    transform-origin:top center;
+
+}
+/* =====================================================
+   BACKGROUND IMAGE ENHANCEMENT
+===================================================== */
+
+
+
+
+/* ==========================================================
+   END OF FILE
+========================================================== */

@@ -400,7 +400,16 @@ class BloodRequestBase(SchemaBase):
 
     additional_notes: str | None = None
 
-
+class MatchResult(BaseModel):
+    rank: int
+    score: int
+    donor_id: int
+    donor_code: str
+    donor_name: str
+    blood_group: str
+    phone: str | None
+    email: str | None
+    status: str
 # ==========================================================
 # CREATE BLOOD REQUEST
 # ==========================================================

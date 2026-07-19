@@ -1,10 +1,508 @@
 /* ==========================================================
-   BIOTRACK SETTINGS
-   PART 3A
+   BloodLink Settings Module
+   File: settings.js
 ========================================================== */
-function initSettings() {
 
-    initializeNavigation();
+export function loadSettings() {
+
+    return `
+
+    <section class="settings-page">
+
+        <!-- ======================================================
+             HERO
+        ======================================================= -->
+
+        <section class="settings-hero glass-card">
+
+            <div class="settings-hero-left">
+
+                <div class="settings-hero-icon">
+
+                    <i class="fa-solid fa-gear"></i>
+
+                </div>
+
+                <div class="settings-hero-text">
+
+                    <h1>System Settings</h1>
+
+                    <p>
+
+                        Configure your BloodLink account,
+                        notifications, security,
+                        application preferences
+                        and backup options.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ======================================================
+             SETTINGS GRID
+        ======================================================= -->
+
+        <section class="settings-grid">
+
+            <!-- ==================================================
+                 PROFILE
+            =================================================== -->
+
+            <article
+                class="settings-card glass-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h2>My Profile</h2>
+
+                        <p>
+
+                            Personal information
+                            and account details.
+
+                        </p>
+
+                    </div>
+
+                    <i class="fa-solid fa-user card-icon"></i>
+
+                </div>
+
+                <div class="profile-wrapper">
+
+                    <div class="profile-avatar-wrapper">
+
+                        <img
+                            id="profilePreview"
+                            src="../assets/settings/profile.png"
+                            alt="Profile">
+
+                        <button
+                            id="changePhoto"
+                            class="camera-btn">
+
+                            <i class="fa-solid fa-camera"></i>
+
+                        </button>
+
+                        <input
+                            id="profileUpload"
+                            type="file"
+                            hidden>
+
+                    </div>
+
+                    <div class="profile-information">
+
+                        <div class="detail-row">
+
+                            <label>Full Name</label>
+
+                            <span id="settingsFullName">
+
+                                Loading...
+
+                            </span>
+
+                        </div>
+
+                        <div class="detail-row">
+
+                            <label>Email</label>
+
+                            <span id="settingsEmail">
+
+                                Loading...
+
+                            </span>
+
+                        </div>
+
+                        <div class="detail-row">
+
+                            <label>Employee ID</label>
+
+                            <span id="settingsEmployeeId">
+
+                                Loading...
+
+                            </span>
+
+                        </div>
+
+                        <div class="detail-row">
+
+                            <label>Role</label>
+
+                            <span id="settingsRole">
+
+                                Loading...
+
+                            </span>
+
+                        </div>
+
+                        <button
+                            id="editProfileBtn"
+                            class="btn-primary">
+
+                            <i class="fa-solid fa-pen"></i>
+
+                            Edit Profile
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+            <!-- ==================================================
+                 NOTIFICATIONS
+            =================================================== -->
+
+            <article
+                class="settings-card glass-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h2>Notifications</h2>
+
+                        <p>
+
+                            Configure notification
+                            preferences.
+
+                        </p>
+
+                    </div>
+
+                    <i class="fa-solid fa-bell card-icon"></i>
+
+                </div>
+
+                <div class="settings-list">
+
+                    <div class="settings-item">
+
+                        <span>Email Notifications</span>
+
+                        <label class="switch">
+
+                            <input
+                                id="emailNotification"
+                                type="checkbox"
+                                checked>
+
+                            <span class="slider"></span>
+
+                        </label>
+
+                    </div>
+
+                    <div class="settings-item">
+
+                        <span>Desktop Notifications</span>
+
+                        <label class="switch">
+
+                            <input
+                                id="desktopNotification"
+                                type="checkbox"
+                                checked>
+
+                            <span class="slider"></span>
+
+                        </label>
+
+                    </div>
+
+                    <div class="settings-item">
+
+                        <span>Blood Request Updates</span>
+
+                        <label class="switch">
+
+                            <input
+                                id="requestUpdates"
+                                type="checkbox"
+                                checked>
+
+                            <span class="slider"></span>
+
+                        </label>
+
+                    </div>
+
+                    <div class="settings-item">
+
+                        <span>Donation Reminder</span>
+
+                        <label class="switch">
+
+                            <input
+                                id="pmReminder"
+                                type="checkbox">
+
+                            <span class="slider"></span>
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+            <!-- ==================================================
+                 SECURITY
+            =================================================== -->
+
+            <article
+                class="settings-card glass-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h2>Security</h2>
+
+                        <p>
+
+                            Password,
+                            authentication and
+                            login protection.
+
+                        </p>
+
+                    </div>
+
+                    <i class="fa-solid fa-shield-halved card-icon"></i>
+
+                </div>
+
+                <div class="settings-list">
+
+                    <div class="settings-item">
+
+                        <span>Change Password</span>
+
+                        <button
+                            id="changePassword"
+                            class="btn-secondary">
+
+                            Change
+
+                        </button>
+
+                    </div>
+
+                    <div class="settings-item">
+
+                        <span>Two Factor Authentication</span>
+
+                        <label class="switch">
+
+                            <input
+                                id="twoFactor"
+                                type="checkbox">
+
+                            <span class="slider"></span>
+
+                        </label>
+
+                    </div>
+
+                    <div class="settings-item">
+
+                        <span>Active Sessions</span>
+
+                        <button
+                            id="viewSessions"
+                            class="btn-secondary">
+
+                            View
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+            <!-- ==================================================
+                 PREFERENCES
+            =================================================== -->
+
+            <article
+                class="settings-card glass-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h2>Preferences</h2>
+
+                        <p>
+
+                            Application preferences.
+
+                        </p>
+
+                    </div>
+
+                    <i class="fa-solid fa-sliders card-icon"></i>
+
+                </div>
+
+                <div class="settings-form">
+
+                    <select id="themeSelect">
+
+                        <option value="light">
+
+                            Light Theme
+
+                        </option>
+
+                        <option value="dark">
+
+                            Dark Theme
+
+                        </option>
+
+                    </select>
+
+                    <select id="languageSelect">
+
+                        <option>
+
+                            English
+
+                        </option>
+
+                        <option>
+
+                            Malayalam
+
+                        </option>
+
+                    </select>
+
+                    <select id="dateFormat">
+
+                        <option>
+
+                            DD/MM/YYYY
+
+                        </option>
+
+                        <option>
+
+                            MM/DD/YYYY
+
+                        </option>
+
+                    </select>
+
+                    <select id="timeFormat">
+
+                        <option>
+
+                            24 Hour
+
+                        </option>
+
+                        <option>
+
+                            12 Hour
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </article>
+
+            <!-- ==================================================
+                 BACKUP
+            =================================================== -->
+
+            <article
+                class="settings-card glass-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h2>
+
+                            Backup & Data
+
+                        </h2>
+
+                        <p>
+
+                            Backup and export
+                            BloodLink data.
+
+                        </p>
+
+                    </div>
+
+                    <i class="fa-solid fa-database card-icon"></i>
+
+                </div>
+
+                <div class="backup-buttons">
+
+                    <button
+                        id="backupNow"
+                        class="btn-primary">
+
+                        Create Backup
+
+                    </button>
+
+                    <button
+                        id="exportData"
+                        class="btn-secondary">
+
+                        Export Data
+
+                    </button>
+
+                </div>
+
+            </article>
+
+        </section>
+
+        <div id="settingsToast"></div>
+
+    </section>
+
+    `;
+
+}
+/* ==========================================================
+   Initialize Settings
+========================================================== */
+
+export function initializeSettings() {
+
+    loadProfileData();
 
     initializeProfilePhoto();
 
@@ -18,8 +516,6 @@ function initSettings() {
 
     initializeBackup();
 
-    loadProfileData();
-
     loadSavedPreferences();
 
     initializeSmoothButtons();
@@ -28,145 +524,141 @@ function initSettings() {
 
     initializeCardEffects();
 
+    initializeKeyboardShortcuts();
+
     showToast(
-        "Settings",
-        "Settings page loaded successfully.",
+
+        "BloodLink",
+
+        "Settings loaded successfully.",
+
         "fa-circle-check"
+
     );
 
 }
+
 /* ==========================================================
-   LOAD PROFILE DATA
+   Load Profile Data
 ========================================================== */
 
 function loadProfileData() {
 
-    const username =
-        localStorage.getItem("username") || "Administrator";
+    const profile = {
 
-    const role =
-        localStorage.getItem("role") || "Administrator";
+        fullName:
+            localStorage.getItem("username")
+            || "Administrator",
 
-    const email =
-        localStorage.getItem("email") || "admin@BloodLink.com";
+        email:
+            localStorage.getItem("email")
+            || "admin@bloodlink.com",
 
-    const employeeId =
-        localStorage.getItem("employee_id") || "EMP-001";
+        employeeId:
+            localStorage.getItem("employee_id")
+            || "EMP-001",
+
+        role:
+            localStorage.getItem("role")
+            || "Administrator"
+
+    };
 
     const fullName =
         document.getElementById("settingsFullName");
 
-    const emailText =
+    const email =
         document.getElementById("settingsEmail");
 
-    const roleText =
-        document.getElementById("settingsRole");
-
-    const employee =
+    const employeeId =
         document.getElementById("settingsEmployeeId");
 
-    if(fullName) fullName.textContent = username;
+    const role =
+        document.getElementById("settingsRole");
 
-    if(emailText) emailText.textContent = email;
+    if(fullName){
 
-    if(roleText) roleText.textContent = role;
+        fullName.textContent =
+            profile.fullName;
 
-    if(employee) employee.textContent = employeeId;
+    }
 
-}
-/* ==========================================================
-   SIDEBAR NAVIGATION
-========================================================== */
+    if(email){
 
-function initializeNavigation() {
+        email.textContent =
+            profile.email;
 
-    const navItems = document.querySelectorAll(".nav-item");
+    }
 
-    navItems.forEach(item => {
+    if(employeeId){
 
-        item.addEventListener("click", () => {
+        employeeId.textContent =
+            profile.employeeId;
 
-            navItems.forEach(nav => nav.classList.remove("active"));
+    }
 
-            item.classList.add("active");
+    if(role){
 
-            const target = document.getElementById(item.dataset.target);
+        role.textContent =
+            profile.role;
 
-            if (!target) return;
-
-                            const sections =
-                    document.querySelectorAll(".settings-card");
-
-                sections.forEach(section => {
-
-                    section.style.display = "none";
-
-                });
-
-                if (target) {
-
-                    target.style.display = "block";
-
-                }
-                const cards =
-                    document.querySelectorAll(".settings-card");
-
-                cards.forEach(card => {
-
-                    card.style.display = "none";
-
-                });
-
-                const first =
-                    document.getElementById("profile");
-
-                if (first) {
-
-                    first.style.display = "block";
-
-                }
-
-        });
-
-    });
+    }
 
 }
 
 /* ==========================================================
-   PROFILE IMAGE
+   Profile Photo
 ========================================================== */
 
 function initializeProfilePhoto() {
 
-    const uploadInput = document.getElementById("profileUpload");
+    const upload =
+        document.getElementById("profileUpload");
 
-    const preview = document.getElementById("profilePreview");
+    const preview =
+        document.getElementById("profilePreview");
 
-    const cameraButton = document.getElementById("changePhoto");
+    const camera =
+        document.getElementById("changePhoto");
 
-    if (!uploadInput || !preview || !cameraButton) return;
+    if(
+        !upload ||
+        !preview ||
+        !camera
+    ){
 
-    cameraButton.addEventListener("click", () => {
+        return;
 
-        uploadInput.click();
+    }
+
+    camera.addEventListener("click", () => {
+
+        upload.click();
 
     });
 
-    uploadInput.addEventListener("change", event => {
+    upload.addEventListener("change", event => {
 
-        const file = event.target.files[0];
+        const file =
+            event.target.files[0];
 
-        if (!file) return;
+        if(!file){
 
-        if (!file.type.startsWith("image/")) {
+            return;
+
+        }
+
+        if(
+            !file.type.startsWith("image/")
+        ){
 
             showToast(
 
-                "Invalid File",
+                "Invalid Image",
 
-                "Please select an image.",
+                "Please choose a valid image.",
 
-                "fa-circle-exclamation"
+                "fa-circle-xmark"
 
             );
 
@@ -174,17 +666,27 @@ function initializeProfilePhoto() {
 
         }
 
-        const reader = new FileReader();
+        const reader =
+            new FileReader();
 
         reader.onload = e => {
 
-            preview.src = e.target.result;
+            preview.src =
+                e.target.result;
+
+            localStorage.setItem(
+
+                "settings-profile-photo",
+
+                e.target.result
+
+            );
 
             showToast(
 
                 "Profile Updated",
 
-                "Your profile picture has been changed.",
+                "Profile photo updated successfully.",
 
                 "fa-circle-check"
 
@@ -196,81 +698,74 @@ function initializeProfilePhoto() {
 
     });
 
-}
+    const savedPhoto =
+        localStorage.getItem(
+            "settings-profile-photo"
+        );
 
-/* ==========================================================
-   BUTTON SCROLL EFFECT
-========================================================== */
+    if(savedPhoto){
 
-function initializeSmoothButtons() {
+        preview.src =
+            savedPhoto;
 
-    document.querySelectorAll(".primary-btn, .secondary-btn").forEach(button => {
-
-        button.addEventListener("click", createRipple);
-
-    });
+    }
 
 }
-
 /* ==========================================================
-   RIPPLE EFFECT
-========================================================== */
-
-function createRipple(event) {
-
-    const button = event.currentTarget;
-
-    const ripple = document.createElement("span");
-
-    const size = Math.max(button.clientWidth, button.clientHeight);
-
-    const rect = button.getBoundingClientRect();
-
-    ripple.className = "ripple";
-
-    ripple.style.width = size + "px";
-
-    ripple.style.height = size + "px";
-
-    ripple.style.left = event.clientX - rect.left - size / 2 + "px";
-
-    ripple.style.top = event.clientY - rect.top - size / 2 + "px";
-
-    button.appendChild(ripple);
-
-    setTimeout(() => {
-
-        ripple.remove();
-
-    }, 600);
-
-}
- 
-
-/* ==========================================================
-   NOTIFICATION SWITCHES
+   Notification Switches
 ========================================================== */
 
 function initializeNotificationSwitches() {
 
-    const switches = document.querySelectorAll(
-        "#emailNotification, #desktopNotification, #requestUpdates, #pmReminder"
-    );
+    const switches = [
 
-    switches.forEach(toggle => {
+        "emailNotification",
 
-        toggle.addEventListener("change", function () {
+        "desktopNotification",
 
-            const title = getSettingName(this.id);
+        "requestUpdates",
 
-            const status = this.checked ? "Enabled" : "Disabled";
+        "pmReminder"
+
+    ];
+
+    switches.forEach(id => {
+
+        const element =
+            document.getElementById(id);
+
+        if (!element) return;
+
+        const saved =
+            localStorage.getItem(id);
+
+        if (saved !== null) {
+
+            element.checked =
+                saved === "true";
+
+        }
+
+        element.addEventListener("change", () => {
+
+            localStorage.setItem(
+
+                id,
+
+                element.checked
+
+            );
 
             showToast(
-                title,
-                `${title} ${status}.`,
-                this.checked
+
+                "Notification Updated",
+
+                `${getSettingName(id)} ${element.checked ? "Enabled" : "Disabled"}.`,
+
+                element.checked
                     ? "fa-circle-check"
                     : "fa-circle-minus"
+
             );
 
         });
@@ -279,103 +774,37 @@ function initializeNotificationSwitches() {
 
 }
 
-function getSettingName(id) {
+/* ==========================================================
+   Setting Name
+========================================================== */
 
-    switch (id) {
+function getSettingName(id){
 
-        case "emailNotification":
-            return "Email Notifications";
+    const names={
 
-        case "desktopNotification":
-            return "Desktop Notifications";
+        emailNotification:
+            "Email Notifications",
 
-        case "requestUpdates":
-            return "Request Updates";
+        desktopNotification:
+            "Desktop Notifications",
 
-        case "pmReminder":
-            return "Preventive Maintenance Reminder";
+        requestUpdates:
+            "Blood Request Updates",
 
-        default:
-            return "Setting";
+        pmReminder:
+            "Donation Reminder"
 
-    }
+    };
+
+    return names[id] || "Setting";
 
 }
 
 /* ==========================================================
-   SYSTEM PREFERENCES
+   Security
 ========================================================== */
 
-function initializePreferences() {
-
-    const theme = document.getElementById("themeSelect");
-    const language = document.getElementById("languageSelect");
-    const date = document.getElementById("dateFormat");
-    const time = document.getElementById("timeFormat");
-
-    if (theme) {
-
-        theme.addEventListener("change", () => {
-
-            showToast(
-                "Theme",
-                `Theme changed to ${theme.value}.`,
-                "fa-palette"
-            );
-
-        });
-
-    }
-
-    if (language) {
-
-        language.addEventListener("change", () => {
-
-            showToast(
-                "Language",
-                `Language set to ${language.value}.`,
-                "fa-language"
-            );
-
-        });
-
-    }
-
-    if (date) {
-
-        date.addEventListener("change", () => {
-
-            showToast(
-                "Date Format",
-                `${date.value} selected.`,
-                "fa-calendar"
-            );
-
-        });
-
-    }
-
-    if (time) {
-
-        time.addEventListener("change", () => {
-
-            showToast(
-                "Time Format",
-                `${time.value} selected.`,
-                "fa-clock"
-            );
-
-        });
-
-    }
-
-}
-
-/* ==========================================================
-   SECURITY
-========================================================== */
-
-function initializeSecurity() {
+function initializeSecurity(){
 
     const changePassword =
         document.getElementById("changePassword");
@@ -386,46 +815,80 @@ function initializeSecurity() {
     const twoFactor =
         document.getElementById("twoFactor");
 
-    if (changePassword) {
+    if(changePassword){
 
-        changePassword.addEventListener("click", () => {
+        changePassword.addEventListener("click",()=>{
 
             showToast(
+
                 "Security",
-                "Redirecting to Change Password...",
+
+                "Password change feature will be available soon.",
+
                 "fa-key"
+
             );
 
         });
 
     }
 
-    if (sessions) {
+    if(sessions){
 
-        sessions.addEventListener("click", () => {
+        sessions.addEventListener("click",()=>{
 
             showToast(
+
                 "Active Sessions",
-                "Loading signed-in devices...",
+
+                "Loading active sessions...",
+
                 "fa-laptop"
+
             );
 
         });
 
     }
 
-    if (twoFactor) {
+    if(twoFactor){
 
-        twoFactor.addEventListener("change", function () {
+        const saved =
+            localStorage.getItem("twoFactor");
+
+        if(saved!==null){
+
+            twoFactor.checked =
+                saved==="true";
+
+        }
+
+        twoFactor.addEventListener("change",()=>{
+
+            localStorage.setItem(
+
+                "twoFactor",
+
+                twoFactor.checked
+
+            );
 
             showToast(
-                "Two-Factor Authentication",
-                this.checked
-                    ? "Two-Factor Authentication Enabled."
-                    : "Two-Factor Authentication Disabled.",
-                this.checked
+
+                "Two Factor Authentication",
+
+                twoFactor.checked
+
+                    ? "Enabled."
+
+                    : "Disabled.",
+
+                twoFactor.checked
+
                     ? "fa-lock"
+
                     : "fa-lock-open"
+
             );
 
         });
@@ -435,289 +898,525 @@ function initializeSecurity() {
 }
 
 /* ==========================================================
-   TOAST NOTIFICATION
+   Preferences
 ========================================================== */
 
-function showToast(title, message, icon) {
+function initializePreferences(){
 
-    let toast = document.querySelector(".toast");
+    saveDropdown("languageSelect");
 
-    if (!toast) {
+    saveDropdown("dateFormat");
 
-        toast = document.createElement("div");
-
-        toast.className = "toast";
-
-        toast.innerHTML = `
-
-            <i class="fa-solid ${icon}"></i>
-
-            <div>
-
-                <h4>${title}</h4>
-
-                <p>${message}</p>
-
-            </div>
-
-        `;
-
-        document.body.appendChild(toast);
-
-    } else {
-
-        toast.innerHTML = `
-
-            <i class="fa-solid ${icon}"></i>
-
-            <div>
-
-                <h4>${title}</h4>
-
-                <p>${message}</p>
-
-            </div>
-
-        `;
-
-    }
-
-    toast.classList.add("show");
-
-    clearTimeout(window.toastTimer);
-
-    window.toastTimer = setTimeout(() => {
-
-        toast.classList.remove("show");
-
-    }, 3000);
-
-}
-
-
-/* ==========================================================
-   BACKUP & EXPORT
-========================================================== */
-
-function initializeBackup() {
-
-    const backupBtn = document.getElementById("backupNow");
-    const exportBtn = document.getElementById("exportData");
-
-    if (backupBtn) {
-
-        backupBtn.addEventListener("click", function () {
-
-            const original = this.innerHTML;
-
-            this.disabled = true;
-
-            this.innerHTML = `
-                <div class="loader"></div>
-                Creating Backup...
-            `;
-
-            setTimeout(() => {
-
-                this.disabled = false;
-
-                this.innerHTML = original;
-
-                showToast(
-                    "Backup Complete",
-                    "System backup created successfully.",
-                    "fa-cloud-arrow-up"
-                );
-
-            }, 2500);
-
-        });
-
-    }
-
-    if (exportBtn) {
-
-        exportBtn.addEventListener("click", () => {
-
-            showToast(
-                "Export Started",
-                "Preparing maintenance data for download.",
-                "fa-file-export"
-            );
-
-        });
-
-    }
+    saveDropdown("timeFormat");
 
 }
 
 /* ==========================================================
-   THEME
+   Theme
 ========================================================== */
 
-function initializeTheme() {
+function initializeTheme(){
 
-    const selector = document.getElementById("themeSelect");
+    const selector =
+        document.getElementById("themeSelect");
 
-    if (!selector) return;
+    if(!selector){
 
-    selector.addEventListener("change", () => {
+        return;
 
-        localStorage.setItem("bloodlink-theme", selector.value);
+    }
 
-        applyTheme(selector.value);
+    const savedTheme =
+        localStorage.getItem("bloodlink-theme");
+
+    if(savedTheme){
+
+        selector.value =
+            savedTheme;
+
+        applyTheme(savedTheme);
+
+    }
+
+    selector.addEventListener("change",()=>{
+
+        localStorage.setItem(
+
+            "bloodlink-theme",
+
+            selector.value
+
+        );
+
+        applyTheme(
+
+            selector.value
+
+        );
 
     });
 
 }
 
-function applyTheme(theme) {
+/* ==========================================================
+   Apply Theme
+========================================================== */
 
-    document.body.classList.remove("dark-theme");
+function applyTheme(theme){
 
-    if (theme === "dark") {
+    document.body.classList.remove(
 
-        document.body.classList.add("dark-theme");
+        "dark-theme"
+
+    );
+
+    if(theme==="dark"){
+
+        document.body.classList.add(
+
+            "dark-theme"
+
+        );
 
     }
 
     showToast(
+
         "Theme Updated",
+
         `${theme} theme applied.`,
+
         "fa-palette"
+
     );
 
 }
 
 /* ==========================================================
-   SAVE PREFERENCES
+   Saved Dropdowns
 ========================================================== */
 
-function loadSavedPreferences() {
+function saveDropdown(id){
 
-    const theme = localStorage.getItem("bloodlink-theme");
+    const dropdown =
+        document.getElementById(id);
 
-    if (theme) {
+    if(!dropdown){
 
-        const selector = document.getElementById("themeSelect");
-
-        if (selector) {
-
-            selector.value = theme;
-
-            applyTheme(theme);
-
-        }
+        return;
 
     }
 
+    const saved =
+        localStorage.getItem(id);
+
+    if(saved){
+
+        dropdown.value =
+            saved;
+
+    }
+
+    dropdown.addEventListener("change",()=>{
+
+        localStorage.setItem(
+
+            id,
+
+            dropdown.value
+
+        );
+
+        showToast(
+
+            "Preference Saved",
+
+            `${dropdown.value} selected.`,
+
+            "fa-sliders"
+
+        );
+
+    });
+
+}
+
+/* ==========================================================
+   Load Saved Preferences
+========================================================== */
+
+function loadSavedPreferences(){
+
     saveDropdown("languageSelect");
+
     saveDropdown("dateFormat");
+
     saveDropdown("timeFormat");
 
 }
+/* ==========================================================
+   Backup & Export
+========================================================== */
 
-function saveDropdown(id) {
+function initializeBackup(){
 
-    const element = document.getElementById(id);
+    const backupButton =
+        document.getElementById("backupNow");
 
-    if (!element) return;
+    const exportButton =
+        document.getElementById("exportData");
 
-    const saved = localStorage.getItem(id);
+    if(backupButton){
 
-    if (saved) {
+        backupButton.addEventListener("click",function(){
 
-        element.value = saved;
+            const originalText =
+                this.innerHTML;
+
+            this.disabled = true;
+
+            this.innerHTML = `
+
+                <i class="fa-solid fa-spinner fa-spin"></i>
+
+                Creating Backup...
+
+            `;
+
+            setTimeout(()=>{
+
+                this.disabled = false;
+
+                this.innerHTML =
+                    originalText;
+
+                showToast(
+
+                    "Backup Complete",
+
+                    "BloodLink backup created successfully.",
+
+                    "fa-cloud-arrow-up"
+
+                );
+
+            },2500);
+
+        });
 
     }
 
-    element.addEventListener("change", () => {
+    if(exportButton){
 
-        localStorage.setItem(id, element.value);
+        exportButton.addEventListener("click",()=>{
 
-    });
+            showToast(
 
-}
+                "Export Started",
 
-/* ==========================================================
-   GLOBAL BUTTON EFFECT
-========================================================== */
+                "Preparing BloodLink data for export.",
 
-/* ==========================================================
-   BUTTON EFFECTS
-========================================================== */
+                "fa-file-export"
 
-function initializeButtonEffects() {
+            );
 
-    document.addEventListener("click", function (event) {
+        });
 
-        const button = event.target.closest("button");
-
-        if (!button) return;
-
-        button.style.transform = "scale(.97)";
-
-        setTimeout(() => {
-
-            button.style.transform = "";
-
-        }, 120);
-
-    });
+    }
 
 }
 
 /* ==========================================================
-   CARD HOVER EFFECT
+   Smooth Button Ripple
+========================================================== */
+
+function initializeSmoothButtons(){
+
+    document
+
+        .querySelectorAll(
+
+            ".btn-primary,.btn-secondary"
+
+        )
+
+        .forEach(button=>{
+
+            button.addEventListener(
+
+                "click",
+
+                createRipple
+
+            );
+
+        });
+
+}
+
+function createRipple(event){
+
+    const button =
+        event.currentTarget;
+
+    const ripple =
+        document.createElement("span");
+
+    const size =
+        Math.max(
+
+            button.clientWidth,
+
+            button.clientHeight
+
+        );
+
+    const rect =
+        button.getBoundingClientRect();
+
+    ripple.className = "ripple";
+
+    ripple.style.width =
+        ripple.style.height =
+            size + "px";
+
+    ripple.style.left =
+        event.clientX -
+        rect.left -
+        size / 2 + "px";
+
+    ripple.style.top =
+        event.clientY -
+        rect.top -
+        size / 2 + "px";
+
+    button.appendChild(ripple);
+
+    setTimeout(()=>{
+
+        ripple.remove();
+
+    },600);
+
+}
+
+/* ==========================================================
+   Button Effects
+========================================================== */
+
+function initializeButtonEffects(){
+
+    document.addEventListener(
+
+        "click",
+
+        event=>{
+
+            const button =
+                event.target.closest("button");
+
+            if(!button){
+
+                return;
+
+            }
+
+            button.style.transform =
+                "scale(.97)";
+
+            setTimeout(()=>{
+
+                button.style.transform = "";
+
+            },120);
+
+        }
+
+    );
+
+}
+
+/* ==========================================================
+   Card Effects
 ========================================================== */
 
 function initializeCardEffects(){
 
-    document.querySelectorAll(".settings-card")
+    document
+
+        .querySelectorAll(
+
+            ".settings-card"
+
+        )
+
         .forEach(card=>{
 
-            card.style.transition=".3s ease";
+            card.style.transition =
+                ".30s ease";
+
+            card.addEventListener(
+
+                "mouseenter",
+
+                ()=>{
+
+                    card.style.transform =
+                        "translateY(-5px)";
+
+                }
+
+            );
+
+            card.addEventListener(
+
+                "mouseleave",
+
+                ()=>{
+
+                    card.style.transform =
+                        "translateY(0)";
+
+                }
+
+            );
 
         });
 
 }
 
 /* ==========================================================
-   KEYBOARD SHORTCUTS
+   Keyboard Shortcuts
 ========================================================== */
 
 function initializeKeyboardShortcuts(){
 
-    document.addEventListener("keydown", event => {
+    document.addEventListener(
 
-        if(event.ctrlKey &&
-           event.key.toLowerCase()==="s"){
+        "keydown",
 
-            event.preventDefault();
+        event=>{
 
-            showToast(
-                "Settings Saved",
-                "Your preferences have been saved.",
-                "fa-floppy-disk"
-            );
+            if(
+
+                event.ctrlKey &&
+
+                event.key.toLowerCase()==="s"
+
+            ){
+
+                event.preventDefault();
+
+                showToast(
+
+                    "Settings Saved",
+
+                    "Your preferences have been saved.",
+
+                    "fa-floppy-disk"
+
+                );
+
+            }
 
         }
 
-    });
+    );
 
 }
 
 /* ==========================================================
-   FINAL INITIALIZATION
+   Toast
+========================================================== */
+
+function showToast(
+
+    title,
+
+    message,
+
+    icon
+
+){
+
+    let toast =
+
+        document.querySelector(
+
+            ".settings-toast"
+
+        );
+
+    if(!toast){
+
+        toast =
+
+            document.createElement("div");
+
+        toast.className =
+
+            "settings-toast";
+
+        document.body.appendChild(
+
+            toast
+
+        );
+
+    }
+
+    toast.innerHTML = `
+
+        <i class="fa-solid ${icon}"></i>
+
+        <div>
+
+            <h4>${title}</h4>
+
+            <p>${message}</p>
+
+        </div>
+
+    `;
+
+    toast.classList.add(
+
+        "show"
+
+    );
+
+    clearTimeout(
+
+        window.settingsToastTimer
+
+    );
+
+    window.settingsToastTimer =
+
+        setTimeout(()=>{
+
+            toast.classList.remove(
+
+                "show"
+
+            );
+
+        },3000);
+
+}
+
+/* ==========================================================
+   BloodLink Settings Module
 ========================================================== */
 
 console.log(
+
     "%cBloodLink Settings Module Loaded",
-    "color:#2563eb;font-size:16px;font-weight:bold;"
+
+    "color:#2563EB;font-size:16px;font-weight:bold;"
+
 );
 
 console.log("Version : 1.0.0");
 
 console.log("Status  : Ready");
-
- 

@@ -12,6 +12,17 @@ from backend.database.schemas import (
     DonorResponse,
     DonorUpdate,
 )
+from io import BytesIO
+from backend.services.donor_import_service import (
+    import_donors_from_excel,
+)
+
+from fastapi.responses import StreamingResponse
+from openpyxl import Workbook
+from openpyxl.styles import Font
+from fastapi import UploadFile, File
+
+from openpyxl import load_workbook  
 # ==========================================================
 # AUTHENTICATION
 # ==========================================================
@@ -213,6 +224,124 @@ def list_donors(
 
 
 # ==========================================================
+# EXPORT DONORS TO EXCEL
+# ==========================================================
+
+@router.get("/export")
+def export_donors(
+    database_session: Session = Depends(get_db),
+    current_user: User = Depends(require_authentication),
+):
+    """
+    Export all donor records as an Excel workbook.
+    """
+
+    donors = crud.get_donors(database_session)
+
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "Donors"
+
+    headers = [
+        "Donor Code",
+        "Full Name",
+        "Blood Group",
+        "Gender",
+        "Date of Birth",
+        "Phone",
+        "Email",
+        "Department",
+        "District",
+        "City",
+        "Weight",
+        "Status",
+        "Last Donation",
+        "Total Donations",
+    ]
+
+    worksheet.append(headers)
+
+    for cell in worksheet[1]:
+        cell.font = Font(bold=True)
+
+    for donor in donors:
+
+        worksheet.append([
+            donor.donor_code,
+            donor.full_name,
+            donor.blood_group,
+            donor.gender,
+            donor.date_of_birth,
+            donor.phone,
+            donor.email,
+            donor.class_department,
+            donor.district,
+            donor.city,
+            donor.weight,
+            donor.status,
+            donor.last_donation_date,
+            donor.total_donations,
+        ])
+
+    for column in worksheet.columns:
+
+        length = max(
+            len(str(cell.value or ""))
+            for cell in column
+        )
+
+        worksheet.column_dimensions[
+            column[0].column_letter
+        ].width = length + 3
+
+    stream = BytesIO()
+
+    workbook.save(stream)
+
+    stream.seek(0)
+
+    return StreamingResponse(
+        stream,
+        media_type=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
+        headers={
+            "Content-Disposition":
+                'attachment; filename="bloodlink_donors.xlsx"'
+        },
+    )
+
+# ==========================================================
+# IMPORT DONORS
+# ==========================================================
+
+@router.post("/import")
+async def import_donors(
+    file: UploadFile = File(...),
+    database_session: Session = Depends(get_db),
+    current_user: User = Depends(require_authentication),
+):
+    """
+    Import donors from an Excel workbook.
+    """
+
+    contents = await file.read()
+
+    summary = import_donors_from_excel(
+        database_session,
+        contents,
+    )
+
+    return {
+        "message": "Import completed successfully.",
+        "total_rows": summary.total_rows,
+        "imported": summary.imported,
+        "duplicates": summary.duplicates,
+        "skipped": summary.skipped,
+        "errors": summary.errors,
+    }
+# ==========================================================
 # GET ONE DONOR
 # ==========================================================
 
@@ -242,6 +371,41 @@ def get_donor(
     return donor
 
 
+# ==========================================================
+# DELETE DONOR
+# ==========================================================
+
+@router.delete(
+    "/{donor_id}",
+    status_code=status.HTTP_200_OK,
+)
+def delete_donor(
+    donor_id: int,
+    database_session: Session = Depends(get_db),
+    current_user: User = Depends(require_authentication),
+) -> dict:
+    """Delete an existing donor."""
+
+    donor = crud.get_donor_by_id(
+        database_session,
+        donor_id,
+    )
+
+    if donor is None:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Donor not found.",
+        )
+
+    crud.delete_donor(
+        database_session,
+        donor,
+    )
+
+    return {
+        "message": "Donor deleted successfully."
+    }
 # ==========================================================
 # UPDATE DONOR
 # ==========================================================
