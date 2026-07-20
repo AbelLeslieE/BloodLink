@@ -39,14 +39,11 @@ class Settings:
     access_token_expire_minutes: int
 
     # ==========================================================
-    # SMTP / Email
+    # Resend Email
     # ==========================================================
 
-    smtp_host: str
-    smtp_port: int
-    smtp_username: str
-    smtp_password: str
-    smtp_from: str
+    resend_api_key: str
+    email_from: str
 
     # ==========================================================
     # Application URLs
@@ -114,13 +111,15 @@ def get_settings() -> Settings:
             60,
         ),
 
-        # SMTP
-        smtp_host=_required_value("SMTP_HOST"),
-        smtp_port=_positive_integer("SMTP_PORT", 587),
-        smtp_username=_required_value("SMTP_USERNAME"),
-        smtp_password=_required_value("SMTP_PASSWORD"),
-        smtp_from=_required_value("SMTP_FROM"),
+                # Resend
 
+        resend_api_key=_required_value(
+            "RESEND_API_KEY",
+        ),
+
+        email_from=_required_value(
+            "EMAIL_FROM",
+        ),
         # Application URLs
 
         backend_url=_required_value("BACKEND_URL"),

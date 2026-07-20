@@ -13,16 +13,15 @@ Handles:
 from __future__ import annotations
 
 import secrets
-import smtplib
+import resend
 from datetime import datetime, timedelta, timezone
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+
 
 from backend.config.settings import get_settings
 
 settings = get_settings()
 
-
+resend.api_key = settings.resend_api_key
 # ==========================================================
 # TOKEN GENERATION
 # ==========================================================
@@ -49,13 +48,17 @@ def generate_expiry_time(hours: int = 24) -> datetime:
 # SEND EMAIL
 # ==========================================================
 
+# ==========================================================
+# SEND EMAIL
+# ==========================================================
+
 def send_email(
     recipient_email: str,
     subject: str,
     html_body: str,
 ) -> bool:
     """
-    Send an HTML email through Gmail SMTP.
+    Send an HTML email using Resend.
 
     Returns
     -------
@@ -63,38 +66,18 @@ def send_email(
         True if successful, otherwise False.
     """
 
-    message = MIMEMultipart("alternative")
-
-    message["Subject"] = subject
-    message["From"] = settings.smtp_from
-    message["To"] = recipient_email
-
-    message.attach(
-        MIMEText(
-            html_body,
-            "html",
-        )
-    )
-
     try:
 
-        with smtplib.SMTP(
-            settings.smtp_host,
-            settings.smtp_port,
-        ) as smtp:
+        response = resend.Emails.send(
+            {
+                "from": settings.email_from,
+                "to": [recipient_email],
+                "subject": subject,
+                "html": html_body,
+            }
+        )
 
-            smtp.starttls()
-
-            smtp.login(
-                settings.smtp_username,
-                settings.smtp_password,
-            )
-
-            smtp.sendmail(
-                settings.smtp_from,
-                recipient_email,
-                message.as_string(),
-            )
+        print(f"Email sent successfully: {response}")
 
         return True
 
@@ -103,7 +86,6 @@ def send_email(
         print(f"Email sending failed: {error}")
 
         return False
-    
 # ==========================================================
 # EMAIL SUBJECT
 # ==========================================================
