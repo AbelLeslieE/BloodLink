@@ -282,18 +282,13 @@ function initializeMonthlyDonationChart(data = {}) {
             "monthlyDonationChart"
         );
 
-
     if (!canvas) {
 
         return;
 
     }
 
-
-    if (
-        typeof window.Chart ===
-        "undefined"
-    ) {
+    if (typeof window.Chart === "undefined") {
 
         console.warn(
             "Chart.js is not available."
@@ -303,39 +298,15 @@ function initializeMonthlyDonationChart(data = {}) {
 
     }
 
-
     if (monthlyDonationChart) {
 
         monthlyDonationChart.destroy();
 
     }
 
+    const labels = Object.keys(data || {});
 
-    const labels =
-        data.labels || [
-
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun"
-
-        ];
-
-
-    const values =
-        data.values || [
-
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
-
-        ];
-
+    const values = Object.values(data || {});
 
     monthlyDonationChart =
         new window.Chart(
@@ -352,16 +323,14 @@ function initializeMonthlyDonationChart(data = {}) {
 
                         {
 
-                            label:
-                                "Blood Donations",
+                            label: "Blood Donations",
 
                             data: values,
 
-                            borderColor:
-                                "#DC2626",
+                            borderColor: "#DC2626",
 
                             backgroundColor:
-                                "rgba(220, 38, 38, 0.08)",
+                                "rgba(220,38,38,0.08)",
 
                             borderWidth: 2,
 
@@ -383,8 +352,7 @@ function initializeMonthlyDonationChart(data = {}) {
 
                     responsive: true,
 
-                    maintainAspectRatio:
-                        false,
+                    maintainAspectRatio: false,
 
                     plugins: {
 
@@ -400,24 +368,7 @@ function initializeMonthlyDonationChart(data = {}) {
 
                         y: {
 
-                            beginAtZero: true,
-
-                            grid: {
-
-                                color:
-                                    "rgba(148, 163, 184, 0.15)"
-
-                            }
-
-                        },
-
-                        x: {
-
-                            grid: {
-
-                                display: false
-
-                            }
+                            beginAtZero: true
 
                         }
 
@@ -426,6 +377,7 @@ function initializeMonthlyDonationChart(data = {}) {
                 }
 
             }
+
         );
 
 }
@@ -468,7 +420,7 @@ function initializeBloodGroupChart(data = {}) {
 
 
     const labels =
-        data.labels || [
+        Object.keys(data || {});
 
             "A+",
             "A-",
@@ -479,11 +431,11 @@ function initializeBloodGroupChart(data = {}) {
             "O+",
             "O-"
 
-        ];
+        ;
 
 
     const values =
-        data.values || [
+        Object.values(data || {});
 
             0,
             0,
@@ -494,7 +446,7 @@ function initializeBloodGroupChart(data = {}) {
             0,
             0
 
-        ];
+        ;
 
 
     bloodGroupChart =
@@ -616,7 +568,7 @@ async function loadDashboardData() {
 
 
     updateDashboardKpis(
-        data
+        data.statistics || {}
     );
 
 
@@ -857,7 +809,8 @@ async function initializeDashboard() {
     initializeDashboardActions();
 
     // Temporary empty charts until backend integration
-    initializeCharts();
+    // Load dashboard data from backend
+    await loadDashboardData();
 
     // Render Lucide icons
     if (window.lucide) {

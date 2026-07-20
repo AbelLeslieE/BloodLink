@@ -22,12 +22,38 @@ class ConfigurationError(RuntimeError):
 class Settings:
     """Runtime settings loaded exclusively from environment variables."""
 
+    # ==========================================================
+    # Database
+    # ==========================================================
+
     database_url: str
     database_pool_size: int
     database_max_overflow: int
+
+    # ==========================================================
+    # Security
+    # ==========================================================
+
     secret_key: str
     jwt_algorithm: str
     access_token_expire_minutes: int
+
+    # ==========================================================
+    # SMTP / Email
+    # ==========================================================
+
+    smtp_host: str
+    smtp_port: int
+    smtp_username: str
+    smtp_password: str
+    smtp_from: str
+
+    # ==========================================================
+    # Application URLs
+    # ==========================================================
+
+    backend_url: str
+    frontend_url: str
 
 
 @dataclass(frozen=True)
@@ -41,16 +67,21 @@ class DefaultVolunteerCredentials:
 def _required_value(name: str) -> str:
     """Return a required non-empty environment variable."""
     value = os.getenv(name)
+
     if not value or not value.strip():
         raise ConfigurationError(f"{name} environment variable is required.")
+
     return value.strip()
 
 
 def _positive_integer(name: str, default: int) -> int:
     """Read a positive integer setting from the environment."""
+
     raw_value = os.getenv(name, str(default))
+
     try:
         value = int(raw_value)
+
     except ValueError as error:
         raise ConfigurationError(
             f"{name} environment variable must be an integer."
@@ -60,34 +91,55 @@ def _positive_integer(name: str, default: int) -> int:
         raise ConfigurationError(
             f"{name} environment variable must be greater than zero."
         )
+
     return value
 
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    """Build and cache the application settings for the current process."""
+    """Build and cache the application settings."""
+
     return Settings(
+
+        # Database
         database_url=_required_value("DATABASE_URL"),
-        database_pool_size=_positive_integer("DATABASE_POOL_SIZE", default=5),
-        database_max_overflow=_positive_integer(
-            "DATABASE_MAX_OVERFLOW",
-            default=10,
-        ),
+        database_pool_size=_positive_integer("DATABASE_POOL_SIZE", 5),
+        database_max_overflow=_positive_integer("DATABASE_MAX_OVERFLOW", 10),
+
+        # Security
         secret_key=_required_value("SECRET_KEY"),
         jwt_algorithm=_required_value("JWT_ALGORITHM"),
         access_token_expire_minutes=_positive_integer(
             "ACCESS_TOKEN_EXPIRE_MINUTES",
-            default=60,
+            60,
         ),
+
+        # SMTP
+        smtp_host=_required_value("SMTP_HOST"),
+        smtp_port=_positive_integer("SMTP_PORT", 587),
+        smtp_username=_required_value("SMTP_USERNAME"),
+        smtp_password=_required_value("SMTP_PASSWORD"),
+        smtp_from=_required_value("SMTP_FROM"),
+
+        # Application URLs
+
+        backend_url=_required_value("BACKEND_URL"),
+
+        frontend_url=_required_value("FRONTEND_URL"),
     )
 
 
 def get_default_volunteer_credentials() -> DefaultVolunteerCredentials:
-    """Load initial volunteer credentials without embedding them in source code."""
-    username = os.getenv("DEFAULT_VOLUNTEER_USERNAME", "volunteer").strip()
+    """Load initial volunteer credentials."""
+
+    username = os.getenv(
+        "DEFAULT_VOLUNTEER_USERNAME",
+        "volunteer",
+    ).strip()
+
     if not username:
         raise ConfigurationError(
-            "DEFAULT_VOLUNTEER_USERNAME environment variable cannot be empty."
+            "DEFAULT_VOLUNTEER_USERNAME cannot be empty."
         )
 
     return DefaultVolunteerCredentials(

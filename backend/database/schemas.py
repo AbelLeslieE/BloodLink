@@ -585,3 +585,26 @@ class NotificationResponse(NotificationBase):
     id: int
     sent_at: datetime
     responded_at: datetime | None
+# ==========================================================
+# DONOR MATCHING API SCHEMAS
+# ==========================================================
+
+from pydantic import BaseModel
+
+
+class FindMatchRequest(BaseModel):
+    """
+    Request body for finding compatible donors.
+    """
+
+    blood_request_id: int
+
+
+class SendNotificationRequest(BaseModel):
+    """
+    Request body for sending notification emails.
+    """
+
+    blood_request_id: int
+
+    donor_ids: list[int]

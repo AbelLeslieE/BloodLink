@@ -8,9 +8,11 @@ from decimal import Decimal
 from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric
 from sqlalchemy import String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from backend.database.email_token import EmailToken
+from backend.database.donor_response import DonorResponse
 from backend.database.database import Base
-
+from backend.database.notification import Notification
+from backend.database.notification_recipient import NotificationRecipient
 
 class User(Base):
     """NSS volunteer account with access to the BloodLink application."""
@@ -245,17 +247,35 @@ class Donor(Base):
     # RELATIONSHIPS
     # ======================================================
 
+
+
+
+
+    # ======================================================
+    # RELATIONSHIPS
+    # ======================================================
+
     donation_history_entries: Mapped[
         list["DonationHistory"]
     ] = relationship(
         back_populates="donor"
     )
 
-    notifications: Mapped[
-        list["Notification"]
+    notification_recipients: Mapped[
+        list["NotificationRecipient"]
     ] = relationship(
-        back_populates="donor"
+        back_populates="donor",
+        cascade="all, delete-orphan",
     )
+
+    responses: Mapped[
+        list["DonorResponse"]
+    ] = relationship(
+        back_populates="donor",
+        cascade="all, delete-orphan",
+    )
+
+
 # ==========================================================
 # BLOOD REQUEST MODEL
 # ==========================================================
@@ -408,8 +428,19 @@ class BloodRequest(Base):
     notifications: Mapped[
         list["Notification"]
     ] = relationship(
-        back_populates="blood_request"
+        back_populates="blood_request",
+        cascade="all, delete-orphan",
     )
+
+    responses: Mapped[
+        list["DonorResponse"]
+    ] = relationship(
+        back_populates="blood_request",
+        cascade="all, delete-orphan",
+    )
+
+
+
 class DonationHistory(Base):
     """Recorded donation associated with a donor and blood request."""
 
@@ -449,35 +480,4 @@ class DonationHistory(Base):
     )
 
 
-class Notification(Base):
-    """Notification record sent to a donor for a blood request."""
 
-    __tablename__ = "notifications"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    blood_request_id: Mapped[int] = mapped_column(
-        ForeignKey("blood_requests.id"),
-        index=True,
-        nullable=False,
-    )
-    donor_id: Mapped[int] = mapped_column(
-        ForeignKey("donors.id"),
-        index=True,
-        nullable=False,
-    )
-    notification_status: Mapped[str] = mapped_column(String(50), nullable=False)
-    response: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    sent_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
-    )
-    responded_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-
-    blood_request: Mapped["BloodRequest"] = relationship(
-        back_populates="notifications"
-    )
-    donor: Mapped["Donor"] = relationship(back_populates="notifications")

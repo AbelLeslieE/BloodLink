@@ -17,9 +17,21 @@
 
 const API = {
 
-    dashboard: "/api/dashboard/v2",
+    dashboard: "/api/dashboard",
 
-    profile: "/api/auth/me"
+    profile: "/api/auth/me",
+
+    notifications: "/api/notifications",
+
+    notificationStats: "/api/notifications/stats/summary",
+
+    donors: "/api/donors",
+
+    bloodRequests: "/api/blood-requests",
+
+    matchFind: "/api/match/find",
+
+    matchSend: "/api/match/send"
 
 };
 

@@ -28,11 +28,18 @@ import { authenticatedFetch } from "./api.js";
    API ENDPOINTS
 =================================================================== */
 
-const REQUEST_API = "/api/blood-requests";
-const MATCH_API = "/api/find-match";
-const MATCH_SAVE_API = "/api/matches";
-const EMAIL_API = "/api/send-match-email";
+/* ===================================================================
+   API ENDPOINTS
+=================================================================== */
 
+const REQUEST_API = "/api/blood-requests";
+
+const MATCH_API = "/api/match/find";
+
+const SEND_NOTIFICATION_API = "/api/match/send";
+
+const NOTIFICATION_STATS_API =
+    "/api/notifications/stats/summary";
 /* ===================================================================
    MODULE STATE
 =================================================================== */
@@ -65,89 +72,6 @@ const state = {
 
 };
 
-/* ===================================================================
-   DEMO DATA
-   -------------------------------------------------------------------
-   Temporary data.
-   Replace with backend API later.
-=================================================================== */
-
-const DEMO_REQUESTS = [
-
-    {
-        id: 1,
-        patient: "Anand Joseph",
-        hospital: "City Medical Centre",
-        district: "Ernakulam",
-        bloodGroup: "O+",
-        units: 2,
-        priority: "Critical",
-        requiredDate: "Today"
-    },
-
-    {
-        id: 2,
-        patient: "Maria Thomas",
-        hospital: "Lakeside Hospital",
-        district: "Thrissur",
-        bloodGroup: "A-",
-        units: 1,
-        priority: "High",
-        requiredDate: "Tomorrow"
-    },
-
-    {
-        id: 3,
-        patient: "Rahul Menon",
-        hospital: "Medical Trust",
-        district: "Kochi",
-        bloodGroup: "B+",
-        units: 3,
-        priority: "Medium",
-        requiredDate: "Today"
-    }
-
-];
-
-const DEMO_DONORS = [
-
-    {
-        id: 101,
-        name: "John Thomas",
-        phone: "+91 9876543210",
-        bloodGroup: "O+",
-        district: "Ernakulam",
-        distance: "2.4 km",
-        availability: "Available",
-        compatibility: 98,
-        lastDonation: "4 months ago"
-    },
-
-    {
-        id: 102,
-        name: "Kevin Joseph",
-        phone: "+91 9876543211",
-        bloodGroup: "O+",
-        district: "Ernakulam",
-        distance: "4.1 km",
-        availability: "Available",
-        compatibility: 94,
-        lastDonation: "5 months ago"
-    },
-
-    {
-        id: 103,
-        name: "Alan George",
-        phone: "+91 9876543212",
-        bloodGroup: "O+",
-        district: "Ernakulam",
-        distance: "6.9 km",
-        availability: "Available",
-        compatibility: 91,
-        lastDonation: "6 months ago"
-    }
-
-];
 
 /* ===================================================================
    INITIALIZE MODULE
@@ -163,11 +87,7 @@ export function loadFindMatch(container) {
 
     bindEvents();
 
-    loadBloodRequests();
-
-    loadBloodAvailability();
-
-    loadDashboardStatistics();
+    initializeModule();
 
 }
 
@@ -177,9 +97,9 @@ export function loadFindMatch(container) {
 
 function initializeState() {
 
-    state.bloodRequests = [...DEMO_REQUESTS];
+    state.bloodRequests = [];
 
-    state.filteredRequests = [...DEMO_REQUESTS];
+    state.filteredRequests = [];
 
     state.matchingDonors = [];
 
@@ -189,13 +109,17 @@ function initializeState() {
 
     state.selectedDonors.clear();
 
-    state.statistics.pending = state.bloodRequests.length;
+    state.statistics = {
 
-    state.statistics.matches = 0;
+        pending: 0,
 
-    state.statistics.emails = 0;
+        matches: 0,
 
-    state.statistics.responses = 0;
+        emails: 0,
+
+        responses: 0
+
+    };
 
 }
 /* ===================================================================
@@ -220,36 +144,62 @@ function getFindMatchTemplate() {
 
             <section class="fm-header glass-card">
 
-                <div class="fm-header-left">
+            <div class="fm-header-left">
 
-                    <span class="fm-page-tag">
-                        BLOODLINK MATCHING
-                    </span>
+                <span class="fm-page-tag">
+                    BLOODLINK MATCHING
+                </span>
 
-                    <h1 class="fm-title">
-                        Find Compatible Donors
-                    </h1>
+                <h1 class="fm-title">
+                    Find Compatible Donors
+                </h1>
 
-                    <p class="fm-subtitle">
-                        Search compatible donors, manage pending blood requests,
-                        contact donors and monitor responses from one dashboard.
-                    </p>
+                <p class="fm-subtitle">
+                    Search compatible donors, manage pending blood requests,
+                    contact donors and monitor responses from one dashboard.
+                </p>
+
+            </div>
+
+            <div class="fm-header-right">
+
+                <div class="quick-actions-card">
+
+                    <h3>Quick Actions</h3>
+
+                    <div class="hero-action-grid">
+
+                        <button
+                            id="sendEmailHeroBtn"
+                            class="primary-btn">
+
+                            Send Email
+
+                        </button>
+
+                        <button
+                            id="exportMatchesBtn"
+                            class="secondary-btn">
+
+                            Export List
+
+                        </button>
+
+                        <button
+                            id="refreshDashboardBtn"
+                            class="secondary-btn">
+
+                            Refresh
+
+                        </button>
+
+                    </div>
 
                 </div>
 
-                <div class="fm-header-right">
+            </div>
 
-                    <button
-                        id="refreshDashboardBtn"
-                        class="primary-btn">
-
-                        Refresh Dashboard
-
-                    </button>
-
-                </div>
-
-            </section>
+        </section>
 
             <!-- =======================================================
                  KPI SECTION
@@ -423,104 +373,86 @@ function getFindMatchTemplate() {
 
                 <div class="right-column">
 
-                    <!-- Blood Availability -->
+                <div class="glass-card section-card">
 
-                    <div class="glass-card section-card">
+                    <div class="section-header">
 
-                        <div class="section-header">
+                    <h2>
+                        Compatible Donors
+                    </h2>
 
-                            <h2>
+                    <div class="section-actions">
 
-                                Blood Availability
+                        <input
+                            type="text"
+                            id="compatibleDonorSearch"
+                            class="search-input donor-search-input"
+                            placeholder="Search donor name...">
 
-                            </h2>
+                        <label class="select-all-wrapper">
 
-                        </div>
+                            <input
+                                type="checkbox"
+                                id="selectAllDonors">
 
-                        <div
-                            id="bloodAvailabilityPanel"
-                            class="availability-grid">
+                            <span>
+                                Select All Compatible
+                            </span>
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+                    <div class="donor-panel">
+
+                    <div
+                        id="donorCardsContainer"
+                        class="donor-list">
+
+                        <div class="empty-state">
+
+                            Select a blood request to view
+                            compatible donors.
 
                         </div>
 
                     </div>
 
-                    <!-- Quick Actions -->
+                    <div class="donor-panel-footer">
 
-                    <div class="glass-card section-card">
+                        <div class="selected-info">
 
-                        <div class="section-header">
+                            Selected Donors :
 
-                            <h2>
-
-                                Quick Actions
-
-                            </h2>
-
-                        </div>
-
-                        <div class="quick-action-grid">
-
-                            <button
-                                id="findBestMatchBtn"
-                                class="secondary-btn">
-
-                                Find Best Match
-
-                            </button>
-
-                            <button
-                                id="refreshMatchesBtn"
-                                class="secondary-btn">
-
-                                Refresh Matches
-
-                            </button>
-
-                            <button
-                                id="exportMatchesBtn"
-                                class="secondary-btn">
-
-                                Export
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    <!-- Compatible Donors -->
-
-                    <div class="glass-card section-card">
-
-                        <div class="section-header">
-
-                            <h2>
-
-                                Compatible Donors
-
-                            </h2>
-
-                            <span
-                                id="donorCountBadge"
-                                class="badge">
+                            <strong id="selectedDonorCount">
 
                                 0
 
-                            </span>
+                            </strong>
 
                         </div>
 
-                        <div
-                            id="donorCardsContainer"
-                            class="donor-list">
+                        <div class="panel-actions">
 
-                            <div class="empty-state">
+                            <button
+                                id="saveMatchBtn"
+                                class="secondary-btn"
+                                disabled>
 
-                                Select a request to view
-                                compatible donors.
+                                Save Match
 
-                            </div>
+                            </button>
+
+                            <button
+                                id="sendEmailBtn"
+                                class="primary-btn"
+                                disabled>
+
+                                Send Email
+
+                            </button>
 
                         </div>
 
@@ -528,50 +460,46 @@ function getFindMatchTemplate() {
 
                 </div>
 
-            </section>
+                </div>
 
+            </div>
+            </section>
+            <!-- =======================================================
+                BLOOD AVAILABILITY
+            ======================================================= -->
+
+            <section class="glass-card blood-availability-section">
+
+                <div class="section-header">
+
+                    <h2>Blood Availability</h2>
+
+                    <button
+                        class="secondary-btn"
+                        id="refreshAvailabilityBtn">
+
+                        Refresh Availability
+
+                    </button>
+
+                </div>
+
+                <div
+                    class="availability-grid"
+                    id="bloodAvailabilityGrid">
+
+                    ${renderBloodAvailability()}
+
+                </div>
+
+            </section>
             <!-- =======================================================
                  FOOTER ACTION BAR
             ======================================================== -->
 
-            <section class="bottom-action-bar glass-card">
 
-                <div class="selected-info">
 
-                    Selected Donors :
 
-                    <strong
-                        id="selectedDonorCount">
-
-                        0
-
-                    </strong>
-
-                </div>
-
-                <div class="bottom-actions">
-
-                    <button
-                        id="saveMatchBtn"
-                        class="secondary-btn">
-
-                        Save Match
-
-                    </button>
-
-                    <button
-                        id="sendEmailBtn"
-                        class="primary-btn">
-
-                        Send Email
-
-                    </button>
-
-                </div>
-
-            </section>
-
-        </div>
 
         <!-- Toast -->
 
@@ -614,7 +542,7 @@ function renderKPICards() {
     const responseElement = document.getElementById("responsesCount");
 
     const requestBadge = document.getElementById("requestCountBadge");
-    const donorBadge = document.getElementById("donorCountBadge");
+
 
     state.statistics.pending = state.filteredRequests.length;
     state.statistics.matches = state.filteredDonors.length;
@@ -634,8 +562,7 @@ function renderKPICards() {
     if (requestBadge)
         requestBadge.textContent = state.filteredRequests.length;
 
-    if (donorBadge)
-        donorBadge.textContent = state.filteredDonors.length;
+
 
 }
 
@@ -646,9 +573,8 @@ function renderKPICards() {
 function renderBloodAvailability() {
 
     const container = document.getElementById(
-        "bloodAvailabilityPanel"
+        "bloodAvailabilityGrid"
     );
-
     if (!container) return;
 
     const availability = [
@@ -1132,6 +1058,19 @@ function bindEvents() {
         ?.addEventListener("click", refreshDashboard);
 
     document
+        .getElementById("sendEmailHeroBtn")
+        ?.addEventListener(
+            "click",
+            sendSelectedEmails
+        );
+
+    document
+        .getElementById("exportMatchesBtn")
+        ?.addEventListener(
+            "click",
+            exportMatches
+        );
+    document
         .getElementById("refreshMatchesBtn")
         ?.addEventListener("click", refreshDashboard);
 
@@ -1156,6 +1095,12 @@ function bindEvents() {
     document
         .getElementById("hospitalSearch")
         ?.addEventListener("input", filterRequests);
+    document
+        .getElementById("compatibleDonorSearch")
+        ?.addEventListener(
+            "input",
+            filterCompatibleDonors
+        );    
 
     /* ---------------- Request Selection ---------------- */
 
@@ -1164,7 +1109,9 @@ function bindEvents() {
     /* ---------------- Donor Selection ---------------- */
 
     document.addEventListener("click", handleDonorSelection);
-
+    document
+        .getElementById("selectAllDonors")
+        ?.addEventListener("change", handleSelectAllDonors);
     /* ---------------- Footer Buttons ---------------- */
 
     document
@@ -1181,13 +1128,9 @@ function bindEvents() {
    REFRESH DASHBOARD
 =================================================================== */
 
-function refreshDashboard() {
+async function refreshDashboard() {
 
-    refreshModule();
-
-    showToast(
-        "Dashboard refreshed successfully."
-    );
+    await refreshModule();
 
 }
 
@@ -1220,29 +1163,7 @@ function handleRequestSelection(event) {
 
 }
 
-/* ===================================================================
-   LOAD MATCHING DONORS
-=================================================================== */
 
-function loadMatchingDonors(request) {
-
-    state.matchingDonors = DEMO_DONORS.filter(donor => {
-
-        return donor.bloodGroup === request.bloodGroup;
-
-    });
-
-    state.matchingDonors.sort((a, b) => {
-
-        return b.compatibility - a.compatibility;
-
-    });
-
-    state.filteredDonors = [...state.matchingDonors];
-
-    renderKPICards();
-
-}
 
 /* ===================================================================
    DONOR SELECTION
@@ -1273,22 +1194,60 @@ function handleDonorSelection(event) {
     renderDonorCards();
 
 }
+function handleSelectAllDonors(event) {
 
+    if (event.target.checked) {
+
+        state.filteredDonors.forEach(donor => {
+
+            state.selectedDonors.add(donor.id);
+
+        });
+
+    } else {
+
+        state.selectedDonors.clear();
+
+    }
+
+    updateSelectedCounter();
+
+    renderDonorCards();
+
+}
 /* ===================================================================
    SELECTED COUNTER
 =================================================================== */
 
 function updateSelectedCounter() {
 
-    const counter =
-        document.getElementById(
-            "selectedDonorCount"
-        );
+    const counter = document.getElementById("selectedDonorCount");
 
-    if (!counter) return;
+    const saveButton = document.getElementById("saveMatchBtn");
 
-    counter.textContent =
-        state.selectedDonors.size;
+    const emailButton = document.getElementById("sendEmailBtn");
+
+    const heroEmailButton = document.getElementById("sendEmailHeroBtn");
+
+    const selectedCount = state.selectedDonors.size;
+
+    if (counter) {
+        counter.textContent = selectedCount;
+    }
+
+    const hasSelection = selectedCount > 0;
+
+    if (saveButton) {
+        saveButton.disabled = !hasSelection;
+    }
+
+    if (emailButton) {
+        emailButton.disabled = !hasSelection;
+    }
+
+    if (heroEmailButton) {
+        heroEmailButton.disabled = !hasSelection;
+    }
 
 }
 
@@ -1426,7 +1385,16 @@ function filterRequests() {
         state.selectedDonors.clear();
 
     }
+    const selectAllCheckbox =
+        document.getElementById("selectAllDonors");
 
+    if (selectAllCheckbox) {
+
+        selectAllCheckbox.checked =
+            state.filteredDonors.length > 0 &&
+            state.selectedDonors.size === state.filteredDonors.length;
+
+    }
     updateSelectedCounter();
 
     renderKPICards();
@@ -1436,7 +1404,31 @@ function filterRequests() {
     renderDonorCards();
 
 }
+/* ===================================================================
+   FILTER COMPATIBLE DONORS
+=================================================================== */
 
+function filterCompatibleDonors() {
+
+    const keyword =
+        document
+            .getElementById("compatibleDonorSearch")
+            ?.value
+            .trim()
+            .toLowerCase() || "";
+
+    state.filteredDonors =
+        state.matchingDonors.filter(donor => {
+
+            return donor.name
+                .toLowerCase()
+                .includes(keyword);
+
+        });
+
+    renderDonorCards();
+
+}
 /* ===================================================================
    CLEAR SEARCH FILTERS
 =================================================================== */
@@ -1552,6 +1544,7 @@ function findBestMatch() {
    Later they will call authenticatedFetch().
 =================================================================== */
 
+
 /* ===================================================================
    LOAD BLOOD REQUESTS
 =================================================================== */
@@ -1560,32 +1553,93 @@ async function loadBloodRequests() {
 
     try {
 
+        showLoading("requestCardsContainer");
+
+        const response = await authenticatedFetch(
+            REQUEST_API
+        );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to load blood requests."
+            );
+
+        }
+
+        const requests = await response.json();
+
         /*
-        Future Backend
-
-        const response = await authenticatedFetch(REQUEST_API);
-
-        const data = await response.json();
-
-        state.bloodRequests = data;
-
+        ----------------------------------------------------------
+        Convert backend response into the existing UI format.
+        ----------------------------------------------------------
         */
 
-        state.bloodRequests = [...DEMO_REQUESTS];
+        state.bloodRequests = requests.map(request => ({
 
-        state.filteredRequests = [...state.bloodRequests];
+            id: request.id,
 
-        state.statistics.pending = state.filteredRequests.length;
+            patient: request.patient_name,
+
+            hospital: request.hospital_name,
+
+            district: request.hospital_location,
+
+            bloodGroup: request.blood_group,
+
+            units: request.units_required,
+
+            priority: request.priority,
+
+            requiredDate: formatDate(
+                request.required_date
+            ),
+
+            status: request.status
+
+        }));
+
+        /*
+        ----------------------------------------------------------
+        Only show pending and in-progress requests.
+        ----------------------------------------------------------
+        */
+
+        state.filteredRequests = state.bloodRequests.filter(
+
+            request =>
+
+                request.status === "Pending" ||
+
+                request.status === "In Progress"
+
+        );
+
+        state.statistics.pending =
+            state.filteredRequests.length;
 
         renderDashboard();
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.error(error);
 
+        renderEmptyState(
+
+            "requestCardsContainer",
+
+            "Unable to load blood requests."
+
+        );
+
         showToast(
-            "Unable to load blood requests.",
+
+            error.message,
+
             "error"
+
         );
 
     }
@@ -1596,56 +1650,104 @@ async function loadBloodRequests() {
    LOAD MATCHING DONORS
 =================================================================== */
 
+/* ===================================================================
+   LOAD MATCHING DONORS
+=================================================================== */
+
 async function loadMatchingDonorsFromAPI(requestId) {
 
     try {
 
-        /*
-        Future Backend
+        showLoading("donorCardsContainer");
 
         const response = await authenticatedFetch(
-
-            `${MATCH_API}/${requestId}`
-
+            MATCH_API,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    blood_request_id: requestId
+                })
+            }
         );
 
-        const donors = await response.json();
+        if (!response.ok) {
 
-        state.matchingDonors = donors;
+            throw new Error(
+                "Unable to retrieve compatible donors."
+            );
 
+        }
+
+        const result = await response.json();
+
+        /*
+        ----------------------------------------------------------
+        Convert backend response into the UI format expected by
+        the existing donor cards.
+        ----------------------------------------------------------
         */
 
-        state.matchingDonors = DEMO_DONORS.filter(
+        state.matchingDonors = result.matches.map(match => ({
 
-            donor => donor.bloodGroup === state.selectedRequest.bloodGroup
+            id: match.donor.id,
 
-        );
+            name: match.donor.name,
 
-        state.matchingDonors.sort(
+            phone: match.donor.phone,
 
-            (a, b) => b.compatibility - a.compatibility
+            email: match.donor.email,
 
-        );
+            bloodGroup: match.donor.blood_group,
+
+            district: match.donor.district,
+
+            availability: match.donor.status,
+
+            compatibility: match.score,
+
+            rank: match.rank,
+
+            distance: "-",
+
+            lastDonation: "-"
+
+        }));
 
         state.filteredDonors = [...state.matchingDonors];
+
+        state.selectedDonors.clear();
+
+        updateSelectedCounter();
 
         renderDonorCards();
 
         renderKPICards();
 
+        showToast(
+            `${result.total_matches} compatible donors found.`,
+            "success"
+        );
+
     } catch (error) {
 
         console.error(error);
 
+        renderEmptyState(
+            "donorCardsContainer",
+            "Unable to load compatible donors."
+        );
+
         showToast(
-            "Unable to load compatible donors.",
+            error.message,
             "error"
         );
 
     }
 
 }
-
 /* ===================================================================
    SAVE MATCH
 =================================================================== */
@@ -1659,9 +1761,9 @@ async function saveMatchToDatabase() {
 
         const payload = {
 
-            requestId: state.selectedRequest.id,
+            blood_request_id: state.selectedRequest.id,
 
-            donorIds: [...state.selectedDonors]
+            donor_ids: [...state.selectedDonors]
 
         };
 
@@ -1713,63 +1815,96 @@ async function saveMatchToDatabase() {
    SEND EMAILS
 =================================================================== */
 
+/* ===================================================================
+   SEND EMAILS
+=================================================================== */
+
 async function sendEmailsToSelectedDonors() {
 
     try {
 
-        if (state.selectedDonors.size === 0)
+        if (!state.selectedRequest) {
+
+            showToast(
+                "Please select a blood request.",
+                "warning"
+            );
+
             return;
 
-        const payload = {
+        }
 
-            request: state.selectedRequest,
+        if (state.selectedDonors.size === 0) {
 
-            donorIds: [...state.selectedDonors]
+            showToast(
+                "Please select at least one donor.",
+                "warning"
+            );
 
-        };
+            return;
 
-        /*
-        Future Backend
+        }
 
-        await authenticatedFetch(
+        const response = await authenticatedFetch(
 
-            EMAIL_API,
+            SEND_NOTIFICATION_API,
 
             {
 
-                method:"POST",
+                method: "POST",
 
-                headers:{
+                headers: {
 
-                    "Content-Type":"application/json"
+                    "Content-Type": "application/json"
 
                 },
 
-                body:JSON.stringify(payload)
+                body: JSON.stringify({
+
+                    blood_request_id: state.selectedRequest.id,
+
+                    donor_ids: [...state.selectedDonors]
+
+                })
 
             }
 
         );
 
-        */
+        if (!response.ok) {
 
-        console.log(payload);
+            throw new Error(
+                "Failed to send notification emails."
+            );
 
-        state.statistics.emails += state.selectedDonors.size;
+        }
+
+        const result = await response.json();
+
+        state.statistics.emails += result.emails_sent;
 
         renderKPICards();
 
         showToast(
-            "Email notifications sent."
+
+            `${result.emails_sent} notification emails sent successfully.`,
+
+            "success"
+
         );
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.error(error);
 
         showToast(
-            "Unable to send emails.",
+
+            error.message,
+
             "error"
+
         );
 
     }
@@ -1780,21 +1915,34 @@ async function sendEmailsToSelectedDonors() {
    LOAD DASHBOARD STATISTICS
 =================================================================== */
 
+/* ===================================================================
+   LOAD DASHBOARD STATISTICS
+=================================================================== */
+
 async function loadDashboardStatistics() {
 
     try {
 
+        const response = await authenticatedFetch(
+            NOTIFICATION_STATS_API
+        );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to load dashboard statistics."
+            );
+
+        }
+
+        const statistics = await response.json();
+
         /*
-        Future Backend
-
-        const response =
-            await authenticatedFetch("/api/dashboard/find-match");
-
-        const statistics =
-            await response.json();
-
-        state.statistics = statistics;
-
+        ----------------------------------------------------------
+        Merge backend statistics with UI statistics.
+        Pending Requests and Compatible Donors are still driven
+        by the currently loaded page state.
+        ----------------------------------------------------------
         */
 
         state.statistics.pending =
@@ -1803,11 +1951,25 @@ async function loadDashboardStatistics() {
         state.statistics.matches =
             state.filteredDonors.length;
 
+        state.statistics.emails =
+            statistics.emails_sent;
+
+        state.statistics.responses =
+            statistics.accepted +
+            statistics.declined;
+
         renderKPICards();
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.error(error);
+
+        showToast(
+            error.message,
+            "error"
+        );
 
     }
 
@@ -1918,42 +2080,7 @@ function sortDonors() {
 
 }
 
-/* ===================================================================
-   CALCULATE COMPATIBILITY
-   (Temporary Frontend Version)
 
-   Backend will eventually calculate this score.
-=================================================================== */
-
-function calculateCompatibility(donor, request) {
-
-    let score = 0;
-
-    if (donor.bloodGroup === request.bloodGroup)
-        score += 50;
-
-    if (donor.availability === "Available")
-        score += 20;
-
-    score += Math.max(
-
-        0,
-
-        20 - parseFloat(donor.distance)
-
-    );
-
-    score += 10;
-
-    return Math.min(
-
-        100,
-
-        Math.round(score)
-
-    );
-
-}
 
 /* ===================================================================
    RESET SELECTIONS
@@ -2088,6 +2215,13 @@ function clearSearchFields() {
     if (district) district.value = "";
 
     if (hospital) hospital.value = "";
+        const donor =
+        document.getElementById(
+            "compatibleDonorSearch"
+        );
+
+    if (donor)
+        donor.value = "";
 
 }
 
@@ -2095,7 +2229,7 @@ function clearSearchFields() {
    REFRESH MODULE
 =================================================================== */
 
-function refreshModule() {
+async function refreshModule() {
 
     clearSearchFields();
 
@@ -2103,7 +2237,14 @@ function refreshModule() {
 
     initializeState();
 
-    renderDashboard();
+    await loadBloodRequests();
+
+    await loadDashboardStatistics();
+
+    await loadBloodAvailability();
+
+    updateSelectedCounter();
+
 
     showToast(
 
@@ -2130,7 +2271,7 @@ async function initializeModule() {
 
         updateSelectedCounter();
 
-        renderDashboard();
+        
 
     } catch (error) {
 
