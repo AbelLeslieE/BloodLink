@@ -11,6 +11,10 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from backend.database.models import BloodRequest, Donor, User
+from backend.database.notification import Notification
+from backend.database.notification_recipient import NotificationRecipient
+from backend.database.email_token import EmailToken
+from backend.database.donor_response import DonorResponse
 
 from backend.database.schemas import (
     BloodRequestCreate,
@@ -79,26 +83,393 @@ def volunteer_exists(database_session: Session) -> bool:
     return database_session.scalar(statement) is not None
 
 
-def create_user(database_session: Session, user_data: UserCreate) -> User:
+def create_user(
+    database_session: Session,
+    user_data: UserCreate,
+) -> User:
     """Persist a user record whose password has already been securely hashed."""
+
     user = User(
         username=user_data.username,
         password_hash=user_data.password_hash,
         full_name=user_data.full_name,
         active=user_data.active,
     )
+
     database_session.add(user)
-    _commit_and_refresh(database_session, user)
+
+    _commit_and_refresh(
+        database_session,
+        user,
+    )
+
     return user
 
 
-def update_user_last_login(database_session: Session, user: User) -> User:
+def update_user_last_login(
+    database_session: Session,
+    user: User,
+) -> User:
     """Record the time at which a volunteer successfully authenticated."""
+
     user.last_login = datetime.now(timezone.utc)
-    _commit_and_refresh(database_session, user)
+
+    _commit_and_refresh(
+        database_session,
+        user,
+    )
+
     return user
+# ==========================================================
+# NOTIFICATION CRUD
+# ==========================================================
+
+def create_notification(
+    database_session: Session,
+    blood_request_id: int,
+    title: str,
+) -> Notification:
+    """
+    Create a notification campaign.
+    """
+
+    notification = Notification(
+        blood_request_id=blood_request_id,
+        title=title,
+        status="ACTIVE",
+    )
+
+    database_session.add(notification)
+
+    _commit_and_refresh(
+        database_session,
+        notification,
+    )
+
+    return notification
 
 
+def get_notification_by_id(
+    database_session: Session,
+    notification_id: int,
+) -> Notification | None:
+    """
+    Return one notification campaign.
+    """
+
+    statement = (
+        select(Notification)
+        .where(Notification.id == notification_id)
+    )
+
+    return database_session.scalar(statement)
+
+
+def get_notifications(
+    database_session: Session,
+) -> list[Notification]:
+    """
+    Return all notification campaigns.
+    """
+
+    statement = (
+        select(Notification)
+        .order_by(Notification.created_at.desc())
+    )
+
+    return list(
+        database_session.scalars(statement).all()
+    )
+
+
+# ==========================================================
+# NOTIFICATION RECIPIENT CRUD
+# ==========================================================
+
+def create_notification_recipient(
+    database_session: Session,
+    notification_id: int,
+    donor: Donor,
+    distance: float,
+) -> NotificationRecipient:
+    """
+    Create one recipient entry for a donor.
+    """
+
+    recipient = NotificationRecipient(
+        notification_id=notification_id,
+        donor_id=donor.id,
+        email=donor.email,
+        distance=distance,
+        status="PENDING",
+    )
+
+    database_session.add(recipient)
+
+    _commit_and_refresh(
+        database_session,
+        recipient,
+    )
+
+    return recipient
+
+
+def get_notification_recipients(
+    database_session: Session,
+    notification_id: int,
+) -> list[NotificationRecipient]:
+    """
+    Return all recipients belonging to a campaign.
+    """
+
+    statement = (
+        select(NotificationRecipient)
+        .where(
+            NotificationRecipient.notification_id == notification_id
+        )
+        .order_by(NotificationRecipient.id)
+    )
+
+    return list(
+        database_session.scalars(statement).all()
+    )
+# ==========================================================
+# NOTIFICATION RECIPIENT STATUS
+# ==========================================================
+
+def get_notification_recipient_by_token(
+    database_session: Session,
+    email_token_id: int,
+) -> NotificationRecipient | None:
+    """
+    Return one notification recipient using its email token.
+    """
+
+    statement = (
+        select(NotificationRecipient)
+        .where(
+            NotificationRecipient.email_token_id == email_token_id
+        )
+    )
+
+    return database_session.scalar(statement)
+
+
+def update_notification_recipient_status(
+    database_session: Session,
+    recipient: NotificationRecipient,
+    status: str,
+) -> NotificationRecipient:
+    """
+    Update a recipient's response status.
+    """
+
+    recipient.status = status
+    recipient.responded_at = datetime.now(timezone.utc)
+
+    _commit_and_refresh(
+        database_session,
+        recipient,
+    )
+
+    return recipient
+# ==========================================================
+# NOTIFICATION CAMPAIGN STATISTICS
+# ==========================================================
+
+def refresh_notification_statistics(
+    database_session: Session,
+    notification: Notification,
+) -> Notification:
+    """
+    Refresh notification statistics based on recipient responses.
+    """
+
+    recipients = get_notification_recipients(
+        database_session,
+        notification.id,
+    )
+
+    notification.total_sent = len(recipients)
+
+    notification.accepted_count = sum(
+        1 for recipient in recipients
+        if recipient.status == "ACCEPTED"
+    )
+
+    notification.declined_count = sum(
+        1 for recipient in recipients
+        if recipient.status == "DECLINED"
+    )
+
+    notification.pending_count = sum(
+        1 for recipient in recipients
+        if recipient.status == "PENDING"
+    )
+
+    _commit_and_refresh(
+        database_session,
+        notification,
+    )
+
+    return notification
+# ==========================================================
+# EMAIL TOKEN CRUD
+# ==========================================================
+
+def create_email_token(
+    database_session: Session,
+    recipient: NotificationRecipient,
+    token: str,
+    expires_at: datetime,
+) -> EmailToken:
+    """
+    Create and save an email token for a notification recipient.
+    """
+
+    email_token = EmailToken(
+        token=token,
+        expires_at=expires_at,
+    )
+
+    database_session.add(email_token)
+
+    _commit_and_refresh(
+        database_session,
+        email_token,
+    )
+
+    recipient.email_token_id = email_token.id
+
+    _commit_and_refresh(
+        database_session,
+        recipient,
+    )
+
+    return email_token
+
+def get_email_token(
+    database_session: Session,
+    token: str,
+) -> EmailToken | None:
+    """
+    Return an email token using the token string.
+    """
+
+    statement = (
+        select(EmailToken)
+        .where(
+            EmailToken.token == token
+        )
+    )
+
+    return database_session.scalar(statement)
+
+
+def mark_email_token_used(
+    database_session: Session,
+    email_token: EmailToken,
+) -> EmailToken:
+    """
+    Mark an email token as used.
+    """
+
+    email_token.used = True
+
+    _commit_and_refresh(
+        database_session,
+        email_token,
+    )
+
+    return email_token
+
+
+def email_token_expired(
+    email_token: EmailToken,
+) -> bool:
+    """
+    Return whether an email token has expired.
+
+    Works correctly with both SQLite (naive datetime)
+    and PostgreSQL (timezone-aware datetime).
+    """
+
+    expires_at = email_token.expires_at
+
+    # SQLite returns naive datetimes
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(
+            tzinfo=timezone.utc,
+        )
+
+    return (
+        datetime.now(timezone.utc)
+        >= expires_at
+    )
+# ==========================================================
+# UPDATE BLOOD REQUEST STATUS (AUTO)
+# ==========================================================
+
+def update_blood_request_status(
+    database_session,
+    blood_request,
+    new_status: str,
+):
+    """
+    Update the status of a blood request.
+    """
+
+    blood_request.status = new_status
+
+    database_session.add(
+        blood_request,
+    )
+
+    database_session.commit()
+
+    database_session.refresh(
+        blood_request,
+    )
+
+    return blood_request
+# ==========================================================
+# DONOR RESPONSE CRUD
+# ==========================================================
+
+def create_donor_response(
+    database_session: Session,
+    email_token: EmailToken,
+    response: str,
+    remarks: str | None = None,
+) -> DonorResponse:
+    """
+    Store a donor's response for a blood request.
+    """
+
+    recipient = get_notification_recipient_by_token(
+        database_session,
+        email_token.id,
+    )
+
+    if recipient is None:
+        raise ValueError("Notification recipient not found.")
+
+    donor_response = DonorResponse(
+        email_token_id=email_token.id,
+        donor_id=recipient.donor_id,
+        blood_request_id=recipient.notification.blood_request_id,
+        response=response,
+        remarks=remarks,
+    )
+
+    database_session.add(donor_response)
+
+    _commit_and_refresh(
+        database_session,
+        donor_response,
+    )
+
+    return donor_response
 # ==========================================================
 # DONOR CRUD
 # ==========================================================
@@ -259,7 +630,21 @@ def get_eligible_donors(
     database_session: Session,
     compatible_groups: list[str],
 ) -> list[Donor]:
-    ...
+    """
+    Return available donors belonging to compatible blood groups.
+    """
+
+    statement = (
+        select(Donor)
+        .where(
+            Donor.blood_group.in_(compatible_groups),
+            Donor.status == "Available",
+        )
+    )
+
+    return list(
+        database_session.scalars(statement).all()
+    )
 def get_donor_by_email(
     database_session: Session,
     email: str,

@@ -1,96 +1,81 @@
 /* ==========================================================
-   BloodLink - Notifications Module
-   File: notifications.css
-   Description:
-   Donor Response Center Styling
+   BloodLink - Notifications
+   Part 1
+   Root + Page Layout + Hero + KPI Cards
 ========================================================== */
 
-
 /* ==========================================================
-   1. Notifications Page
+   PAGE
 ========================================================== */
 
 .notifications-page{
-    display:flex;
-    flex-direction:column;
-    gap:28px;
-    min-height:100%;
-    padding:30px;
-
-    background:
-        linear-gradient(
-            rgba(8,18,40,.82),
-            rgba(5,12,30,.90)
-        ),
-        url("/static/assets/noti.png");
-
-    background-size:cover;
-    background-position:center;
-    background-repeat:no-repeat;
-    background-attachment:fixed;
-}
-
-
-/* ==========================================================
-   2. Shared Glass Card
-========================================================== */
-
-.notifications-page .glass-card{
-
-    background:rgba(255,255,255,.08);
-
-    backdrop-filter:blur(18px);
-
-    -webkit-backdrop-filter:blur(18px);
-
-    border:1px solid rgba(255,255,255,.14);
-
-    border-radius:22px;
-
-    box-shadow:0 15px 35px rgba(0,0,0,.18);
-
-}
-
-
-/* ==========================================================
-   3. Hero Section
-========================================================== */
-
-.notifications-hero{
-
-    padding:34px;
-
-    overflow:hidden;
 
     position:relative;
 
-}
+    min-height:100vh;
 
+    padding:22px;
 
-.notifications-hero::before{
+    background:
+        linear-gradient(
+            rgba(7,12,28,.45),
+            rgba(7,12,28,.62)
+        ),
+        url("/static/assets/noti.png") center center / cover no-repeat;
 
-    content:"";
-
-    position:absolute;
-
-    top:-140px;
-
-    right:-100px;
-
-    width:320px;
-
-    height:320px;
-
-    border-radius:50%;
-
-    background:rgba(59,130,246,.10);
-
-    filter:blur(12px);
+    background-attachment:fixed;
 
 }
 
+/* ==========================================================
+   GLASS CARD
+========================================================== */
 
-.hero-content{
+.glass-card{
+
+    background:rgba(15,22,40,.22);
+
+    backdrop-filter:blur(28px);
+    -webkit-backdrop-filter:blur(28px);
+
+    border:1px solid rgba(255,255,255,.08);
+
+    border-radius:20px;
+
+    box-shadow:
+        0 10px 35px rgba(0,0,0,.18),
+        inset 0 1px 0 rgba(255,255,255,.05);
+
+}
+
+.glass-inner-card{
+
+    background:rgba(255,255,255,.025);
+
+    border:1px solid rgba(255,255,255,.06);
+
+    border-radius:16px;
+
+}
+
+.notifications-container{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+    position:relative;
+
+    z-index:2;
+
+}
+/* ==========================================================
+   HERO
+========================================================== */
+
+.notifications-hero{
 
     display:flex;
 
@@ -98,14 +83,31 @@
 
     align-items:center;
 
-    gap:40px;
+    padding:22px 28px;
 
-    position:relative;
-
-    z-index:2;
+    min-height:120px;
 
 }
 
+.notifications-hero::before{
+
+    content:"";
+
+    position:absolute;
+
+    right:-80px;
+
+    top:-80px;
+
+    width:260px;
+
+    height:260px;
+
+    border-radius:50%;
+
+    background:rgba(82,120,255,.08);
+
+}
 
 .hero-left{
 
@@ -115,78 +117,134 @@
 
     gap:24px;
 
-}
+    z-index:2;
 
+}
 
 .hero-icon{
 
-    width:82px;
+    width:72px;
 
-    height:82px;
+    height:72px;
 
-    border-radius:22px;
+    border-radius:20px;
 
-    background:linear-gradient(
-        135deg,
-        #2563eb,
-        #3b82f6
-    );
+    background:linear-gradient(135deg,#3479ff,#4d8dff);
 
     display:flex;
 
-    justify-content:center;
-
     align-items:center;
+
+    justify-content:center;
 
     font-size:34px;
 
-    box-shadow:
-        0 10px 30px rgba(37,99,235,.35);
+    color:white;
+
+    flex-shrink:0;
+
+    box-shadow:0 15px 35px rgba(40,110,255,.35);
 
 }
 
-
-.hero-text h1{
+.hero-content h1{
 
     margin:0;
 
     color:#fff;
 
-    font-size:2rem;
+    font-size:24px;
 
     font-weight:700;
 
+    letter-spacing:-.5px;
+
 }
 
+.hero-content p{
 
-.hero-text p{
+    margin-top:6px;
 
-    margin-top:12px;
+    color:#b8c0d8;
 
     max-width:620px;
 
-    color:#CBD5E1;
+    font-size:14px;
 
-    line-height:1.7;
-
-    font-size:.98rem;
+    line-height:1.6;
 
 }
 
+.hero-right{
 
-.hero-actions{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:16px;
+    z-index:2;
 
 }
 
 
 /* ==========================================================
-   4. KPI Section
+   BUTTONS
+========================================================== */
+
+.primary-btn{
+
+    border:none;
+
+    cursor:pointer;
+
+    border-radius:16px;
+
+    padding:15px 26px;
+
+    background:linear-gradient(135deg,#3479ff,#4d8dff);
+
+    color:#fff;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    transition:.25s;
+
+    box-shadow:0 12px 30px rgba(60,110,255,.35);
+
+}
+
+.primary-btn:hover{
+
+    transform:translateY(-2px);
+
+}
+
+.secondary-btn{
+
+    border:1px solid rgba(255,255,255,.08);
+
+    background:rgba(255,255,255,.05);
+
+    color:#fff;
+
+    cursor:pointer;
+
+    border-radius:16px;
+
+    padding:15px 24px;
+
+    font-size:15px;
+
+    transition:.25s;
+
+}
+
+.secondary-btn:hover{
+
+    background:rgba(255,255,255,.09);
+
+}
+
+
+/* ==========================================================
+   KPI SECTION
 ========================================================== */
 
 .notification-kpis{
@@ -195,39 +253,27 @@
 
     grid-template-columns:repeat(4,1fr);
 
-    gap:22px;
+    gap:18px;
 
 }
 
-
 .kpi-card{
-
-    padding:24px;
-
-    display:flex;
-
-    align-items:center;
-
-    gap:20px;
 
     position:relative;
 
     overflow:hidden;
 
-    transition:.30s;
+    padding:18px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:16px;
+
+    min-height:92px;
 
 }
-
-
-.kpi-card:hover{
-
-    transform:translateY(-6px);
-
-    box-shadow:
-        0 18px 40px rgba(0,0,0,.25);
-
-}
-
 
 .kpi-card::after{
 
@@ -235,9 +281,9 @@
 
     position:absolute;
 
-    right:-35px;
+    right:-40px;
 
-    bottom:-35px;
+    bottom:-40px;
 
     width:120px;
 
@@ -245,35 +291,31 @@
 
     border-radius:50%;
 
-    background:rgba(255,255,255,.05);
+    background:rgba(255,255,255,.04);
 
 }
 
-
 .kpi-icon{
 
-    width:64px;
+    width:56px;
 
-    height:64px;
+    height:56px;
 
-    border-radius:18px;
+    border-radius:16px;
 
     display:flex;
 
-    justify-content:center;
-
     align-items:center;
 
-    font-size:26px;
+    justify-content:center;
 
-    background:rgba(255,255,255,.10);
+    background:rgba(255,255,255,.06);
 
-    color:#fff;
+    font-size:24px;
 
     flex-shrink:0;
 
 }
-
 
 .kpi-info{
 
@@ -281,104 +323,75 @@
 
     flex-direction:column;
 
-}
+    gap:8px;
 
+}
 
 .kpi-info h2{
 
     margin:0;
 
-    color:#fff;
-
-    font-size:2rem;
+    font-size:34px;
 
     font-weight:700;
 
-}
+    color:#fff;
 
+    line-height:1;
+
+}
 
 .kpi-info span{
 
-    margin-top:6px;
+    color:#c8cfe1;
 
-    color:#CBD5E1;
-
-    font-size:.92rem;
+    font-size:14px;
 
 }
 
 
 /* ==========================================================
-   5. Primary & Secondary Buttons
+   RESPONSIVE
 ========================================================== */
 
-.primary-btn{
+@media(max-width:1500px){
 
-    border:none;
+    .notification-kpis{
 
-    outline:none;
+        grid-template-columns:repeat(2,1fr);
 
-    cursor:pointer;
-
-    padding:13px 24px;
-
-    border-radius:16px;
-
-    background:linear-gradient(
-        135deg,
-        #2563eb,
-        #3b82f6
-    );
-
-    color:#fff;
-
-    font-weight:600;
-
-    transition:.30s;
+    }
 
 }
 
+@media(max-width:900px){
 
-.primary-btn:hover{
+    .notifications-hero{
 
-    transform:translateY(-3px);
+        flex-direction:column;
 
-    box-shadow:
-        0 10px 24px rgba(37,99,235,.35);
+        align-items:flex-start;
 
-}
+        gap:25px;
 
+    }
 
-.secondary-btn{
+    .notification-kpis{
 
-    border:none;
+        grid-template-columns:1fr;
 
-    outline:none;
-
-    cursor:pointer;
-
-    padding:13px 24px;
-
-    border-radius:16px;
-
-    background:rgba(255,255,255,.08);
-
-    color:#fff;
-
-    border:1px solid rgba(255,255,255,.15);
-
-    transition:.30s;
-
-}
-
-
-.secondary-btn:hover{
-
-    background:rgba(255,255,255,.14);
+    }
 
 }
 /* ==========================================================
-   6. Toolbar
+   BloodLink - Notifications
+   Part 2
+   Toolbar + Main Layout
+========================================================== */
+
+
+/* ==========================================================
+   TOOLBAR
 ========================================================== */
 
 .notifications-toolbar{
@@ -389,25 +402,21 @@
 
     align-items:center;
 
-    gap:20px;
+    gap:24px;
 
-    padding:22px 26px;
-
-    flex-wrap:wrap;
+    padding:18px 22px;
 
 }
 
 .toolbar-left{
+
+    flex:1;
 
     display:flex;
 
     align-items:center;
 
     gap:18px;
-
-    flex:1;
-
-    flex-wrap:wrap;
 
 }
 
@@ -417,96 +426,140 @@
 
     align-items:center;
 
-    gap:16px;
+    gap:14px;
 
 }
 
 
 /* ==========================================================
-   Search Input
+   SEARCH
 ========================================================== */
 
-#responseSearch{
+#notificationSearch{
 
     flex:1;
 
-    min-width:280px;
+    min-width:320px;
 
-    padding:14px 18px;
+    height:56px;
+
+    padding:0 22px;
 
     border-radius:16px;
 
-    border:1px solid rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.08);
 
-    background:rgba(255,255,255,.08);
+    background:rgba(255,255,255,.05);
 
-    color:#ffffff;
+    color:#fff;
+
+    font-size:15px;
 
     outline:none;
 
-    transition:.30s;
+    transition:.25s;
 
 }
 
-#responseSearch::placeholder{
+#notificationSearch::placeholder{
 
-    color:#94A3B8;
+    color:#9ca6bf;
 
 }
 
-#responseSearch:focus{
+#notificationSearch:focus{
 
-    border-color:#3B82F6;
+    border-color:#4b8dff;
 
-    box-shadow:0 0 0 3px rgba(59,130,246,.18);
+    box-shadow:0 0 0 3px rgba(75,141,255,.18);
 
 }
 
 
 /* ==========================================================
-   Select Box
+   SELECT BOXES
 ========================================================== */
 
-#responseStatusFilter{
+#typeFilter,
 
-    min-width:180px;
+#statusFilter,
 
-    padding:14px 18px;
+#dateFilter{
+
+    height:56px;
+
+    padding:0 18px;
 
     border-radius:16px;
 
-    border:1px solid rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.08);
 
-    background:rgba(255,255,255,.08);
+    background:rgba(255,255,255,.05);
 
-    color:#ffffff;
+    color:#fff;
+
+    font-size:15px;
 
     outline:none;
 
     cursor:pointer;
 
+    transition:.25s;
+
 }
 
-#responseStatusFilter option{
+#typeFilter{
 
-    background:#152238;
+    width:180px;
 
-    color:#ffffff;
+}
+
+#statusFilter{
+
+    width:170px;
+
+}
+
+#dateFilter{
+
+    width:170px;
+
+}
+
+#typeFilter:focus,
+
+#statusFilter:focus,
+
+#dateFilter:focus{
+
+    border-color:#4b8dff;
+
+    box-shadow:0 0 0 3px rgba(75,141,255,.18);
+
+}
+
+#typeFilter option,
+
+#statusFilter option{
+
+    background:#30384d;
+
+    color:#fff;
 
 }
 
 
 /* ==========================================================
-   7. Main Layout
+   MAIN LAYOUT
 ========================================================== */
 
 .notifications-layout{
 
     display:grid;
 
-    grid-template-columns:1.15fr .85fr;
+    grid-template-columns:300px 1fr;
 
-    gap:26px;
+    gap:28px;
 
     align-items:start;
 
@@ -514,807 +567,190 @@
 
 
 /* ==========================================================
-   Left Response Panel
+   LEFT PANEL
 ========================================================== */
 
-.response-list{
-
-    min-height:720px;
-
-    padding:24px;
+.notification-feed{
 
     display:flex;
 
     flex-direction:column;
 
-}
-
-.section-title{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    margin-bottom:20px;
-
-}
-
-.section-title h2{
-
-    margin:0;
-
-    color:#ffffff;
-
-    font-size:1.35rem;
-
-    font-weight:700;
-
-}
-
-
-/* ==========================================================
-   Response Container
-========================================================== */
-
-.response-list-container{
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:18px;
-
-}
-
-
-/* ==========================================================
-   Right Details Panel
-========================================================== */
-
-.response-details{
-
-    min-height:720px;
-
-    padding:30px;
-
-    position:sticky;
-
-    top:20px;
-
-}
-
-
-/* ==========================================================
-   Empty Details
-========================================================== */
-
-.empty-details{
-
-    height:100%;
-
-    display:flex;
-
-    flex-direction:column;
-
-    justify-content:center;
-
-    align-items:center;
-
-    text-align:center;
-
-    gap:18px;
-
-}
-
-.empty-icon{
-
-    width:90px;
-
-    height:90px;
-
-    border-radius:50%;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    font-size:38px;
-
-    background:rgba(255,255,255,.08);
-
-    border:1px solid rgba(255,255,255,.12);
-
-}
-
-.empty-details h2{
-
-    margin:0;
-
-    color:#ffffff;
-
-}
-
-.empty-details p{
-
-    max-width:320px;
-
-    line-height:1.7;
-
-    color:#CBD5E1;
-
-}
-
-
-/* ==========================================================
-   Pagination
-========================================================== */
-
-.pagination-section{
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    gap:22px;
-
-    padding-bottom:15px;
-
-}
-
-.pagination-btn{
-
-    padding:12px 24px;
-
-    border:none;
-
-    border-radius:14px;
-
-    cursor:pointer;
-
-    background:rgba(255,255,255,.08);
-
-    color:#ffffff;
-
-    border:1px solid rgba(255,255,255,.12);
-
-    transition:.30s;
-
-}
-
-.pagination-btn:hover{
-
-    background:rgba(255,255,255,.14);
-
-}
-
-.page-indicator{
-
-    color:#CBD5E1;
-
-    font-weight:500;
-
-}
-/* ==========================================================
-   8. Donor Response Cards
-========================================================== */
-
-.donor-response-card{
-
-    position:relative;
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:18px;
-
-    padding:22px;
-
-    border-radius:20px;
-
-    background:rgba(255,255,255,.05);
-
-    border:1px solid rgba(255,255,255,.08);
-
-    cursor:pointer;
-
-    transition:
-        transform .25s ease,
-        box-shadow .25s ease,
-        border-color .25s ease,
-        background .25s ease;
-
-}
-
-.donor-response-card:hover{
-
-    transform:translateY(-4px);
-
-    background:rgba(255,255,255,.08);
-
-    border-color:rgba(59,130,246,.45);
-
-    box-shadow:
-        0 14px 30px rgba(0,0,0,.20);
-
-}
-
-.donor-response-card.active{
-
-    background:rgba(59,130,246,.12);
-
-    border-color:#3B82F6;
-
-    box-shadow:
-        0 0 0 1px rgba(59,130,246,.30),
-        0 18px 40px rgba(0,0,0,.25);
-
-}
-
-
-/* ==========================================================
-   Card Top
-========================================================== */
-
-.response-card-top{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:18px;
-
-}
-
-.response-avatar{
-
-    width:64px;
-
-    height:64px;
-
-    border-radius:18px;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    font-size:28px;
-
-    background:linear-gradient(
-        135deg,
-        rgba(37,99,235,.85),
-        rgba(59,130,246,.95)
-    );
-
-    box-shadow:
-        0 10px 25px rgba(37,99,235,.35);
-
-    flex-shrink:0;
-
-}
-
-.response-information{
-
-    flex:1;
-
-}
-
-.response-information h3{
-
-    margin:0;
-
-    color:#ffffff;
-
-    font-size:1.1rem;
-
-    font-weight:700;
-
-}
-
-.response-information p{
-
-    margin-top:6px;
-
-    color:#CBD5E1;
-
-    font-size:.9rem;
-
-}
-
-
-/* ==========================================================
-   Status Badge
-========================================================== */
-
-.status-badge{
-
-    display:inline-flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    gap:8px;
-
-    min-width:120px;
-
-    padding:8px 16px;
-
-    border-radius:999px;
-
-    font-size:.78rem;
-
-    font-weight:700;
-
-    letter-spacing:.5px;
-
-    text-transform:uppercase;
-
-}
-
-.status-badge.accepted{
-
-    background:rgba(34,197,94,.18);
-
-    color:#4ADE80;
-
-    border:1px solid rgba(74,222,128,.35);
-
-}
-
-.status-badge.pending{
-
-    background:rgba(234,179,8,.18);
-
-    color:#FACC15;
-
-    border:1px solid rgba(250,204,21,.35);
-
-}
-
-.status-badge.declined{
-
-    background:rgba(239,68,68,.18);
-
-    color:#F87171;
-
-    border:1px solid rgba(248,113,113,.35);
-
-}
-
-
-/* ==========================================================
-   Card Middle
-========================================================== */
-
-.response-card-middle{
-
-    display:grid;
-
-    grid-template-columns:repeat(2,1fr);
-
-    gap:18px;
-
-}
-
-.response-card-middle div{
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:6px;
-
-}
-
-.response-card-middle strong{
-
-    color:#94A3B8;
-
-    font-size:.8rem;
-
-    text-transform:uppercase;
-
-    letter-spacing:.6px;
-
-}
-
-.response-card-middle span{
-
-    color:#ffffff;
-
-    font-weight:600;
-
-}
-
-
-/* ==========================================================
-   Card Footer
-========================================================== */
-
-.response-card-footer{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    padding-top:16px;
-
-    border-top:1px solid rgba(255,255,255,.08);
-
-    color:#CBD5E1;
-
-    font-size:.84rem;
-
-}
-
-
-/* ==========================================================
-   Details Panel
-========================================================== */
-
-.response-details-content{
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:28px;
-
-}
-
-.details-header{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    gap:20px;
-
-}
-
-.details-header h2{
-
-    margin:0;
-
-    color:#ffffff;
-
-    font-size:1.6rem;
-
-}
-
-
-/* ==========================================================
-   Details Grid
-========================================================== */
-
-.details-grid{
-
-    display:grid;
-
-    grid-template-columns:repeat(2,1fr);
-
-    gap:18px;
-
-}
-
-.details-grid div{
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:8px;
-
-    padding:16px;
-
-    border-radius:16px;
-
-    background:rgba(255,255,255,.05);
-
-    border:1px solid rgba(255,255,255,.08);
-
-}
-
-.details-grid label{
-
-    color:#94A3B8;
-
-    font-size:.78rem;
-
-    text-transform:uppercase;
-
-    letter-spacing:.6px;
-
-}
-
-.details-grid span{
-
-    color:#ffffff;
-
-    font-weight:600;
-
-    word-break:break-word;
-
-}
-
-
-/* ==========================================================
-   Action Buttons
-========================================================== */
-
-.details-actions{
-
-    display:flex;
-
-    gap:16px;
-
-    flex-wrap:wrap;
-
-}
-
-
-/* ==========================================================
-   Empty List
-========================================================== */
-
-.empty-response-list{
-
-    display:flex;
-
-    flex-direction:column;
-
-    align-items:center;
-
-    justify-content:center;
-
-    text-align:center;
-
-    gap:18px;
-
-    min-height:350px;
-
-}
-
-.empty-response-list .empty-icon{
-
-    width:90px;
-
-    height:90px;
-
-    border-radius:50%;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    font-size:40px;
-
-    background:rgba(255,255,255,.08);
-
-    border:1px solid rgba(255,255,255,.12);
-
-}
-
-.empty-response-list h3{
-
-    margin:0;
-
-    color:#ffffff;
-
-}
-
-.empty-response-list p{
-
-    max-width:320px;
-
-    color:#CBD5E1;
-
-    line-height:1.7;
-
-}   
-/* ==========================================================
-   9. Scrollbars
-========================================================== */
-
-.response-list-container{
-
-    max-height:720px;
-
-    overflow-y:auto;
-
-    padding-right:8px;
-
-}
-
-.response-list-container::-webkit-scrollbar{
-
-    width:8px;
-
-}
-
-.response-list-container::-webkit-scrollbar-track{
-
-    background:transparent;
-
-}
-
-.response-list-container::-webkit-scrollbar-thumb{
-
-    background:rgba(255,255,255,.15);
-
-    border-radius:20px;
-
-}
-
-.response-list-container::-webkit-scrollbar-thumb:hover{
-
-    background:rgba(59,130,246,.55);
-
-}
-
-
-/* ==========================================================
-   10. Decorative Glow Effects
-========================================================== */
-
-.kpi-card::before{
-
-    content:"";
-
-    position:absolute;
-
-    inset:0;
-
-    border-radius:22px;
-
-    background:linear-gradient(
-        135deg,
-        rgba(59,130,246,.08),
-        transparent 70%
-    );
-
-    pointer-events:none;
-
-}
-
-.response-details::before{
-
-    content:"";
-
-    position:absolute;
-
-    top:-100px;
-
-    right:-80px;
-
-    width:220px;
-
-    height:220px;
-
-    border-radius:50%;
-
-    background:rgba(59,130,246,.08);
-
-    filter:blur(40px);
-
-    pointer-events:none;
-
-}
-
-.response-list{
-
-    position:relative;
+    height:690px;
 
     overflow:hidden;
 
 }
 
-.response-list::after{
 
-    content:"";
+/* ==========================================================
+   RIGHT PANEL
+========================================================== */
 
-    position:absolute;
+.notification-details{
 
-    bottom:-140px;
+    min-height:820px;
 
-    left:-120px;
-
-    width:260px;
-
-    height:260px;
-
-    border-radius:50%;
-
-    background:rgba(59,130,246,.05);
-
-    filter:blur(50px);
-
-    pointer-events:none;
+    overflow:hidden;
 
 }
 
 
 /* ==========================================================
-   11. Smooth Animations
+   PANEL HEADERS
 ========================================================== */
 
-@keyframes fadeUp{
+.panel-header{
 
-    from{
+    display:flex;
 
-        opacity:0;
+    justify-content:space-between;
 
-        transform:translateY(15px);
+    align-items:center;
 
-    }
+    padding:26px 28px;
 
-    to{
-
-        opacity:1;
-
-        transform:translateY(0);
-
-    }
+    border-bottom:1px solid rgba(255,255,255,.05);
 
 }
 
-.notifications-page > *{
+.panel-header h2{
 
-    animation:fadeUp .45s ease;
+    margin:0;
+
+    font-size:28px;
+
+    font-weight:700;
+
+    color:#fff;
 
 }
 
-.donor-response-card{
+.panel-header span{
 
-    animation:fadeUp .35s ease;
+    color:#8ea3d2;
 
-}
-
-.response-details-content{
-
-    animation:fadeUp .25s ease;
+    font-size:14px;
 
 }
 
 
 /* ==========================================================
-   12. Focus States
+   SCROLL AREAS
 ========================================================== */
 
-button:focus-visible,
+.notification-list{
 
-input:focus-visible,
+    flex:1;
 
-select:focus-visible{
+    overflow-y:auto;
 
-    outline:none;
+    padding:20px;
 
-    box-shadow:
-        0 0 0 3px rgba(59,130,246,.28);
+}
+
+.notification-details{
+
+    overflow-y:auto;
 
 }
 
 
 /* ==========================================================
-   13. Responsive (Tablet)
+   CUSTOM SCROLLBAR
 ========================================================== */
 
-@media (max-width:1200px){
+.notification-list::-webkit-scrollbar,
+
+.notification-details::-webkit-scrollbar{
+
+    width:8px;
+
+}
+
+.notification-list::-webkit-scrollbar-track,
+
+.notification-details::-webkit-scrollbar-track{
+
+    background:transparent;
+
+}
+
+.notification-list::-webkit-scrollbar-thumb,
+
+.notification-details::-webkit-scrollbar-thumb{
+
+    background:rgba(255,255,255,.10);
+
+    border-radius:20px;
+
+}
+
+.notification-list::-webkit-scrollbar-thumb:hover,
+
+.notification-details::-webkit-scrollbar-thumb:hover{
+
+    background:rgba(255,255,255,.20);
+
+}
+
+
+/* ==========================================================
+   EMPTY STATE
+========================================================== */
+
+.empty-notification-feed{
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+
+    padding:90px 30px;
+
+}
+
+.empty-notification-feed .empty-icon{
+
+    font-size:70px;
+
+    margin-bottom:18px;
+
+}
+
+.empty-notification-feed h3{
+
+    margin:0;
+
+    color:#fff;
+
+    font-size:28px;
+
+}
+
+.empty-notification-feed p{
+
+    margin-top:12px;
+
+    color:#a8b2c9;
+
+    max-width:260px;
+
+    line-height:1.7;
+
+}
+
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media(max-width:1400px){
 
     .notifications-layout{
 
@@ -1322,36 +758,15 @@ select:focus-visible{
 
     }
 
-    .response-details{
+    .notification-feed{
 
-        position:static;
-
-        min-height:auto;
+        height:520px;
 
     }
 
 }
 
-
-/* ==========================================================
-   Responsive (Small Tablet)
-========================================================== */
-
-@media (max-width:900px){
-
-    .notification-kpis{
-
-        grid-template-columns:repeat(2,1fr);
-
-    }
-
-    .hero-content{
-
-        flex-direction:column;
-
-        align-items:flex-start;
-
-    }
+@media(max-width:1000px){
 
     .notifications-toolbar{
 
@@ -1363,122 +778,1397 @@ select:focus-visible{
 
     .toolbar-left{
 
-        flex-direction:column;
-
-        align-items:stretch;
+        flex-wrap:wrap;
 
     }
 
-    #responseSearch{
+    #notificationSearch{
 
         min-width:100%;
 
     }
 
-    #responseStatusFilter{
+}
+/* ==========================================================
+   BloodLink - Notifications
+   Part 3
+   Activity Feed
+========================================================== */
 
-        width:100%;
 
-    }
+/* ==========================================================
+   NOTIFICATION CARD
+========================================================== */
 
-    .details-grid{
+.notification-card{
 
-        grid-template-columns:1fr;
+    display:flex;
 
-    }
+    flex-direction:column;
+
+    gap:20px;
+
+    padding:24px;
+
+    margin-bottom:18px;
+
+    border-radius:22px;
+
+    background:rgba(20,28,45,.18);
+
+    border:1px solid rgba(255,255,255,.05);
+
+    cursor:pointer;
+
+    transition:all .25s ease;
+
+    position:relative;
+
+    overflow:hidden;
+
+}
+
+.notification-card:hover{
+
+    transform:translateY(-4px);
+
+    border-color:rgba(80,140,255,.35);
+
+    background:rgba(255,255,255,.06);
+
+    box-shadow:0 14px 32px rgba(0,0,0,.18);
+
+}
+
+.notification-card.active{
+
+    border:1px solid rgba(76,145,255,.55);
+
+    background:rgba(72,122,255,.12);
+
+    box-shadow:
+        0 18px 36px rgba(44,96,255,.18),
+        inset 0 0 0 1px rgba(92,150,255,.18);
+
+}
+
+.notification-card.active::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+
+    top:0;
+
+    bottom:0;
+
+    width:5px;
+
+    background:#4b8dff;
 
 }
 
 
 /* ==========================================================
-   Responsive (Mobile)
+   HEADER
 ========================================================== */
 
-@media (max-width:640px){
+.notification-card-header{
 
-    .notifications-page{
+    display:flex;
 
-        padding:18px;
+    align-items:center;
 
-        gap:20px;
+    gap:18px;
+
+}
+
+.notification-icon{
+
+    width:64px;
+
+    height:64px;
+
+    border-radius:18px;
+
+    background:linear-gradient(135deg,#3479ff,#4d8dff);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    color:#fff;
+
+    font-size:28px;
+
+    flex-shrink:0;
+
+    box-shadow:0 10px 24px rgba(52,121,255,.35);
+
+}
+
+.notification-title{
+
+    flex:1;
+
+}
+
+.notification-title h3{
+
+    margin:0;
+
+    color:#fff;
+
+    font-size:22px;
+
+    font-weight:700;
+
+}
+
+.notification-title span{
+
+    display:block;
+
+    margin-top:6px;
+
+    color:#94a2c5;
+
+    font-size:14px;
+
+}
+
+
+/* ==========================================================
+   BODY
+========================================================== */
+
+.notification-card-body{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+}
+
+.notification-info{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:6px;
+
+}
+
+.notification-info strong{
+
+    color:#ffffff;
+
+    font-size:18px;
+
+    font-weight:600;
+
+}
+
+.notification-info span{
+
+    color:#b8c2dc;
+
+    font-size:15px;
+
+}
+
+
+/* ==========================================================
+   TAGS
+========================================================== */
+
+.notification-tags{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:12px;
+
+}
+
+.blood-tag{
+
+    padding:8px 16px;
+
+    border-radius:999px;
+
+    background:rgba(255,70,70,.14);
+
+    color:#ff8b8b;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+.priority-tag{
+
+    padding:8px 16px;
+
+    border-radius:999px;
+
+    background:rgba(255,185,0,.14);
+
+    color:#ffd34e;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+
+/* ==========================================================
+   SUMMARY
+========================================================== */
+
+.notification-summary{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:14px;
+
+}
+
+.notification-summary div{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:14px;
+
+    border-radius:16px;
+
+    background:rgba(255,255,255,.04);
+
+    border:1px solid rgba(255,255,255,.05);
+
+}
+
+.notification-summary strong{
+
+    font-size:24px;
+
+    color:#fff;
+
+    font-weight:700;
+
+    line-height:1;
+
+}
+
+.notification-summary span{
+
+    margin-top:6px;
+
+    color:#aeb9d6;
+
+    font-size:13px;
+
+}
+
+
+/* ==========================================================
+   BADGE COLORS
+========================================================== */
+
+.notification-summary div:nth-child(1) strong{
+
+    color:#73a8ff;
+
+}
+
+.notification-summary div:nth-child(2) strong{
+
+    color:#42d67f;
+
+}
+
+.notification-summary div:nth-child(3) strong{
+
+    color:#ff7272;
+
+}
+
+.notification-summary div:nth-child(4) strong{
+
+    color:#ffc84c;
+
+}
+
+
+/* ==========================================================
+   EMPTY DETAILS
+========================================================== */
+
+.empty-details{
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+
+    min-height:720px;
+
+    padding:50px;
+
+}
+
+.empty-details .empty-icon{
+
+    width:120px;
+
+    height:120px;
+
+    border-radius:28px;
+
+    background:linear-gradient(135deg,#3479ff,#4d8dff);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:54px;
+
+    color:#fff;
+
+    margin-bottom:28px;
+
+    box-shadow:0 18px 40px rgba(52,121,255,.35);
+
+}
+
+.empty-details h2{
+
+    margin:0;
+
+    color:#fff;
+
+    font-size:40px;
+
+    font-weight:700;
+
+}
+
+.empty-details p{
+
+    margin-top:18px;
+
+    max-width:480px;
+
+    color:#aeb8d4;
+
+    font-size:18px;
+
+    line-height:1.8;
+
+}
+
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media(max-width:700px){
+
+    .notification-summary{
+
+        grid-template-columns:repeat(2,1fr);
 
     }
 
-    .notification-kpis{
+}
+/* ==========================================================
+   BloodLink - Notifications
+   Part 4
+   Request Details Panel
+========================================================== */
+
+
+/* ==========================================================
+   DETAILS WRAPPER
+========================================================== */
+
+.request-details-wrapper{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:28px;
+
+    padding:32px;
+
+}
+
+
+/* ==========================================================
+   REQUEST HEADER
+========================================================== */
+
+.request-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    gap:20px;
+
+}
+
+.request-header h2{
+
+    margin:14px 0 8px;
+
+    color:#ffffff;
+
+    font-size:36px;
+
+    font-weight:700;
+
+    line-height:1.2;
+
+}
+
+.request-header p{
+
+    margin:0;
+
+    color:#aeb9d4;
+
+    font-size:17px;
+
+}
+
+.request-badge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:8px 18px;
+
+    border-radius:999px;
+
+    background:rgba(71,126,255,.16);
+
+    color:#78a9ff;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+.priority-badge{
+
+    padding:12px 22px;
+
+    border-radius:999px;
+
+    background:rgba(255,190,60,.14);
+
+    color:#ffd15f;
+
+    font-weight:700;
+
+    letter-spacing:.5px;
+
+    text-transform:uppercase;
+
+}
+
+
+/* ==========================================================
+   REQUEST INFORMATION GRID
+========================================================== */
+
+.request-info-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:18px;
+
+}
+
+.overview-card{
+
+    padding:22px;
+
+    background:rgba(20,28,45,.18);
+
+}
+
+.info-card span{
+
+    display:block;
+
+    color:#8f9dbc;
+
+    font-size:13px;
+
+    text-transform:uppercase;
+
+    letter-spacing:1px;
+
+    margin-bottom:12px;
+
+}
+
+.info-card strong{
+
+    color:#fff;
+
+    font-size:22px;
+
+    font-weight:700;
+
+}
+
+
+/* ==========================================================
+   OVERVIEW SECTION
+========================================================== */
+
+.recipient-overview{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:18px;
+
+}
+
+.overview-card{
+
+    padding:24px;
+
+    text-align:center;
+
+}
+
+.overview-card h2{
+
+    margin:0;
+
+    font-size:42px;
+
+    color:#fff;
+
+    font-weight:700;
+
+}
+
+.overview-card span{
+
+    display:block;
+
+    margin-top:10px;
+
+    color:#aeb8d4;
+
+    font-size:15px;
+
+}
+
+
+/* ==========================================================
+   OVERVIEW COLORS
+========================================================== */
+
+.recipient-overview .overview-card:nth-child(1) h2{
+
+    color:#78a8ff;
+
+}
+
+.recipient-overview .overview-card:nth-child(2) h2{
+
+    color:#44d982;
+
+}
+
+.recipient-overview .overview-card:nth-child(3) h2{
+
+    color:#ff6d6d;
+
+}
+
+.recipient-overview .overview-card:nth-child(4) h2{
+
+    color:#ffc84a;
+
+}
+
+
+/* ==========================================================
+   SECTION HEADER
+========================================================== */
+
+.section-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:18px;
+
+}
+
+.section-header h3{
+
+    margin:0;
+
+    color:#ffffff;
+
+    font-size:24px;
+
+    font-weight:700;
+
+}
+
+
+/* ==========================================================
+   TEXT BUTTON
+========================================================== */
+
+.text-btn{
+
+    background:none;
+
+    border:none;
+
+    color:#78a8ff;
+
+    cursor:pointer;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    transition:.25s;
+
+}
+
+.text-btn:hover{
+
+    color:#9fc2ff;
+
+}
+
+
+/* ==========================================================
+   ACTION BUTTONS
+========================================================== */
+
+.request-actions{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    flex-wrap:wrap;
+
+    gap:16px;
+
+    padding-top:10px;
+
+}
+
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media(max-width:1300px){
+
+    .request-info-grid{
+
+        grid-template-columns:repeat(2,1fr);
+
+    }
+
+    .recipient-overview{
+
+        grid-template-columns:repeat(2,1fr);
+
+    }
+
+}
+
+@media(max-width:750px){
+
+    .request-header{
+
+        flex-direction:column;
+
+    }
+
+    .request-info-grid{
 
         grid-template-columns:1fr;
 
     }
 
-    .hero-left{
-
-        flex-direction:column;
-
-        align-items:flex-start;
-
-    }
-
-    .hero-icon{
-
-        width:68px;
-
-        height:68px;
-
-        font-size:28px;
-
-    }
-
-    .hero-text h1{
-
-        font-size:1.6rem;
-
-    }
-
-    .response-card-top{
-
-        flex-direction:column;
-
-        align-items:flex-start;
-
-    }
-
-    .response-card-middle{
+    .recipient-overview{
 
         grid-template-columns:1fr;
 
     }
 
-    .response-card-footer{
-
-        flex-direction:column;
-
-        align-items:flex-start;
-
-        gap:8px;
-
-    }
-
-    .details-header{
-
-        flex-direction:column;
-
-        align-items:flex-start;
-
-    }
-
-    .details-actions{
+    .request-actions{
 
         flex-direction:column;
 
     }
 
-    .details-actions button{
+    .request-actions button{
 
         width:100%;
 
     }
 
-    .pagination-section{
+}
+/* ==========================================================
+   BloodLink - Notifications
+   Part 5
+   Recipient Table
+========================================================== */
+
+
+/* ==========================================================
+   RECIPIENT SECTION
+========================================================== */
+
+.recipient-section{
+
+    background:rgba(20,28,45,.18);
+
+    border:1px solid rgba(255,255,255,.05);
+
+    border-radius:22px;
+
+    padding:26px;
+
+}
+
+
+/* ==========================================================
+   TABLE WRAPPER
+========================================================== */
+
+.recipient-table-wrapper{
+
+    width:100%;
+
+    overflow-x:auto;
+
+    border-radius:18px;
+
+}
+
+
+/* ==========================================================
+   TABLE
+========================================================== */
+
+.recipient-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    min-width:850px;
+
+}
+
+.recipient-table thead{
+
+    background:rgba(255,255,255,.05);
+
+}
+
+.recipient-table th{
+
+    padding:18px 20px;
+
+    text-align:left;
+
+    color:#8fa7d6;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    text-transform:uppercase;
+
+    letter-spacing:.8px;
+
+    border-bottom:1px solid rgba(255,255,255,.08);
+
+}
+
+.recipient-table td{
+
+    padding:20px;
+
+    color:#ffffff;
+
+    border-bottom:1px solid rgba(255,255,255,.04);
+
+    vertical-align:middle;
+
+}
+
+.recipient-table tbody tr{
+
+    transition:.25s;
+
+}
+
+.recipient-table tbody tr:hover{
+
+    background:rgba(255,255,255,.04);
+
+}
+
+
+/* ==========================================================
+   DONOR INFO
+========================================================== */
+
+.recipient-name{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:6px;
+
+}
+
+.recipient-name strong{
+
+    color:#ffffff;
+
+    font-size:16px;
+
+    font-weight:600;
+
+}
+
+.recipient-name small{
+
+    color:#9fb0cf;
+
+    font-size:13px;
+
+}
+
+
+/* ==========================================================
+   STATUS BADGES
+========================================================== */
+
+.status-badge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    padding:8px 16px;
+
+    border-radius:999px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+.status-badge.accepted{
+
+    background:rgba(56,199,116,.14);
+
+    color:#4be388;
+
+}
+
+.status-badge.declined{
+
+    background:rgba(255,82,82,.14);
+
+    color:#ff8f8f;
+
+}
+
+.status-badge.pending{
+
+    background:rgba(255,188,61,.14);
+
+    color:#ffd463;
+
+}
+
+.status-badge.default{
+
+    background:rgba(255,255,255,.08);
+
+    color:#d5dcef;
+
+}
+
+
+/* ==========================================================
+   EMPTY TABLE
+========================================================== */
+
+.empty-table{
+
+    text-align:center;
+
+    color:#98a7c6;
+
+    padding:50px !important;
+
+    font-size:16px;
+
+}
+
+
+/* ==========================================================
+   VIEW BUTTON
+========================================================== */
+
+.view-donor-btn{
+
+    border:none;
+
+    cursor:pointer;
+
+    padding:10px 18px;
+
+    border-radius:12px;
+
+    background:rgba(70,130,255,.12);
+
+    color:#82b0ff;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    transition:.25s;
+
+}
+
+.view-donor-btn:hover{
+
+    background:rgba(70,130,255,.22);
+
+    transform:translateY(-2px);
+
+}
+
+
+/* ==========================================================
+   TABLE SCROLLBAR
+========================================================== */
+
+.recipient-table-wrapper::-webkit-scrollbar{
+
+    height:8px;
+
+}
+
+.recipient-table-wrapper::-webkit-scrollbar-track{
+
+    background:transparent;
+
+}
+
+.recipient-table-wrapper::-webkit-scrollbar-thumb{
+
+    background:rgba(255,255,255,.12);
+
+    border-radius:20px;
+
+}
+
+
+/* ==========================================================
+   MOBILE
+========================================================== */
+
+@media(max-width:900px){
+
+    .recipient-section{
+
+        padding:18px;
+
+    }
+
+    .recipient-table{
+
+        min-width:700px;
+
+    }
+
+}
+/* ==========================================================
+   BloodLink - Notifications
+   Part 6
+   Timeline + Utilities
+========================================================== */
+
+
+/* ==========================================================
+   EMAIL CAMPAIGN STATUS
+========================================================== */
+
+.request-message{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+    padding:20px;
+
+    background:rgba(20,28,45,.18);
+
+    border:1px solid rgba(255,255,255,.05);
+
+    border-radius:18px;
+
+}
+
+.message-icon{
+
+    width:68px;
+
+    height:68px;
+
+    border-radius:18px;
+
+    background:linear-gradient(135deg,#3479ff,#4d8dff);
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    color:#fff;
+
+    font-size:28px;
+
+    flex-shrink:0;
+
+    box-shadow:0 10px 24px rgba(52,121,255,.30);
+
+}
+
+.request-message strong{
+
+    display:block;
+
+    color:#ffffff;
+
+    font-size:18px;
+
+    margin-bottom:8px;
+
+}
+
+.request-message p{
+
+    margin:0;
+
+    color:#aab6d4;
+
+    line-height:1.6;
+
+}
+
+
+/* ==========================================================
+   TIMELINE SECTION
+========================================================== */
+
+.timeline-section{
+
+    background:rgba(20,28,45,.18);
+
+    border:1px solid rgba(255,255,255,.05);
+
+    border-radius:22px;
+
+    padding:26px;
+
+}
+
+.timeline-container{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+}
+
+
+/* ==========================================================
+   TIMELINE ITEM
+========================================================== */
+
+.timeline-item{
+
+    display:flex;
+
+    align-items:flex-start;
+
+    gap:18px;
+
+    padding:18px;
+
+    border-radius:18px;
+
+    background:rgba(255,255,255,.03);
+
+    border:1px solid rgba(255,255,255,.04);
+
+    transition:.25s;
+
+}
+
+.timeline-item:hover{
+
+    transform:translateX(4px);
+
+    background:rgba(255,255,255,.05);
+
+}
+
+
+/* ==========================================================
+   TIMELINE ICON
+========================================================== */
+
+.timeline-icon{
+
+    width:54px;
+
+    height:54px;
+
+    border-radius:16px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:rgba(255,255,255,.06);
+
+    font-size:24px;
+
+    flex-shrink:0;
+
+}
+
+.timeline-content{
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    gap:8px;
+
+}
+
+.timeline-content strong{
+
+    color:#ffffff;
+
+    font-size:16px;
+
+    font-weight:600;
+
+}
+
+.timeline-content span{
+
+    color:#9ca9c8;
+
+    font-size:14px;
+
+}
+
+
+/* ==========================================================
+   EMPTY TIMELINE
+========================================================== */
+
+.empty-timeline{
+
+    padding:50px;
+
+    text-align:center;
+
+    color:#99a8c7;
+
+}
+
+
+/* ==========================================================
+   ACTION BUTTONS
+========================================================== */
+
+.request-actions{
+
+    margin-top:12px;
+
+    padding-top:24px;
+
+    border-top:1px solid rgba(255,255,255,.05);
+
+}
+
+
+/* ==========================================================
+   ANIMATIONS
+========================================================== */
+
+.notification-card,
+
+.kpi-card,
+
+.info-card,
+
+.overview-card,
+
+.timeline-item,
+
+.request-message,
+
+.recipient-section{
+
+    transition:
+
+        transform .25s,
+
+        box-shadow .25s,
+
+        border-color .25s,
+
+        background .25s;
+
+}
+
+.info-card:hover,
+
+.overview-card:hover,
+
+.request-message:hover,
+
+.recipient-section:hover{
+
+    transform:translateY(-3px);
+
+    border-color:rgba(85,145,255,.22);
+
+    box-shadow:0 12px 26px rgba(0,0,0,.18);
+
+}
+
+
+/* ==========================================================
+   FOCUS STYLES
+========================================================== */
+
+button:focus,
+
+input:focus,
+
+select:focus{
+
+    outline:none;
+
+}
+
+
+/* ==========================================================
+   TEXT SELECTION
+========================================================== */
+
+::selection{
+
+    background:#4b8dff;
+
+    color:#ffffff;
+
+}
+
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media(max-width:900px){
+
+    .request-message{
+
+        flex-direction:column;
+
+        text-align:center;
+
+    }
+
+    .timeline-item{
 
         flex-direction:column;
 

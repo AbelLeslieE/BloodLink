@@ -55,10 +55,19 @@
 
     overflow:hidden;
 
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    min-height:170px;
+
+    padding:34px 42px;
+
     background:rgba(255,255,255,.08);
 
     backdrop-filter:blur(14px);
-
 
     -webkit-backdrop-filter:blur(20px);
 
@@ -67,7 +76,6 @@
     border-radius:24px;
 
     box-shadow:
-
         0 18px 45px rgba(0,0,0,.18);
 
 }
@@ -111,22 +119,32 @@
    3. HERO CONTENT
 ========================================================== */
 
-.hero-content {
-    position: relative;
-    z-index: 1;
+.hero-content{
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    position:relative;
 
-    gap: var(--space-xl);
+    z-index:1;
+
+    width:100%;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:48px;
+
 }
 
 
-.hero-text {
-    max-width: 720px;
-}
+.hero-text{
 
+    flex:1;
+
+    max-width:760px;
+
+}
 
 .hero-badge {
     display: inline-flex;
@@ -167,13 +185,18 @@
    4. HERO ACTIONS
 ========================================================== */
 
-.hero-actions {
-    display: flex;
-    align-items: center;
+.hero-actions{
 
-    gap: var(--space-sm);
+    display:flex;
 
-    flex-wrap: wrap;
+    align-items:center;
+
+    justify-content:flex-end;
+
+    gap:14px;
+
+    flex-shrink:0;
+
 }
 
 
@@ -406,6 +429,10 @@
 
 .chart-card{
 
+    padding:24px;
+
+    min-height:420px;
+
     background:rgba(255,255,255,.08);
 
     backdrop-filter:blur(14px);
@@ -415,15 +442,16 @@
     border-radius:22px;
 
     box-shadow:
-
         0 12px 30px rgba(15,23,42,.15);
 
 }
 
-.chart-card canvas {
-    width: 100% !important;
+.chart-card canvas{
 
-    max-height: 320px;
+    width:100% !important;
+
+    height:340px !important;
+
 }
 
 

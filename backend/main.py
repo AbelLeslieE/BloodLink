@@ -23,6 +23,12 @@ logger = logging.getLogger(__name__)
 from backend.routers.donor_matching import (
     router as donor_matching_router,
 )
+from backend.routers.email_router import router as email_router
+from backend.routers.notifications import (
+    router as notifications_router,
+)
+from backend.create_default_admin import create_admin
+from backend.routers import dashboard_router
 # ==========================================================
 # Paths
 # ==========================================================
@@ -35,24 +41,41 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 # ==========================================================
 
 @asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+async def lifespan(_: FastAPI):
     """
-    Initialize the database, verify connectivity,
-    and clean up resources on shutdown.
+    Initialize the database, create the default administrator
+    if needed, verify connectivity, and clean up resources
+    on shutdown.
     """
 
-    # Create SQLite tables automatically
+    # ------------------------------------------------------
+    # Create all database tables
+    # ------------------------------------------------------
+
     Base.metadata.create_all(bind=engine)
 
-    # Verify the database connection
+    # ------------------------------------------------------
+    # Create the default administrator
+    # (Only if it doesn't already exist)
+    # ------------------------------------------------------
+
+    create_admin()
+
+    # ------------------------------------------------------
+    # Verify database connection
+    # ------------------------------------------------------
+
     verify_database_connection()
 
-    logger.info("Database connection verified.")
+    logger.info("Database initialized successfully.")
 
     try:
         yield
+
     finally:
+
         engine.dispose()
+
         logger.info("Database engine disposed.")
 # ==========================================================
 # FastAPI App
@@ -79,6 +102,13 @@ app.include_router(
 )
 app.include_router(
     donor_matching_router
+)
+app.include_router(email_router)
+app.include_router(
+    notifications_router
+)
+app.include_router(
+    dashboard_router.router,
 )
 # ==========================================================
 # Static Files
