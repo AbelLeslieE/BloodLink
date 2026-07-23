@@ -12,21 +12,23 @@
     --primary:#DC2626;
     --primary-dark:#B91C1C;
 
-    --secondary:#2563EB;
+    --secondary:#3B82F6;
 
-    --success:#16A34A;
-    --warning:#F59E0B;
-    --purple:#7C3AED;
+    --success:#4ADE80;
+    --warning:#FBBF24;
+    --purple:#A855F7;
 
-    --heading:#0F172A;
-    --text:#334155;
-    --muted:#64748B;
+    /* ===== Better text colours for dark background ===== */
+
+    --heading:#FFFFFF;
+    --text:#F1F5F9;
+    --muted:#CBD5E1;
 
     --glass:rgba(255,255,255,.18);
-    --glass-border:rgba(255,255,255,.35);
+    --glass-border:rgba(255,255,255,.28);
 
     --shadow:
-        0 10px 35px rgba(15,23,42,.10);
+        0 12px 35px rgba(0,0,0,.35);
 
     --radius:22px;
 
@@ -71,7 +73,7 @@
 
 .glass-card{
 
-    background:rgba(255,255,255,.16);
+    background:rgba(15,23,42,.35);
 
     backdrop-filter:blur(24px);
 
@@ -114,7 +116,7 @@
 
     transition:.30s;
 
-    background:rgba(255,255,255,.14);
+    background:rgba(15,23,42,.35);
 
     backdrop-filter:blur(24px);
 
@@ -170,7 +172,7 @@
 
     margin:0;
 
-    color:var(--heading);
+    color:#FFFFFF;
 
     font-size:2rem;
 
@@ -178,18 +180,21 @@
 
     letter-spacing:.3px;
 
+    text-shadow:0 2px 8px rgba(0,0,0,.45);
+
 }
 
 .dh-hero-text p{
 
     margin-top:8px;
 
-    color:var(--muted);
+    color:#E2E8F0;
 
     font-size:.98rem;
 
-}
+    font-weight:500;
 
+}
 /* ========================================================================
    KPI Grid
    ======================================================================== */
@@ -220,7 +225,7 @@
 
     gap:18px;
 
-    background:rgba(255,255,255,.14);
+    background:rgba(15,23,42,.35);
 
     backdrop-filter:blur(22px);
 
@@ -312,13 +317,13 @@
 
     display:block;
 
-    color:var(--muted);
+    color:#F8FAFC;
 
-    font-size:.92rem;
+    font-size:.95rem;
 
     margin-bottom:8px;
 
-    font-weight:500;
+    font-weight:600;
 
 }
 
@@ -328,9 +333,9 @@
 
     font-size:2rem;
 
-    font-weight:700;
+    font-weight:800;
 
-    color:var(--heading);
+    color:#FFFFFF;
 
     line-height:1;
 
@@ -384,21 +389,21 @@
 
     font-size:1.25rem;
 
-    color:var(--heading);
+    color:#FFFFFF;
 
     font-weight:700;
 
 }
 
-.sidebar-title{
+.sidebar-title h3{
 
-    display:flex;
+    margin:0;
 
-    justify-content:space-between;
+    font-size:1.08rem;
 
-    align-items:center;
+    color:#FFFFFF;
 
-    margin-bottom:18px;
+    font-weight:700;
 
 }
 
@@ -435,7 +440,7 @@
 
     padding:22px 24px;
 
-    background:rgba(255,255,255,.14);
+    background:rgba(255, 255, 255, 0);
 
     backdrop-filter:blur(22px);
 
@@ -483,7 +488,7 @@
 
     border-radius:14px;
 
-    background:rgba(255,255,255,.18);
+    background:rgba(0, 0, 0, 0.18);
 
     color:var(--heading);
 
@@ -518,12 +523,13 @@
 
     border-radius:14px;
 
-    background:rgba(255,255,255,.18);
+    background:rgba(255,255,255,.10);
+
+    color:#FFFFFF;
 
     padding:0 16px;
 
-    color:var(--heading);
-
+ 
     font-size:.95rem;
 
     cursor:pointer;
@@ -557,11 +563,11 @@
 
     border-radius:14px;
 
-    background:rgba(255,255,255,.18);
+    background:rgba(255,255,255,.10);
 
     padding:0 16px;
 
-    color:var(--heading);
+    color:#FFFFFF;
 
     transition:.25s;
 
@@ -634,9 +640,9 @@
 
 .btn-secondary{
 
-    background:rgba(255,255,255,.25);
+    background:rgba(255,255,255,.12);
 
-    color:var(--heading);
+    color:#FFFFFF;
 
 }
 
@@ -727,7 +733,7 @@
 
     padding:24px;
 
-    background:rgba(255,255,255,.14);
+    background:rgba(15,23,42,.35);
 
 }
 
@@ -872,7 +878,7 @@
 
 .dh-table thead{
 
-    background:rgba(255,255,255,.18);
+    background:rgba(255,255,255,.10);
 
     backdrop-filter:blur(18px);
 
@@ -884,7 +890,7 @@
 
     text-align:left;
 
-    color:var(--heading);
+    color:#FFFFFF;
 
     font-size:.9rem;
 
@@ -900,7 +906,7 @@
 
     padding:18px 20px;
 
-    color:var(--text);
+    color:#F8FAFC;
 
     font-size:.93rem;
 
@@ -1120,9 +1126,9 @@
 
     border-radius:10px;
 
-    background:rgba(255,255,255,.25);
+    background:rgba(255,255,255,.12);
 
-    color:var(--heading);
+    color:#FFFFFF;
 
     cursor:pointer;
 
@@ -1253,7 +1259,7 @@
 
 .summary-row span{
 
-    color:var(--muted);
+    color:#E2E8F0;
 
     font-size:.92rem;
 
@@ -1261,7 +1267,7 @@
 
 .summary-row strong{
 
-    color:var(--heading);
+    color:#FFFFFF;
 
     font-size:.95rem;
 
@@ -1345,7 +1351,7 @@
 
     display:block;
 
-    color:var(--heading);
+    color:#FFFFFF;
 
     font-size:.95rem;
 
@@ -1355,7 +1361,8 @@
 
 .recent-info small{
 
-    color:var(--muted);
+    color:#E2E8F0;
+
 
     font-size:.82rem;
 
