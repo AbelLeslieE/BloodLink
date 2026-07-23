@@ -191,11 +191,13 @@ def send_notification_campaign(
         # Send Email
         # ----------------------------------------------
 
-        email_service.send_email(
+        success = email_service.send_email(
             recipient_email=recipient.email,
             subject=subject,
             html_body=html,
         )
+
+        print(f"Sending email to {recipient.email} -> {success}")
 
     # ------------------------------------------------------
     # Refresh Statistics

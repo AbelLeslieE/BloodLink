@@ -59,11 +59,6 @@ def send_email(
 ) -> bool:
     """
     Send an HTML email using Resend.
-
-    Returns
-    -------
-    bool
-        True if successful, otherwise False.
     """
 
     try:
@@ -77,13 +72,20 @@ def send_email(
             }
         )
 
-        print(f"Email sent successfully: {response}")
+        print("=" * 60)
+        print("EMAIL SENT SUCCESSFULLY")
+        print(response)
+        print("=" * 60)
 
         return True
 
     except Exception as error:
 
-        print(f"Email sending failed: {error}")
+        print("=" * 60)
+        print("EMAIL SEND FAILED")
+        print(type(error).__name__)
+        print(error)
+        print("=" * 60)
 
         return False
 # ==========================================================

@@ -761,8 +761,7 @@ function handleNavigation(event) {
             break;    
         /* ======================================================
         Notifications
-        ====================================================== */            
-
+        ====================================================== */
 
         case "notifications":
 
@@ -771,7 +770,20 @@ function handleNavigation(event) {
 
             initializeNotifications();
 
-            break;  
+            break;
+
+
+        /* ======================================================
+        Blood Requests
+        ====================================================== */
+
+        case "bloodRequests":
+
+            // This module renders itself from blood-requests.js.
+            // Do nothing here to avoid rendering the placeholder.
+            break;
+
+
         /* ======================================================
         Placeholder Modules
         ====================================================== */

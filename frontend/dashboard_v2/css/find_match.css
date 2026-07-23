@@ -104,11 +104,11 @@
 
     z-index:5;
 
-    width:min(1550px,96%);
+    width:100%;
 
-    margin:auto;
+    margin:0 auto;
 
-    padding:18px 0 35px;
+    padding:18px 24px 40px;
 
     background:transparent;
 
@@ -346,26 +346,66 @@
    SECTION HEADER
 ========================================================== */
 
+/* ==========================================================
+   Blood Availability Section
+========================================================== */
+
+.blood-availability-section{
+
+    padding:40px;
+
+    margin-top:24px;
+
+    border-radius:24px;
+
+    overflow:hidden;
+
+    background:rgba(255,255,255,.10);
+}
 .section-header{
 
     display:flex;
 
-    justify-content:space-between;
-
     align-items:center;
 
-    margin-bottom:22px;
+    justify-content:space-between;
 
+    gap:24px;
+
+    padding:8px 0 24px;
+
+    margin-bottom:20px;
 }
 
 .section-header h2{
 
+    margin:0;
+
+    flex:1;
+
     color:#0f172a;
 
-    font-size:1.15rem;
+    font-size:2rem;
 
-    font-weight:600;
+    font-weight:700;
 
+    line-height:1.2;
+}
+.section-header .secondary-btn{
+
+    flex-shrink:0;
+
+    min-width:260px;
+
+    height:64px;
+
+    padding:0 28px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
 }
 
 /* ==========================================================
@@ -851,67 +891,103 @@
 
     display:grid;
 
-    grid-template-columns:
-        repeat(2,1fr);
+    grid-template-columns:repeat(2,minmax(0,1fr));
 
-    gap:14px;
+    gap:18px;
 
+    width:100%;
+
+    margin-top:10px;
 }
+/* ==========================================================
+   BLOOD AVAILABILITY CARD (REPLACE)
+========================================================== */
 
 .availability-card{
 
     display:flex;
 
-    justify-content:space-between;
-
     align-items:center;
 
-    padding:18px;
+    justify-content:space-between;
 
-    border-radius:14px;
+    min-height:86px;
 
-     background:
+    padding:22px 26px;
 
-        rgba(255,255,255,.20);
+    border-radius:18px;
 
+    background:rgba(255,255,255,.18);
 
-    border:
+    border:1px solid rgba(255,255,255,.28);
 
-        1px solid rgba(255,255,255,.28);
-
-    transition:
-        all .25s ease;
-
+    box-sizing:border-box;
 }
 
 .availability-card:hover{
 
-    transform:
-        translateY(-3px);
+    transform:translateY(-2px);
 
-    background:
+    background:rgba(255,255,255,.28);
 
-        rgba(255,255,255,.12);
+    border-color:rgba(255,255,255,.45);
 
 }
 
 .availability-group{
 
-    color:#0f172a;
+    font-size:2rem;
+
+    line-height:1;
 
     font-weight:700;
 
-    font-size:1rem;
-
+    color:#0f172a;
 }
 
 .availability-count{
 
-    color:#020273;
+    font-size:2.2rem;
 
-    font-size:1.2rem;
+    line-height:1;
 
-    font-weight:700;
+    font-weight:800;
+
+    color:#1D4ED8;
+
+    flex-shrink:0;
+}
+
+.availability-count{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    min-width:42px;
+
+    font-size:2rem;
+
+    font-weight:800;
+
+    color:#1D4ED8;
+
+    line-height:1;
+
+    font-variant-numeric:tabular-nums;
+
+}
+.availability-grid{
+
+    align-items:stretch;
+
+}
+
+.availability-grid > *{
+
+    height:100%;
 
 }
 /* ==========================================================
@@ -2120,21 +2196,35 @@ html{
    COMPACT MODE
 ========================================================== */
 
-.find-match-container{
 
-    transform:scale(.92);
-
-    transform-origin:top center;
-
-}
 /* =====================================================
    BACKGROUND IMAGE ENHANCEMENT
 ===================================================== */
 
 
 /* ==========================================================
-   DONOR PANEL LAYOUT (NEW)
+   DONOR PANEL LAYOUT (FIXED HEIGHT)
 ========================================================== */
+
+.right-column{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-self:start;
+
+    position:sticky;
+
+    top:18px;
+
+    height:calc(100vh - 120px);
+
+    min-height:700px;
+
+    max-height:calc(100vh - 120px);
+
+}
 
 .donor-panel{
 
@@ -2142,9 +2232,11 @@ html{
 
     flex-direction:column;
 
-    height:100%;
+    flex:1;
 
-    min-height:760px;
+    overflow:hidden;
+
+    min-height:0;
 
 }
 
@@ -2154,11 +2246,11 @@ html{
 
     overflow-y:auto;
 
-    padding-right:8px;
+    overflow-x:hidden;
 
     min-height:0;
 
-    max-height:none;
+    padding-right:8px;
 
 }
 
@@ -2168,13 +2260,17 @@ html{
 
 .donor-panel-footer{
 
-    margin-top:18px;
+    flex-shrink:0;
 
-    padding-top:18px;
+    margin-top:16px;
 
-    border-top:
+    padding-top:16px;
 
-        1px solid rgba(255,255,255,.18);
+    border-top:1px solid rgba(255,255,255,.18);
+
+    background:rgba(255,255,255,.08);
+
+    backdrop-filter:blur(16px);
 
     display:flex;
 
@@ -2182,17 +2278,14 @@ html{
 
     align-items:center;
 
-    gap:18px;
+    gap:16px;
 
-    background:
+}
+.section-card{
 
-        rgba(255,255,255,.04);
+    display:flex;
 
-    backdrop-filter:blur(10px);
-
-    position:sticky;
-
-    bottom:0;
+    flex-direction:column;
 
 }
 
