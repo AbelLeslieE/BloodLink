@@ -4,7 +4,11 @@
    Description:
    Renders the Donation History workspace.
 ============================================================ */
-
+import {
+    getDonationHistory,
+    getDonationSummary,
+    getRecentDonations
+} from "./api.js";
 export function loadDonationHistory() {
     return `
     <section class="donation-history-page">
@@ -298,118 +302,21 @@ export function loadDonationHistory() {
 
 const donationHistoryState = {
 
-    donations: [
-
-        {
-            id: "DON-2026-1256",
-            donor: "Rahul Sharma",
-            bloodGroup: "AB+",
-            date: "17 Jul 2026",
-            units: "1 Unit",
-            location: "City Hospital",
-            type: "Voluntary"
-        },
-
-        {
-            id: "DON-2026-1255",
-            donor: "Anjali Nair",
-            bloodGroup: "O-",
-            date: "16 Jul 2026",
-            units: "1 Unit",
-            location: "Medical College",
-            type: "Voluntary"
-        },
-
-        {
-            id: "DON-2026-1254",
-            donor: "John Mathew",
-            bloodGroup: "B+",
-            date: "15 Jul 2026",
-            units: "1 Unit",
-            location: "General Hospital",
-            type: "Voluntary"
-        },
-
-        {
-            id: "DON-2026-1253",
-            donor: "Priya Menon",
-            bloodGroup: "A+",
-            date: "14 Jul 2026",
-            units: "1 Unit",
-            location: "Sunrise Hospital",
-            type: "Voluntary"
-        },
-
-        {
-            id: "DON-2026-1252",
-            donor: "Vishnu Das",
-            bloodGroup: "O+",
-            date: "12 Jul 2026",
-            units: "1 Unit",
-            location: "City Hospital",
-            type: "Replacement"
-        },
-
-        {
-            id: "DON-2026-1251",
-            donor: "Arun Kumar",
-            bloodGroup: "A-",
-            date: "10 Jul 2026",
-            units: "1 Unit",
-            location: "Medical College",
-            type: "Replacement"
-        },
-
-        {
-            id: "DON-2026-1250",
-            donor: "Neha Roy",
-            bloodGroup: "B-",
-            date: "09 Jul 2026",
-            units: "1 Unit",
-            location: "General Hospital",
-            type: "Voluntary"
-        }
-
-    ],
+    donations: [],
 
     summary: {
 
-        totalDonations: 2356,
-        totalDonors: 1245,
-        unitsCollected: 3842,
-        average: "1.63 Units",
-        voluntary: "1,856 (78.8%)",
-        replacement: "500 (21.2%)"
+        total_donations: 0,
+        total_donors: 0,
+        units_collected: 0,
+        average_units: 0,
+        voluntary: 0,
+        replacement: 0,
+        this_month: 0
 
     },
 
-    recentDonors: [
-
-        {
-            name: "Rahul Sharma",
-            group: "AB+",
-            date: "17 Jul 2026"
-        },
-
-        {
-            name: "Anjali Nair",
-            group: "O-",
-            date: "16 Jul 2026"
-        },
-
-        {
-            name: "John Mathew",
-            group: "B+",
-            date: "15 Jul 2026"
-        },
-
-        {
-            name: "Priya Menon",
-            group: "A+",
-            date: "14 Jul 2026"
-        }
-
-    ]
+    recentDonors: []
 
 };
 
@@ -418,7 +325,29 @@ const donationHistoryState = {
    Initialize Module
 ============================================================ */
 
-export function initializeDonationHistory() {
+export async function initializeDonationHistory() {
+
+    try {
+
+        donationHistoryState.summary =
+            await getDonationSummary();
+
+        donationHistoryState.donations =
+            await getDonationHistory();
+
+        donationHistoryState.recentDonors =
+            await getRecentDonations();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Unable to initialize Donation History:",
+            error
+        );
+
+    }
 
     renderKPIs();
 
@@ -429,21 +358,25 @@ export function initializeDonationHistory() {
     renderRecentDonors();
 
 }
-
-
 /* ============================================================
    KPI Rendering
 ============================================================ */
 
 function renderKPIs() {
 
-    document.getElementById("kpiTotalDonations").textContent = donationHistoryState.summary.totalDonations.toLocaleString();
+    const summary = donationHistoryState.summary;
 
-    document.getElementById("kpiTotalDonors").textContent = donationHistoryState.summary.totalDonors.toLocaleString();
+    document.getElementById("kpiTotalDonations").textContent =
+        (summary.total_donations ?? 0).toLocaleString();
 
-    document.getElementById("kpiUnitsCollected").textContent = donationHistoryState.summary.unitsCollected.toLocaleString();
+    document.getElementById("kpiTotalDonors").textContent =
+        (summary.total_donors ?? 0).toLocaleString();
 
-    document.getElementById("kpiThisMonth").textContent = "156";
+    document.getElementById("kpiUnitsCollected").textContent =
+        (summary.units_collected ?? 0).toLocaleString();
+
+    document.getElementById("kpiThisMonth").textContent =
+        (summary.this_month ?? 0).toLocaleString();
 
 }
 
@@ -458,48 +391,50 @@ function renderDonationTable() {
 
     if (!tbody) return;
 
+    if (donationHistoryState.donations.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="empty-state">
+                    No donation records found.
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
     tbody.innerHTML = donationHistoryState.donations.map(donation => `
 
         <tr>
 
-            <td>${donation.id}</td>
+            <td>${donation.donation_id}</td>
 
-            <td>${donation.donor}</td>
+            <td>${donation.donor_name}</td>
 
             <td>
-
-                <span class="blood-badge ${donation.bloodGroup.replace("+","plus").replace("-","minus")}">
-
-                    ${donation.bloodGroup}
-
+                <span class="blood-badge ${donation.blood_group.replace("+","plus").replace("-","minus")}">
+                    ${donation.blood_group}
                 </span>
-
             </td>
 
-            <td>${donation.date}</td>
+            <td>${donation.donation_date}</td>
 
-            <td>${donation.units}</td>
+            <td>${donation.units} Unit${donation.units > 1 ? "s" : ""}</td>
 
-            <td>${donation.location}</td>
+            <td>${donation.hospital_name}</td>
 
             <td>
-
-                <span class="donation-type ${donation.type.toLowerCase()}">
-
-                    ${donation.type}
-
+                <span class="donation-type ${donation.donation_type.toLowerCase()}">
+                    ${donation.donation_type}
                 </span>
-
             </td>
 
             <td>
-
                 <button class="table-view-btn">
-
                     <i class="fa-solid fa-eye"></i>
-
                 </button>
-
             </td>
 
         </tr>

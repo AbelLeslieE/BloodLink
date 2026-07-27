@@ -446,38 +446,94 @@ class DonationHistory(Base):
 
     __tablename__ = "donation_history"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # ======================================================
+    # PRIMARY KEY
+    # ======================================================
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+    )
+
+    # ======================================================
+    # RELATIONSHIPS
+    # ======================================================
+
     donor_id: Mapped[int] = mapped_column(
         ForeignKey("donors.id"),
         index=True,
         nullable=False,
     )
+
     blood_request_id: Mapped[int] = mapped_column(
         ForeignKey("blood_requests.id"),
         index=True,
         nullable=False,
     )
-    hospital_name: Mapped[str] = mapped_column(String(200), nullable=False)
-    donation_date: Mapped[date] = mapped_column(Date, nullable=False)
-    remarks: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # ======================================================
+    # DONATION INFORMATION
+    # ======================================================
+
+    hospital_name: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False,
+    )
+
+    donation_date: Mapped[date] = mapped_column(
+        Date,
+        nullable=False,
+    )
+
+    units: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=1,
+        server_default="1",
+    )
+
+    donation_type: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        default="Voluntary",
+        server_default="Voluntary",
+    )
+
+    remarks: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    # ======================================================
+    # AUDIT
+    # ======================================================
+
     recorded_by: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
         index=True,
         nullable=False,
     )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
 
-    donor: Mapped["Donor"] = relationship(back_populates="donation_history_entries")
-    blood_request: Mapped["BloodRequest"] = relationship(
-        back_populates="donation_history_entries"
-    )
-    recorded_by_user: Mapped["User"] = relationship(
+    # ======================================================
+    # RELATIONSHIPS
+    # ======================================================
+
+    donor: Mapped["Donor"] = relationship(
         back_populates="donation_history_entries"
     )
 
+    blood_request: Mapped["BloodRequest"] = relationship(
+        back_populates="donation_history_entries"
+    )
+
+    recorded_by_user: Mapped["User"] = relationship(
+        back_populates="donation_history_entries"
+    )
 
 

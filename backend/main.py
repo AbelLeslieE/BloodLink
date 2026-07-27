@@ -27,6 +27,9 @@ from backend.routers.email_router import router as email_router
 from backend.routers.notifications import (
     router as notifications_router,
 )
+from backend.routers.donations import (
+    router as donations_router,
+)
 from backend.create_default_admin import create_admin
 from backend.routers import dashboard_router
 # ==========================================================
@@ -107,9 +110,17 @@ app.include_router(email_router)
 app.include_router(
     notifications_router
 )
+
+app.include_router(
+    donations_router,
+    prefix="/api/donations",
+    tags=["Donations"],
+)
+
 app.include_router(
     dashboard_router.router,
 )
+
 # ==========================================================
 # Static Files
 # ==========================================================

@@ -10,7 +10,6 @@
 // - Logout / session cleanup
 // ==========================================================
 
-
 // ==========================================================
 // 1. API ENDPOINTS
 // ==========================================================
@@ -29,12 +28,17 @@ const API = {
 
     bloodRequests: "/api/blood-requests",
 
+    donations: "/api/donations",
+
+    donationSummary: "/api/donations/summary",
+
+    donationRecent: "/api/donations/recent",
+
     matchFind: "/api/match/find",
 
     matchSend: "/api/match/send"
 
 };
-
 
 // ==========================================================
 // 2. STORAGE KEYS
@@ -168,7 +172,174 @@ async function getDashboardData() {
 
 }
 
+// ==========================================================
+// 5A. FETCH DONATION HISTORY
+// ==========================================================
 
+async function getDonationHistory() {
+
+    try {
+
+        const response =
+            await authenticatedFetch(
+                API.donations
+            );
+
+        if (!response) {
+            return [];
+        }
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Donation history request failed: ${response.status}`
+            );
+
+        }
+
+        return await response.json();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Unable to load donation history:",
+            error
+        );
+
+        return [];
+
+    }
+
+}
+
+
+// ==========================================================
+// 5B. FETCH DONATION SUMMARY
+// ==========================================================
+
+async function getDonationSummary() {
+
+    try {
+
+        const response =
+            await authenticatedFetch(
+                API.donationSummary
+            );
+
+        if (!response) {
+            return {};
+        }
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Donation summary request failed: ${response.status}`
+            );
+
+        }
+
+        return await response.json();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Unable to load donation summary:",
+            error
+        );
+
+        return {};
+
+    }
+
+}
+
+
+// ==========================================================
+// 5C. FETCH RECENT DONATIONS
+// ==========================================================
+
+async function getRecentDonations() {
+
+    try {
+
+        const response =
+            await authenticatedFetch(
+                API.donationRecent
+            );
+
+        if (!response) {
+            return [];
+        }
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Recent donations request failed: ${response.status}`
+            );
+
+        }
+
+        return await response.json();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Unable to load recent donations:",
+            error
+        );
+
+        return [];
+
+    }
+
+}
+// ==========================================================
+// 5D. FETCH DONORS
+// ==========================================================
+
+async function getDonors() {
+
+    try {
+
+        const response =
+            await authenticatedFetch(
+                API.donors
+            );
+
+        if (!response) {
+            return [];
+        }
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Donor request failed: ${response.status}`
+            );
+
+        }
+
+        return await response.json();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Unable to load donors:",
+            error
+        );
+
+        return [];
+
+    }
+
+}
 // ==========================================================
 // 6. CLEAR AUTHENTICATION DATA
 // ==========================================================
@@ -235,6 +406,14 @@ export {
     authenticatedFetch,
 
     getDashboardData,
+
+    getDonationHistory,
+
+    getDonationSummary,
+
+    getRecentDonations,
+
+    getDonors,
 
     logoutUser
 

@@ -18,6 +18,7 @@ from backend.database import crud
 from backend.database.database import get_db
 from backend.database.models import User
 from backend.database.schemas import (
+    BloodRequestCompleteRequest,
     BloodRequestCreate,
     BloodRequestResponse,
     BloodRequestStatusUpdate,
@@ -177,3 +178,84 @@ def update_blood_request_status(
         blood_request=blood_request,
         new_status=status_data.status,
     )
+# ==========================================================
+# COMPLETE BLOOD REQUEST
+# ==========================================================
+
+@router.post(
+    "/{request_id}/complete",
+    response_model=BloodRequestResponse,
+)
+def complete_blood_request(
+    request_id: int,
+
+    request_data: BloodRequestCompleteRequest,
+
+    database_session: Annotated[
+        Session,
+        Depends(get_db),
+    ],
+
+    _: Annotated[
+        User,
+        Depends(require_authentication),
+    ],
+
+) -> BloodRequestResponse:
+    """
+    Complete a blood request by recording a donation
+    and marking the request as fulfilled.
+    """
+
+    # ------------------------------------------------------
+    # Find blood request
+    # ------------------------------------------------------
+
+    blood_request = crud.get_blood_request_by_id(
+        database_session,
+        request_id,
+    )
+
+    if blood_request is None:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Blood request not found.",
+        )
+
+    # ------------------------------------------------------
+    # Find donor
+    # ------------------------------------------------------
+
+    donor = crud.get_donor_by_id(
+        database_session,
+        request_data.donor_id,
+    )
+
+    if donor is None:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Donor not found.",
+        )
+
+    # ------------------------------------------------------
+    # Complete donation
+    # ------------------------------------------------------
+
+    try:
+
+        return crud.complete_blood_request(
+            database_session=database_session,
+            blood_request=blood_request,
+            donor=donor,
+            donation_type=request_data.donation_type,
+            remarks=request_data.remarks,
+        )
+
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        )

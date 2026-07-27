@@ -6,11 +6,17 @@ from collections.abc import Mapping
 from datetime import datetime, timezone
 from typing import Any, TypeVar
 
-from sqlalchemy import select
+from sqlalchemy import select, func
+from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from backend.database.models import BloodRequest, Donor, User
+from backend.database.models import (
+    BloodRequest,
+    DonationHistory,
+    Donor,
+    User,
+)
 from backend.database.notification import Notification
 from backend.database.notification_recipient import NotificationRecipient
 from backend.database.email_token import EmailToken
@@ -880,6 +886,387 @@ def update_blood_request_status(
     )
 
     return blood_request
+
+# ==========================================================
+# DONATION HISTORY CRUD
+# ==========================================================
+
+def create_donation_history(
+    database_session: Session,
+    donor_id: int,
+    blood_request_id: int,
+    donation_date,
+    units: int,
+    donation_type: str,
+    remarks: str | None = None,
+) -> DonationHistory:
+    """
+    Create and save a donation history record.
+    """
+
+    blood_request = get_blood_request_by_id(
+        database_session,
+        blood_request_id,
+    )
+
+    if blood_request is None:
+        raise ValueError("Blood request not found.")
+
+    donation = DonationHistory(
+        donor_id=donor_id,
+        blood_request_id=blood_request_id,
+        hospital_name=blood_request.hospital_name,
+        donation_date=donation_date,
+        units=units,
+        donation_type=donation_type,
+        remarks=remarks,
+        recorded_by=1,
+    )
+
+    database_session.add(donation)
+
+    _commit_and_refresh(
+        database_session,
+        donation,
+    )
+
+    return donation
+# ==========================================================
+# COMPLETE BLOOD REQUEST
+# ==========================================================
+
+def complete_blood_request(
+    database_session: Session,
+    blood_request: BloodRequest,
+    donor: Donor,
+    donation_type: str = "Voluntary",
+    remarks: str | None = None,
+) -> BloodRequest:
+    """
+    Complete a blood request.
+
+    This operation performs the entire workflow
+    inside one database transaction.
+
+    Steps:
+        1. Validate request status.
+        2. Create donation history.
+        3. Update donor statistics.
+        4. Update blood request status.
+        5. Commit.
+    """
+
+    # ------------------------------------------------------
+    # Prevent duplicate completion
+    # ------------------------------------------------------
+
+    # ------------------------------------------------------
+    # Validate request status
+    # ------------------------------------------------------
+
+    if blood_request.status == "Fulfilled":
+
+        raise ValueError(
+            "This blood request has already been fulfilled."
+        )
+
+    if blood_request.status != "In Progress":
+
+        raise ValueError(
+            "Only requests that are In Progress can be completed."
+        )
+
+    # ------------------------------------------------------
+    # Create donation history
+    # ------------------------------------------------------
+
+    donation = DonationHistory(
+
+        donor_id=donor.id,
+
+        blood_request_id=blood_request.id,
+
+        hospital_name=blood_request.hospital_name,
+
+        donation_date=datetime.now(
+            timezone.utc
+        ).date(),
+
+        units=blood_request.units_required,
+
+        donation_type=donation_type,
+
+        remarks=remarks,
+
+        recorded_by=blood_request.created_by,
+
+    )
+
+    database_session.add(
+        donation
+    )
+
+    # ------------------------------------------------------
+    # Update donor statistics
+    # ------------------------------------------------------
+
+    donor.total_donations += 1
+
+    donor.last_donation_date = donation.donation_date
+
+    donor.status = "Unavailable"
+
+    # ------------------------------------------------------
+    # Update request
+    # ------------------------------------------------------
+
+    blood_request.status = "Fulfilled"
+
+    try:
+
+        database_session.commit()
+
+        database_session.refresh(
+            donation
+        )
+
+        database_session.refresh(
+            donor
+        )
+
+        database_session.refresh(
+            blood_request
+        )
+
+    except SQLAlchemyError:
+
+        database_session.rollback()
+
+        raise
+
+    return blood_request
+
+
+def get_donation_history(
+    database_session: Session,
+) -> list[DonationHistory]:
+    """
+    Return all donation history records with related donor
+    and blood request information loaded efficiently.
+    """
+
+    statement = (
+        select(DonationHistory)
+        .options(
+            joinedload(DonationHistory.donor),
+            joinedload(DonationHistory.blood_request),
+        )
+        .order_by(
+            DonationHistory.donation_date.desc()
+        )
+    )
+
+    return list(
+        database_session.scalars(
+            statement
+        ).unique().all()
+    )
+
+def get_donation_by_id(
+    database_session: Session,
+    donation_id: int,
+) -> DonationHistory | None:
+    """
+    Return one donation record.
+    """
+
+    statement = (
+        select(DonationHistory)
+        .where(
+            DonationHistory.id == donation_id
+        )
+    )
+
+    return database_session.scalar(statement)
+
+
+def get_recent_donations(
+    database_session: Session,
+    limit: int = 5,
+) -> list[DonationHistory]:
+    """
+    Return recent donations with relationships preloaded.
+    """
+
+    statement = (
+        select(DonationHistory)
+        .options(
+            joinedload(DonationHistory.donor),
+            joinedload(DonationHistory.blood_request),
+        )
+        .order_by(
+            DonationHistory.donation_date.desc()
+        )
+        .limit(limit)
+    )
+
+    return list(
+        database_session.scalars(
+            statement
+        ).unique().all()
+    )
+
+def get_total_donations(
+    database_session: Session,
+) -> int:
+    """
+    Return total donation count.
+    """
+
+    return (
+        database_session.query(
+            func.count(DonationHistory.id)
+        ).scalar()
+        or 0
+    )
+
+
+def get_total_units(
+    database_session: Session,
+) -> int:
+    """
+    Return total blood units collected.
+    """
+
+    return (
+        database_session.query(
+            func.sum(DonationHistory.units)
+        ).scalar()
+        or 0
+    )
+
+
+def get_donation_type_count(
+    database_session: Session,
+    donation_type: str,
+) -> int:
+    """
+    Return count for a donation type.
+    """
+
+    return (
+        database_session.query(
+            func.count(DonationHistory.id)
+        )
+        .filter(
+            DonationHistory.donation_type == donation_type
+        )
+        .scalar()
+        or 0
+    )
+def get_donation_dashboard_summary(
+    database_session: Session,
+) -> dict:
+    """
+    Returns all dashboard statistics required by
+    the Donation History page.
+    """
+
+    total_donations = (
+        database_session.query(
+            func.count(DonationHistory.id)
+        ).scalar()
+        or 0
+    )
+
+    total_units = (
+        database_session.query(
+            func.sum(DonationHistory.units)
+        ).scalar()
+        or 0
+    )
+
+    total_donors = (
+        database_session.query(
+            func.count(
+                func.distinct(
+                    DonationHistory.donor_id
+                )
+            )
+        ).scalar()
+        or 0
+    )
+
+    voluntary = (
+        database_session.query(
+            func.count(DonationHistory.id)
+        )
+        .filter(
+            DonationHistory.donation_type == "Voluntary"
+        )
+        .scalar()
+        or 0
+    )
+
+    replacement = (
+        database_session.query(
+            func.count(DonationHistory.id)
+        )
+        .filter(
+            DonationHistory.donation_type == "Replacement"
+        )
+        .scalar()
+        or 0
+    )
+
+    this_month = (
+        database_session.query(
+            func.count(DonationHistory.id)
+        )
+        .filter(
+            func.strftime(
+                "%Y-%m",
+                DonationHistory.donation_date,
+            )
+            ==
+            func.strftime(
+                "%Y-%m",
+                func.current_date(),
+            )
+        )
+        .scalar()
+        or 0
+    )
+
+    average_units = 0
+
+    if total_donations:
+
+        average_units = round(
+            total_units / total_donations,
+            2,
+        )
+
+    return {
+
+        "total_donations": total_donations,
+
+        "total_donors": total_donors,
+
+        "units_collected": total_units,
+
+        "average_units": average_units,
+
+        "voluntary": voluntary,
+
+        "replacement": replacement,
+
+        "this_month": this_month,
+
+    }
+# ==========================================================
+# commit and refresh 
+# ==========================================================
 def _commit_and_refresh(
     database_session: Session,
     record: ModelType,
