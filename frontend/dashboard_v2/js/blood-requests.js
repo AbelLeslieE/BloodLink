@@ -1097,6 +1097,14 @@ function renderBloodRequestDetails(request) {
 
                             try {
 
+                                if (newStatus === "Fulfilled") {
+
+                                    openCompleteDonationModal(request);
+
+                                    return;
+
+                                }
+
                                 await updateBloodRequestStatus(
                                     request.id,
                                     newStatus
@@ -1293,6 +1301,687 @@ function buildRequestStatusActions(request) {
             return "";
 
     }
+
+}
+async function openCompleteDonationModal(request) {
+
+    // ======================================================
+    // REMOVE EXISTING MODAL
+    // ======================================================
+
+    document
+        .getElementById("completeDonationModalOverlay")
+        ?.remove();
+
+    // ======================================================
+    // REQUEST INFORMATION
+    // ======================================================
+
+    const displayRequestId =
+        `BR-${String(request.id).padStart(4, "0")}`;
+
+    // ======================================================
+    // CREATE MODAL
+    // ======================================================
+
+    const modal =
+        document.createElement("div");
+
+    modal.id =
+        "completeDonationModalOverlay";
+
+    modal.className =
+        "complete-donation-overlay";
+
+    modal.innerHTML = `
+
+        <div class="complete-donation-modal">
+
+            <div class="complete-donation-header">
+
+                <div>
+
+                    <h2>
+                        Complete Donation
+                    </h2>
+
+                    <p>
+                        Record the donor who fulfilled this request.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="complete-donation-close"
+                    id="closeDonationModal"
+                >
+
+                    ✕
+
+                </button>
+
+            </div>
+
+            <div class="complete-donation-body">
+
+                <!-- Request Summary -->
+
+                <div class="request-detail-list">
+
+                    <div>
+
+                        <span>Request</span>
+
+                        <strong>${displayRequestId}</strong>
+
+                    </div>
+
+                    <div>
+
+                        <span>Hospital</span>
+
+                        <strong>${request.hospital_name}</strong>
+
+                    </div>
+
+                    <div>
+
+                        <span>Blood Group</span>
+
+                        <strong>${request.blood_group}</strong>
+
+                    </div>
+
+                </div>
+
+                <!-- Donation Source -->
+
+                <div class="form-field">
+
+                    <label>
+
+                        Donation Source
+
+                    </label>
+
+                    <div class="donation-source-options">
+
+                        <label>
+
+                            <input
+                                type="radio"
+                                name="donationSource"
+                                value="registered"
+                                checked
+                            >
+
+                            Registered Donor
+
+                        </label>
+
+                        <label>
+
+                            <input
+                                type="radio"
+                                name="donationSource"
+                                value="external"
+                            >
+
+                            External Donor
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+                <!-- Registered Donor -->
+
+                <div
+                    class="form-field"
+                    id="registeredDonorContainer"
+                >
+
+                    <label>
+
+                        Registered Donor
+
+                    </label>
+
+                    <input
+                        id="donorSearchInput"
+                        type="text"
+                        autocomplete="off"
+                        placeholder="Search donor name or donor code"
+                    >
+
+                    <div
+                        id="donorSearchResults"
+                        class="donor-search-results"
+                    ></div>
+
+                </div>
+
+                <!-- External Donor -->
+
+                <div
+                    class="form-field"
+                    id="externalDonorContainer"
+                    style="display:none;"
+                >
+
+                    <label>
+
+                        External Donor Name
+
+                    </label>
+
+                    <input
+                        id="externalDonorName"
+                        type="text"
+                        placeholder="Enter donor name"
+                    >
+
+                </div>
+
+                <!-- Remarks -->
+
+                <div class="form-field">
+
+                    <label>
+
+                        Remarks
+
+                    </label>
+
+                    <textarea
+                        id="donationRemarks"
+                        rows="4"
+                        placeholder="Optional remarks"
+                    ></textarea>
+
+                </div>
+
+            </div>
+
+            <div class="request-form-actions">
+
+                <button
+                    type="button"
+                    class="secondary-btn"
+                    id="cancelDonationModal"
+                >
+
+                    Cancel
+
+                </button>
+
+                <button
+                    type="button"
+                    class="primary-btn"
+                    id="completeDonationButton"
+                >
+
+                    Complete Donation
+
+                </button>
+
+            </div>
+
+        </div>
+
+    `;
+
+    document.body.appendChild(modal);
+
+    // ======================================================
+    // DOM REFERENCES
+    // ======================================================
+
+    const donorSearchInput =
+        document.getElementById("donorSearchInput");
+
+    const donorSearchResults =
+        document.getElementById("donorSearchResults");
+
+    const registeredContainer =
+        document.getElementById("registeredDonorContainer");
+
+    const externalContainer =
+        document.getElementById("externalDonorContainer");
+
+    const externalDonorInput =
+        document.getElementById("externalDonorName");
+
+    const remarksInput =
+        document.getElementById("donationRemarks");
+
+    const completeButton =
+        document.getElementById("completeDonationButton");
+
+    const radios =
+        document.querySelectorAll(
+            'input[name="donationSource"]'
+        );
+
+    // ======================================================
+    // STATE
+    // ======================================================
+
+    let donors = [];
+
+    let selectedDonor = null;
+
+    let donationSource = "registered";
+
+    // ======================================================
+    // LOAD DONORS
+    // ======================================================
+
+    const accessToken =
+        localStorage.getItem("access_token") ||
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("token");
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/donors",
+                {
+                    headers: {
+
+                        Authorization:
+                            `Bearer ${accessToken}`
+
+                    }
+                }
+            );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to load donors."
+            );
+
+        }
+
+        donors =
+            await response.json();
+
+        console.log(
+            "BloodLink donors:",
+            donors
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            error
+        );
+
+        alert(
+            "Unable to load donors."
+        );
+
+        modal.remove();
+
+        return;
+
+    }
+
+        // ======================================================
+        // DONATION SOURCE SWITCH
+        // ======================================================
+
+        radios.forEach((radio) => {
+
+            radio.addEventListener(
+                "change",
+                () => {
+
+                    donationSource = radio.value;
+
+                    selectedDonor = null;
+
+                    donorSearchInput.value = "";
+
+                    donorSearchResults.innerHTML = "";
+
+                    if (donationSource === "registered") {
+
+                        registeredContainer.style.display = "";
+
+                        externalContainer.style.display = "none";
+
+                        externalDonorInput.value = "";
+
+                    }
+
+                    else {
+
+                        registeredContainer.style.display = "none";
+
+                        externalContainer.style.display = "";
+
+                    }
+
+                }
+            );
+
+        });
+
+
+        // ======================================================
+        // DONOR SEARCH
+        // ======================================================
+
+        donorSearchInput.addEventListener(
+            "input",
+            () => {
+
+                selectedDonor = null;
+
+                donorSearchResults.innerHTML = "";
+
+                const keyword =
+                    donorSearchInput.value
+                        .trim()
+                        .toLowerCase();
+
+                if (!keyword) {
+
+                    return;
+
+                }
+
+                const matches =
+                    donors.filter((donor) => {
+
+                        return (
+
+                            donor.full_name
+                                ?.toLowerCase()
+                                .includes(keyword)
+
+                            ||
+
+                            donor.donor_code
+                                ?.toLowerCase()
+                                .includes(keyword)
+
+                            ||
+
+                            donor.blood_group
+                                ?.toLowerCase()
+                                .includes(keyword)
+
+                        );
+
+                    });
+
+                matches
+                    .slice(0, 10)
+                    .forEach((donor) => {
+
+                        const item =
+                            document.createElement("button");
+
+                        item.type = "button";
+
+                        item.className =
+                            "donor-search-item";
+
+                        item.innerHTML = `
+
+                            <strong>
+
+                                ${donor.full_name}
+
+                            </strong>
+
+                            <span>
+
+                                ${donor.donor_code}
+                                •
+                                ${donor.blood_group}
+
+                            </span>
+
+                        `;
+
+                        item.addEventListener(
+                            "click",
+                            () => {
+
+                                selectedDonor = donor;
+
+                                donorSearchInput.value =
+                                    donor.full_name;
+
+                                donorSearchResults.innerHTML = "";
+
+                            }
+                        );
+
+                        donorSearchResults.appendChild(
+                            item
+                        );
+
+                    });
+
+            }
+        );
+
+
+        // ======================================================
+        // CLOSE SEARCH WHEN CLICKING OUTSIDE
+        // ======================================================
+
+        document.addEventListener(
+            "click",
+            (event) => {
+
+                if (
+
+                    !donorSearchResults.contains(
+                        event.target
+                    )
+
+                    &&
+
+                    event.target !== donorSearchInput
+
+                ) {
+
+                    donorSearchResults.innerHTML = "";
+
+                }
+
+            }
+        );
+
+
+        // ======================================================
+    // CLOSE MODAL
+    // ======================================================
+
+    document
+        .getElementById("closeDonationModal")
+        ?.addEventListener(
+            "click",
+            () => modal.remove()
+        );
+
+    document
+        .getElementById("cancelDonationModal")
+        ?.addEventListener(
+            "click",
+            () => modal.remove()
+        );
+
+    // ======================================================
+    // COMPLETE DONATION
+    // ======================================================
+
+    completeButton?.addEventListener(
+        "click",
+        async () => {
+
+            // ----------------------------------------------
+            // Validate donor
+            // ----------------------------------------------
+
+            if (donationSource === "registered") {
+
+                if (!selectedDonor) {
+
+                    alert(
+                        "Please select a registered donor."
+                    );
+
+                    return;
+
+                }
+
+            }
+
+            else {
+
+                if (!externalDonorInput.value.trim()) {
+
+                    alert(
+                        "Please enter the external donor name."
+                    );
+
+                    return;
+
+                }
+
+                alert(
+                    "External donor recording is not implemented yet."
+                );
+
+                return;
+
+            }
+
+            // ----------------------------------------------
+            // Prevent double click
+            // ----------------------------------------------
+
+            completeButton.disabled = true;
+
+            completeButton.textContent =
+                "Completing...";
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/blood-requests/${request.id}/complete`,
+                        {
+                            method: "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json",
+
+                                "Authorization":
+                                    `Bearer ${accessToken}`
+
+                            },
+
+                            body: JSON.stringify({
+
+                                donor_id:
+                                    selectedDonor.id,
+
+                                donation_type:
+                                    "Voluntary",
+
+                                remarks:
+                                    remarksInput.value.trim() || null
+
+                            })
+
+                        }
+                    );
+
+                const responseData =
+                    await response.json();
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        responseData.detail ||
+                        "Unable to complete donation."
+                    );
+
+                }
+
+                // ------------------------------------------
+                // Update local cache
+                // ------------------------------------------
+
+                const index =
+                    bloodRequests.findIndex(
+                        (bloodRequest) =>
+                            bloodRequest.id === request.id
+                    );
+
+                if (index !== -1) {
+
+                    bloodRequests[index] =
+                        responseData;
+
+                }
+
+                // ------------------------------------------
+                // Success
+                // ------------------------------------------
+
+                modal.remove();
+
+                alert(
+                    "Donation recorded successfully."
+                );
+
+                renderBloodRequestDetails(
+                    responseData
+                );
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "BloodLink:",
+                    error
+                );
+
+                alert(
+                    error.message ||
+                    "Unable to complete donation."
+                );
+
+            }
+
+            finally {
+
+                completeButton.disabled = false;
+
+                completeButton.textContent =
+                    "Complete Donation";
+
+            }
+
+        }
+    );
 
 }
 // ==========================================================

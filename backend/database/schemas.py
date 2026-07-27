@@ -500,6 +500,10 @@ class BloodRequestUpdate(SchemaBase):
 # BLOOD REQUEST STATUS UPDATE
 # ==========================================================
 
+# ==========================================================
+# BLOOD REQUEST STATUS UPDATE
+# ==========================================================
+
 class BloodRequestStatusUpdate(SchemaBase):
     """Status change submitted for an existing blood request."""
 
@@ -507,6 +511,32 @@ class BloodRequestStatusUpdate(SchemaBase):
         min_length=1,
         max_length=50,
     )
+
+
+# ==========================================================
+# COMPLETE BLOOD REQUEST
+# ==========================================================
+
+class BloodRequestCompleteRequest(SchemaBase):
+    """
+    Request body used when completing a blood request.
+
+    The backend will:
+    - validate the donor
+    - create the donation history record
+    - update the donor statistics
+    - mark the request as fulfilled
+    """
+
+    donor_id: int = Field(gt=0)
+
+    donation_type: str = Field(
+        default="Voluntary",
+        min_length=1,
+        max_length=30,
+    )
+
+    remarks: str | None = None
 # ==========================================================
 # BLOOD REQUEST RESPONSE
 # ==========================================================
@@ -608,3 +638,77 @@ class SendNotificationRequest(BaseModel):
     blood_request_id: int
 
     donor_ids: list[int]
+# ==========================================================
+# donation record create  
+# ==========================================================
+class DonationRecordCreate(BaseModel):
+    """
+    Request schema for recording a completed donation.
+    """
+
+    donor_id: int
+    blood_request_id: int
+    donation_date: date
+    units: int = 1
+    donation_type: str = "Voluntary"
+    remarks: str | None = None    
+# ==========================================================
+# DONATION HISTORY SCHEMAS
+# ==========================================================
+
+from datetime import date
+from pydantic import BaseModel, ConfigDict
+
+
+class DonationHistoryCreate(BaseModel):
+    """
+    Create a new donation history record.
+    """
+
+    donor_id: int
+    blood_request_id: int
+    hospital_name: str
+    donation_date: date
+    units: int = 1
+    donation_type: str = "Voluntary"
+    remarks: str | None = None
+
+
+class DonationHistoryResponse(BaseModel):
+    """
+    Donation history record returned to the frontend.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    donor_id: int
+    blood_request_id: int
+    hospital_name: str
+    donation_date: date
+    units: int
+    donation_type: str
+    remarks: str | None
+    recorded_by: int
+    created_at: date
+
+
+class DonationStatisticsResponse(BaseModel):
+    """
+    Dashboard statistics for the Donation History page.
+    """
+
+    total_donations: int
+    total_units: int
+    voluntary_donations: int
+    replacement_donations: int
+
+
+class DonationSummaryResponse(BaseModel):
+    """
+    Donation table summary.
+    """
+
+    total_records: int
+    total_units: int
+    latest_donation: date | None
