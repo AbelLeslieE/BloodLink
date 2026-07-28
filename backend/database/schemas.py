@@ -18,22 +18,58 @@ class UserBase(SchemaBase):
     """Fields shared by user create and response schemas."""
 
     username: str = Field(min_length=1, max_length=100)
+
     full_name: str = Field(min_length=1, max_length=200)
+
+    department: str = Field(
+        min_length=1,
+        max_length=100,
+    )
+
+    role: str = Field(
+        min_length=1,
+        max_length=50,
+    )
+
+    email: str = Field(
+        min_length=1,
+        max_length=255,
+    )
+
+    phone: str = Field(
+        min_length=1,
+        max_length=20,
+    )
+
     active: bool = True
 
 
 class UserCreate(UserBase):
     """Fields required to create a user record."""
 
-    password_hash: str = Field(min_length=1, max_length=255)
+    password_hash: str = Field(
+        min_length=1,
+        max_length=255,
+    )
 
 
 class UserUpdate(SchemaBase):
     """Fields that may be supplied when updating a user record."""
 
     username: str | None = Field(default=None, min_length=1, max_length=100)
+
     password_hash: str | None = Field(default=None, min_length=1, max_length=255)
+
     full_name: str | None = Field(default=None, min_length=1, max_length=200)
+
+    department: str | None = Field(default=None, min_length=1, max_length=100)
+
+    role: str | None = Field(default=None, min_length=1, max_length=50)
+
+    email: str | None = Field(default=None, min_length=1, max_length=255)
+
+    phone: str | None = Field(default=None, min_length=1, max_length=20)
+
     active: bool | None = None
 
 
@@ -41,9 +77,10 @@ class UserResponse(UserBase):
     """Safe user representation returned by the application."""
 
     id: int
-    created_at: datetime
-    last_login: datetime | None
 
+    created_at: datetime
+
+    last_login: datetime | None
 
 # ==========================================================
 # DONOR SCHEMAS

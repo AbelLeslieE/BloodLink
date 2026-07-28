@@ -99,6 +99,10 @@ def create_user(
         username=user_data.username,
         password_hash=user_data.password_hash,
         full_name=user_data.full_name,
+        department=user_data.department,
+        role=user_data.role,
+        email=user_data.email,
+        phone=user_data.phone,
         active=user_data.active,
     )
 
@@ -110,8 +114,6 @@ def create_user(
     )
 
     return user
-
-
 def update_user_last_login(
     database_session: Session,
     user: User,

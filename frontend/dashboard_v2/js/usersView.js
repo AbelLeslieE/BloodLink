@@ -39,8 +39,7 @@ export function loadUsers() {
                     <h1>User Management</h1>
 
                     <p>
-                        Manage administrators, biomedical engineers,
-                        department users and system access.
+                        Manage BloodLink users, volunteers, staff, and administrator access.
                     </p>
 
                 </div>
@@ -418,13 +417,13 @@ function displayUsers(data) {
 
                     <div class="user-avatar">
 
-                        ${user.name.charAt(0).toUpperCase()}
+                        ${user.full_name.charAt(0).toUpperCase()}
 
                     </div>
 
                     <div>
 
-                        <strong>${user.name}</strong>
+                        <strong>${user.full_name}</strong>
 
                     </div>
 
@@ -504,7 +503,7 @@ function renderUserKPIs() {
         usersCache.length;
 
     document.getElementById("kpiAdmins").textContent =
-        usersCache.filter(user => user.role === "Manager").length;
+        usersCache.filter(user => user.role === "Administrator").length;
 
     document.getElementById("kpiDepartments").textContent =
         new Set(usersCache.map(user => user.department)).size;
@@ -551,7 +550,7 @@ function renderUserSummary() {
 
         <div class="summary-row">
 
-            <span>Biomedical Engineers</span>
+            <span>NSS Volunteer</span>
 
             <strong>${bmes}</strong>
 
@@ -559,7 +558,7 @@ function renderUserSummary() {
 
         <div class="summary-row">
 
-            <span>Department Users</span>
+            <span>Users</span>
 
             <strong>${users}</strong>
 
@@ -590,13 +589,13 @@ function renderRecentUsers() {
 
                 <div class="recent-avatar">
 
-                    ${user.name.charAt(0).toUpperCase()}
+                    ${user.full_name.charAt(0).toUpperCase()}
 
                 </div>
 
                 <div class="recent-info">
 
-                    <strong>${user.name}</strong>
+                    <strong>${user.full_name}</strong>
 
                     <small>${user.department}</small>
 
@@ -615,7 +614,7 @@ function filterUsers(){
 let text=userSearch.value.toLowerCase();
 
 let result=usersCache.filter(u=>
-u.name.toLowerCase().includes(text) &&
+u.full_name.toLowerCase().includes(text) &&
 (!deptFilter.value || u.department==deptFilter.value) &&
 (!roleFilter.value || u.role==roleFilter.value)
 );
@@ -627,7 +626,7 @@ displayUsers(result);
 
 }
 
-function showRegisterUser(){
+function showRegisterUser() {
 
     const userModal = document.getElementById("userModal");
 
@@ -637,19 +636,16 @@ function showRegisterUser(){
 
         <h3>${editingUserId ? "Edit User" : "Register User"}</h3>
 
-        <input id="newName" placeholder="Name">
+        <input id="newName" placeholder="Full Name">
 
         <input id="newDept" placeholder="Department">
 
         <select id="newRole">
 
             <option value="">Select Role</option>
-
-            <option value="Manager">Administrator</option>
-
-            <option value="BME">Biomedical Engineer</option>
-
-            <option value="User">Department User</option>
+            <option value="Administrator">Administrator</option>
+            <option value="NSS Volunteer">NSS Volunteer</option>
+            <option value="Blood Bank Staff">Blood Bank Staff</option>
 
         </select>
 
@@ -688,6 +684,8 @@ function showRegisterUser(){
 
     `;
 
+    userModal.classList.add("show");
+
 }
 
 
@@ -710,12 +708,12 @@ function registerUser(){
 
     const payload = {
 
-        name: newName.value,
-        department: newDept.value,
+        full_name: newName.value.trim(),
+        department: newDept.value.trim(),
         role: newRole.value,
-        email: newEmail.value,
-        phone: newPhone.value,
-        username: newUsername.value,
+        email: newEmail.value.trim(),
+        phone: newPhone.value.trim(),
+        username: newUsername.value.trim(),
         password: newPassword.value
 
     };
@@ -785,7 +783,13 @@ function closeUserModal(){
     const userModal =
         document.getElementById("userModal");
 
-    userModal.innerHTML = "";
+    userModal.classList.remove("show");
+
+    setTimeout(() => {
+
+        userModal.innerHTML = "";
+
+    }, 200);
 
     editingUserId = null;
 
