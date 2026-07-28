@@ -111,23 +111,14 @@ def get_settings() -> Settings:
             60,
         ),
 
-                # Resend
+        # Email (optional during development)
+        resend_api_key=os.getenv("RESEND_API_KEY", ""),
+        email_from=os.getenv("EMAIL_FROM", ""),
 
-        resend_api_key=_required_value(
-            "RESEND_API_KEY",
-        ),
-
-        email_from=_required_value(
-            "EMAIL_FROM",
-        ),
         # Application URLs
-
         backend_url=_required_value("BACKEND_URL"),
-
         frontend_url=_required_value("FRONTEND_URL"),
     )
-
-
 def get_default_volunteer_credentials() -> DefaultVolunteerCredentials:
     """Load initial volunteer credentials."""
 

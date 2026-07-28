@@ -32,6 +32,7 @@ from backend.routers.donations import (
 )
 from backend.create_default_admin import create_admin
 from backend.routers import dashboard_router
+from backend.routers.user_routes import router as users_router
 # ==========================================================
 # Paths
 # ==========================================================
@@ -96,7 +97,7 @@ app = FastAPI(
 # ==========================================================
 
 app.include_router(auth_router)
-
+app.include_router(users_router)
 app.include_router(
     blood_requests_router
 )
