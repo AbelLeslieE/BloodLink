@@ -103,7 +103,7 @@ function setActiveNavigation(page) {
 // 4. NAVIGATE
 // ==========================================================
 
-function navigate(page) {
+function navigate(page, detail = {}) {
 
     if (!page) {
         return;
@@ -141,6 +141,7 @@ function navigate(page) {
                 "bloodlink:navigate",
                 {
                     detail: {
+                        ...detail,
                         page: DEFAULT_PAGE
                     }
                 }
@@ -173,6 +174,7 @@ function navigate(page) {
             "bloodlink:navigate",
             {
                 detail: {
+                    ...detail,
                     page
                 }
             }

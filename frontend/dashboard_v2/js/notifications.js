@@ -35,6 +35,12 @@ import {
 
 let notificationFeed = [];
 
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[character]));
+}
+
 let filteredFeed = [];
 
 let selectedNotification = null;
@@ -1525,13 +1531,13 @@ function renderNotificationFeed() {
 
                     <h3>
 
-                        ${notification.title}
+                        ${escapeHtml(notification.title)}
 
                     </h3>
 
                     <span>
 
-                        ${notification.createdAt}
+                        ${escapeHtml(notification.createdAt)}
 
                     </span>
 
@@ -1546,13 +1552,13 @@ function renderNotificationFeed() {
 
                     <strong>
 
-                        ${notification.request.hospital}
+                        ${escapeHtml(notification.request.hospital)}
 
                     </strong>
 
                     <span>
 
-                        ${notification.request.patient}
+                        ${escapeHtml(notification.request.patient)}
 
                     </span>
 
@@ -1563,13 +1569,13 @@ function renderNotificationFeed() {
 
                     <span class="blood-tag">
 
-                        🩸 ${notification.request.bloodGroup}
+                        🩸 ${escapeHtml(notification.request.bloodGroup)}
 
                     </span>
 
                     <span class="priority-tag">
 
-                        ${notification.request.priority}
+                        ${escapeHtml(notification.request.priority)}
 
                     </span>
 
@@ -2077,14 +2083,14 @@ function renderRecipientTable() {
         let badgeClass = "pending";
         let badgeIcon = "⏳";
 
-        if (recipient.response === "Accepted") {
+        if (["Accepted", "ACCEPTED"].includes(recipient.response)) {
 
             badgeClass = "accepted";
             badgeIcon = "✅";
 
         }
 
-        else if (recipient.response === "Declined") {
+        else if (["Declined", "DECLINED"].includes(recipient.response)) {
 
             badgeClass = "declined";
             badgeIcon = "❌";
@@ -2102,13 +2108,13 @@ function renderRecipientTable() {
 
                     <strong>
 
-                        ${recipient.donor}
+                        ${escapeHtml(recipient.donor)}
 
                     </strong>
 
                     <small>
 
-                        ${recipient.email}
+                        ${escapeHtml(recipient.email)}
 
                     </small>
 
@@ -2118,13 +2124,13 @@ function renderRecipientTable() {
 
             <td>
 
-                ${recipient.bloodGroup}
+                ${escapeHtml(recipient.bloodGroup)}
 
             </td>
 
             <td>
 
-                ${recipient.distance}
+                ${escapeHtml(recipient.distance)}
 
             </td>
 
@@ -2134,7 +2140,7 @@ function renderRecipientTable() {
                     class="status-badge ${badgeClass}">
 
                     ${badgeIcon}
-                    ${recipient.response}
+                    ${escapeHtml(recipient.response)}
 
                 </span>
 
@@ -2142,24 +2148,35 @@ function renderRecipientTable() {
 
             <td>
 
-    ${recipient.respondedAt || "--"}
+    ${escapeHtml(recipient.respondedAt || "--")}
 
     </td>
 
     <td>
 
-        <button
-            class="view-donor-btn"
-            data-donor-id="${recipient.id}">
-
-            View Donor
-
-        </button>
+        ${recipient.response === "ACCEPTED" && !recipient.donationConfirmed ? `
+            <button class="view-donor-btn confirm-donation-btn">Confirm Donation</button>
+        ` : recipient.donationConfirmed ? `
+            <span class="status-badge accepted">Points Awarded (${recipient.pointsAwarded})</span>
+        ` : "--"}
 
     </td>
 
         `;
 
+        row.querySelector(".confirm-donation-btn")?.addEventListener("click", async () => {
+            const response = await authenticatedFetch(
+                `/api/admin/donations/requests/${selectedNotification.request.id}/donors/${recipient.donorId}/confirm`,
+                { method: "POST" },
+            );
+            if (!response || !response.ok) {
+                alert("Unable to confirm the donation.");
+                return;
+            }
+            recipient.donationConfirmed = true;
+            recipient.pointsAwarded = (await response.json()).points_awarded;
+            renderRecipientTable();
+        });
         tableBody.appendChild(row);
 
     });
@@ -2952,6 +2969,7 @@ async function loadNotificationRecipients(notificationId) {
         selectedNotification.recipients = recipients.map(recipient => ({
 
             id: recipient.id,
+            donorId: recipient.donor.id,
 
             donor: recipient.donor.full_name,
 
@@ -2964,6 +2982,8 @@ async function loadNotificationRecipients(notificationId) {
             phone: recipient.donor.phone,
 
             response: recipient.status,
+            donationConfirmed: recipient.donation_confirmed,
+            pointsAwarded: recipient.points_awarded,
 
             respondedAt: formatDate(
                 recipient.responded_at

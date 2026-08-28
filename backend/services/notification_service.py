@@ -109,7 +109,7 @@ def send_notification_campaign(
     database_session: Session,
     blood_request: BloodRequest,
     compatible_donors: list[tuple[Donor, float]],
-) -> Notification:
+) -> tuple[Notification, int]:
     """
     Create a notification campaign and send emails to all
     compatible donors.
@@ -138,6 +138,7 @@ def send_notification_campaign(
     # Send Email To Each Recipient
     # ------------------------------------------------------
 
+    successful_deliveries = 0
     for recipient in recipients:
 
         donor = recipient.donor
@@ -197,7 +198,11 @@ def send_notification_campaign(
             html_body=html,
         )
 
-        print(f"Sending email to {recipient.email} -> {success}")
+        if success:
+            successful_deliveries += 1
+        else:
+            recipient.status = "DELIVERY_FAILED"
+            database_session.commit()
 
     # ------------------------------------------------------
     # Refresh Statistics
@@ -208,4 +213,4 @@ def send_notification_campaign(
         notification,
     )
 
-    return notification
+    return notification, successful_deliveries

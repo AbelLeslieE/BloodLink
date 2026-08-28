@@ -79,19 +79,3 @@ class EmailToken(Base):
         DateTime(timezone=True),
         nullable=False,
     )
-
-    # ======================================================
-    # ORM RELATIONSHIPS
-    # ======================================================
-
-    recipient = relationship(
-        "NotificationRecipient",
-        back_populates="email_token",
-        uselist=False,
-    )
-
-    responses = relationship(
-        "DonorResponse",
-        back_populates="email_token",
-        cascade="all, delete-orphan",
-    )

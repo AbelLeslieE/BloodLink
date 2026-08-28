@@ -1,6 +1,6 @@
 # BloodLink
 
-BloodLink is a blood donor management system developed exclusively for National Service Scheme (NSS) volunteers. It is intended to replace the existing Excel-based workflow for finding and contacting blood donors. Donors do not access the application.
+BloodLink is a blood donor management system developed exclusively for National Service Scheme (NSS) volunteers. It replaces the existing Excel-based workflow for finding and contacting donors. Administrators manage campaigns, while donors have a separate, privacy-safe portal.
 
 ## Technology Stack
 
@@ -67,6 +67,33 @@ BloodLink/
 
 ## Current Status
 
-The project includes the backend configuration, database foundation, and NSS volunteer
-authentication. Business workflows and non-authentication frontend functionality remain
-intentionally unimplemented.
+The project includes administrator workflows, donor matching and notifications, secure
+donor accounts, a donor dashboard, rewards, and automatically issued donation certificates.
+
+## Donor rewards and verification
+
+BloodLink now treats a **Yes** response as willingness only. It never awards
+points until an administrator confirms the completed donation. A confirmation
+creates one donation-history record per donor and blood request, awards the
+configured 100 points, and cannot be repeated for that same pair.
+
+Before starting the application, configure the required environment variables
+including `DEFAULT_VOLUNTEER_PASSWORD`, then apply the schema with:
+
+```powershell
+alembic upgrade head
+uvicorn backend.main:app --reload
+```
+
+The first administrator is created from `DEFAULT_VOLUNTEER_USERNAME` and
+`DEFAULT_VOLUNTEER_PASSWORD`; no default password is shipped in source code.
+
+Administrators use the existing dashboard. Donor accounts are redirected to
+`/donor-dashboard`, which exposes only safe request details and never returns
+patient or bystander contact information.
+
+## QR donor registration and certificates
+
+Administrators can open **Users** in the dashboard to display the donor-registration QR code or create a linked donor account themselves. The QR code opens `/donor-register`, where a donor supplies their name, phone, email, blood group, username, and password. Phone numbers and email addresses are checked across both donor and user records, so a registered donor cannot create a second account through formatting variations.
+
+After an administrator confirms a donation, BloodLink issues a single PDF certificate automatically. The donor can find it under **My certificates** in `/donor-dashboard` and download it directly to a mobile device. Set `BACKEND_URL` to the public URL reachable by donor phones before printing or sharing the QR code.

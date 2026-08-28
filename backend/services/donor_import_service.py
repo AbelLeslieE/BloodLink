@@ -63,6 +63,7 @@ BLOOD_GROUP_MAPPING = {
     "O-VE": "O-",
     "O -VE": "O-",
 }
+ALLOWED_BLOOD_GROUPS = {"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"}
 # ==========================================================
 # IMPORT SUMMARY
 # ==========================================================
@@ -96,6 +97,7 @@ def load_excel_workbook(
     workbook = load_workbook(
         BytesIO(file_bytes),
         data_only=True,
+        read_only=True,
     )
 
     return workbook.active
@@ -229,6 +231,11 @@ def parse_donor_row(
         "AGE",
     )
 
+    try:
+        parsed_age = int(age) if age else None
+    except (TypeError, ValueError):
+        parsed_age = None
+
     return {
 
         "full_name": get_cell_value(
@@ -263,7 +270,7 @@ def parse_donor_row(
             "GENDER",
         ),
 
-        "age": int(age) if age else None,
+        "age": parsed_age,
 
     }
 # ==========================================================
@@ -347,6 +354,14 @@ def import_donors_from_excel(
                 "reason": "Missing blood group",
             })
 
+            continue
+
+        if donor["blood_group"] not in ALLOWED_BLOOD_GROUPS:
+            summary.skipped += 1
+            summary.errors.append({
+                "row": excel_row_number,
+                "reason": "Invalid blood group",
+            })
             continue
 
         # ----------------------------------------------

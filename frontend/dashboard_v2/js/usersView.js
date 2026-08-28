@@ -3,9 +3,17 @@
    File: users.js
 ========================================================== */
 
+import { authenticatedFetch } from "./api.js";
+
 let usersCache = [];
 
 let editingUserId = null;
+
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[character]));
+}
 
 /* ==========================================================
    PAGE TEMPLATE
@@ -320,6 +328,15 @@ export function loadUsers() {
 
                 </div>
 
+                <div class="glass-card donor-registration-card">
+
+                    <div class="sidebar-title"><h3>Donor registration QR</h3></div>
+                    <p>Display this code so donors can register their own portal account.</p>
+                    <img id="donorRegistrationQr" alt="QR code for BloodLink donor registration">
+                    <a href="/donor-register" target="_blank" rel="noopener">Open registration page</a>
+
+                </div>
+
             </aside>
 
         </section>
@@ -378,19 +395,28 @@ export function initializeUsers() {
         );
 
     loadUsersData();
+    loadDonorRegistrationQr();
 
 }
+
+async function loadDonorRegistrationQr() {
+    const image = document.getElementById("donorRegistrationQr");
+    if (!image) return;
+    const response = await authenticatedFetch("/api/donor-registration/qr");
+    if (!response || !response.ok) return;
+    image.src = URL.createObjectURL(await response.blob());
+}
 function loadUsersData(){
-fetch('/api/users')
-.then(r=>r.json())
+authenticatedFetch('/api/users')
+.then(r=>r ? r.json() : [])
 .then(data=>{
 usersCache=data;
 
 let depts=[...new Set(data.map(x=>x.department))];
 let roles=[...new Set(data.map(x=>x.role))];
 
-deptFilter.innerHTML='<option value="">All Departments</option>'+depts.map(x=>`<option>${x}</option>`).join('');
-roleFilter.innerHTML='<option value="">All Roles</option>'+roles.map(x=>`<option>${x}</option>`).join('');
+deptFilter.innerHTML='<option value="">All Departments</option>'+depts.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');
+roleFilter.innerHTML='<option value="">All Roles</option>'+roles.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');
 
 displayUsers(data);
 });
@@ -417,13 +443,13 @@ function displayUsers(data) {
 
                     <div class="user-avatar">
 
-                        ${user.full_name.charAt(0).toUpperCase()}
+                        ${escapeHtml(user.full_name.charAt(0).toUpperCase())}
 
                     </div>
 
                     <div>
 
-                        <strong>${user.full_name}</strong>
+                        <strong>${escapeHtml(user.full_name)}</strong>
 
                     </div>
 
@@ -433,15 +459,15 @@ function displayUsers(data) {
 
             <td>
 
-                ${user.department}
+                ${escapeHtml(user.department)}
 
             </td>
 
             <td>
 
-                <span class="role-badge ${user.role.toLowerCase().replace(/\s+/g,'-')}">
+                <span class="role-badge ${escapeHtml(user.role.toLowerCase().replace(/\s+/g,'-'))}">
 
-                    ${user.role}
+                    ${escapeHtml(user.role)}
 
                 </span>
 
@@ -449,13 +475,13 @@ function displayUsers(data) {
 
             <td>
 
-                ${user.email}
+                ${escapeHtml(user.email)}
 
             </td>
 
             <td>
 
-                ${user.phone}
+                ${escapeHtml(user.phone)}
 
             </td>
 
@@ -522,13 +548,13 @@ function renderUserSummary() {
     if (!container) return;
 
     const admins =
-        usersCache.filter(user => user.role === "Manager").length;
+        usersCache.filter(user => user.role === "Administrator").length;
 
     const bmes =
-        usersCache.filter(user => user.role === "BME").length;
+        usersCache.filter(user => user.role === "Donor").length;
 
     const users =
-        usersCache.filter(user => user.role === "User").length;
+        usersCache.filter(user => user.active).length;
 
     container.innerHTML = `
 
@@ -589,15 +615,15 @@ function renderRecentUsers() {
 
                 <div class="recent-avatar">
 
-                    ${user.full_name.charAt(0).toUpperCase()}
+                    ${escapeHtml(user.full_name.charAt(0).toUpperCase())}
 
                 </div>
 
                 <div class="recent-info">
 
-                    <strong>${user.full_name}</strong>
+                    <strong>${escapeHtml(user.full_name)}</strong>
 
-                    <small>${user.department}</small>
+                    <small>${escapeHtml(user.department)}</small>
 
                 </div>
 
@@ -644,14 +670,19 @@ function showRegisterUser() {
 
             <option value="">Select Role</option>
             <option value="Administrator">Administrator</option>
-            <option value="NSS Volunteer">NSS Volunteer</option>
-            <option value="Blood Bank Staff">Blood Bank Staff</option>
+            <option value="Donor">Donor</option>
 
         </select>
 
         <input id="newEmail" placeholder="Email">
 
         <input id="newPhone" placeholder="Phone">
+
+        <select id="newBloodGroup">
+            <option value="">Blood group (required for a new donor)</option>
+            <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+        </select>
 
         <input id="newUsername" placeholder="Username">
 
@@ -714,16 +745,27 @@ function registerUser(){
         email: newEmail.value.trim(),
         phone: newPhone.value.trim(),
         username: newUsername.value.trim(),
-        password: newPassword.value
+        password: newPassword.value || null
 
     };
 
-    console.log("Payload being sent:", payload);
+    if (!editingUserId && !payload.password) {
+        alert("A password is required for a new account.");
+        return;
+    }
 
-    fetch(
+    if (!editingUserId && payload.role === "Donor") {
+        payload.blood_group = newBloodGroup.value;
+        if (!payload.blood_group) {
+            alert("Select the donor's blood group.");
+            return;
+        }
+    }
+
+    authenticatedFetch(
         editingUserId
             ? `/api/users/${editingUserId}`
-            : "/api/users/register",
+            : payload.role === "Donor" ? "/api/donor-registration/admin" : "/api/users/register",
         {
             method: editingUserId ? "PUT" : "POST",
 
@@ -734,10 +776,11 @@ function registerUser(){
             body: JSON.stringify(payload)
         }
     )
-    .then(r => r.json())
+    .then(r => r ? r.json() : { detail: "Session expired." })
     .then(r => {
 
-        alert(r.message);
+        if (!r.success) throw new Error(r.detail || "Unable to save user.");
+        alert("User saved successfully.");
 
         loadUsersData();
 
@@ -758,7 +801,7 @@ function editUser(id){
  editingUserId=id;
  showRegisterUser();
  setTimeout(()=>{
- newName.value=u.name;
+ newName.value=u.full_name;
  newDept.value=u.department;
  newRole.value=u.role;
  newEmail.value=u.email;
@@ -770,8 +813,8 @@ function editUser(id){
 
 function deleteUser(id){
  if(!confirm("Delete this user?")) return;
- fetch(`/api/users/${id}`,{method:"DELETE"})
- .then(r=>r.json())
+  authenticatedFetch(`/api/users/${id}`,{method:"DELETE"})
+  .then(r=>r ? r.json() : { detail: "Session expired." })
  .then(()=>{
    loadUsersData();
  });

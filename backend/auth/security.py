@@ -26,13 +26,13 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
         return False
 
 
-def create_access_token(subject: str) -> str:
+def create_access_token(subject: str, auth_version: int) -> str:
     """Create a time-limited access token for an authenticated volunteer."""
     settings = get_settings()
     expires_at = datetime.now(timezone.utc) + timedelta(
         minutes=settings.access_token_expire_minutes
     )
-    payload = {"sub": subject, "exp": expires_at}
+    payload = {"sub": subject, "ver": auth_version, "exp": expires_at}
     return jwt.encode(
         payload,
         settings.secret_key,
@@ -52,3 +52,17 @@ def get_token_subject(token: str) -> str:
     if not isinstance(subject, str) or not subject:
         raise JWTError("Token subject is missing.")
     return subject
+
+
+def get_token_auth_version(token: str) -> int:
+    """Return the authenticated account's session version from a JWT."""
+    settings = get_settings()
+    payload = jwt.decode(
+        token,
+        settings.secret_key,
+        algorithms=[settings.jwt_algorithm],
+    )
+    auth_version = payload.get("ver")
+    if not isinstance(auth_version, int) or auth_version < 0:
+        raise JWTError("Token session version is missing.")
+    return auth_version

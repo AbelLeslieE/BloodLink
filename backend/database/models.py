@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, UniqueConstraint
 from sqlalchemy import String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.database.email_token import EmailToken
@@ -84,12 +84,40 @@ class User(Base):
         nullable=True,
     )
 
+    donor_id: Mapped[int | None] = mapped_column(
+        ForeignKey("donors.id"), unique=True, nullable=True, index=True
+    )
+
+    total_points: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False
+    )
+
+    donation_count: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False
+    )
+
+    hide_from_leaderboard: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False
+    )
+
+    # Incrementing this value invalidates every JWT issued before the change.
+    # It is used for logout and password-reset revocation without storing raw
+    # tokens in the database.
+    auth_version: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False
+    )
+
     blood_requests: Mapped[list["BloodRequest"]] = relationship(
         back_populates="created_by_user"
     )
 
     donation_history_entries: Mapped[list["DonationHistory"]] = relationship(
         back_populates="recorded_by_user"
+    )
+
+    donor: Mapped["Donor | None"] = relationship(
+        foreign_keys=[donor_id],
+        back_populates="user_account",
     )
 
 
@@ -267,6 +295,18 @@ class Donor(Base):
         nullable=False,
     )
 
+    total_points: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False
+    )
+
+    donation_count: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False
+    )
+
+    hide_from_leaderboard: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False
+    )
+
     # ======================================================
     # AUDIT INFORMATION
     # ======================================================
@@ -314,6 +354,12 @@ class Donor(Base):
     ] = relationship(
         back_populates="donor",
         cascade="all, delete-orphan",
+    )
+
+    user_account: Mapped["User | None"] = relationship(
+        foreign_keys="User.donor_id",
+        back_populates="donor",
+        uselist=False,
     )
 
 
@@ -486,6 +532,11 @@ class DonationHistory(Base):
     """Recorded donation associated with a donor and blood request."""
 
     __tablename__ = "donation_history"
+    __table_args__ = (
+        UniqueConstraint(
+            "donor_id", "blood_request_id", name="uq_donation_history_donor_request"
+        ),
+    )
 
     # ======================================================
     # PRIMARY KEY
@@ -561,6 +612,16 @@ class DonationHistory(Base):
         nullable=False,
     )
 
+    points_awarded: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False
+    )
+    status: Mapped[str] = mapped_column(
+        String(50), default="Donation Confirmed", server_default="Donation Confirmed", nullable=False
+    )
+    awarded_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     # ======================================================
     # RELATIONSHIPS
     # ======================================================
@@ -568,7 +629,6 @@ class DonationHistory(Base):
     donor: Mapped["Donor"] = relationship(
         back_populates="donation_history_entries"
     )
-
     blood_request: Mapped["BloodRequest"] = relationship(
         back_populates="donation_history_entries"
     )
@@ -577,4 +637,51 @@ class DonationHistory(Base):
         back_populates="donation_history_entries"
     )
 
+    certificate: Mapped["DonationCertificate | None"] = relationship(
+        back_populates="donation",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
+class DonationCertificate(Base):
+    """A downloadable certificate issued for one confirmed donation."""
+
+    __tablename__ = "donation_certificates"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    donation_history_id: Mapped[int] = mapped_column(
+        ForeignKey("donation_history.id"), unique=True, nullable=False, index=True
+    )
+    certificate_number: Mapped[str] = mapped_column(
+        String(64), unique=True, nullable=False, index=True
+    )
+    issued_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    donation: Mapped["DonationHistory"] = relationship(back_populates="certificate")
+
+
+class SavedMatch(Base):
+    """An administrator's persisted donor selection for a blood request."""
+
+    __tablename__ = "saved_matches"
+    __table_args__ = (
+        UniqueConstraint(
+            "blood_request_id", "donor_id", name="uq_saved_matches_request_donor"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    blood_request_id: Mapped[int] = mapped_column(
+        ForeignKey("blood_requests.id"), nullable=False, index=True
+    )
+    donor_id: Mapped[int] = mapped_column(
+        ForeignKey("donors.id"), nullable=False, index=True
+    )
+    saved_by: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )

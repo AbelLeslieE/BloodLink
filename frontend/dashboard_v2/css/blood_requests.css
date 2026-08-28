@@ -57,6 +57,35 @@
 
 }
 
+.blood-requests-loading {
+
+    flex: 1;
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #F8FAFC;
+    font-size: 18px;
+    font-weight: 600;
+
+}
+
+.blood-requests-loading svg {
+
+    width: 24px;
+    height: 24px;
+    color: #60A5FA;
+    animation: blood-requests-spin 1s linear infinite;
+
+}
+
+@keyframes blood-requests-spin {
+
+    to { transform: rotate(360deg); }
+
+}
+
 
 /* ==========================================================
    2. PAGE HEADER

@@ -2697,3 +2697,63 @@ body.donor-modal-open {
     background: rgba(255,255,255,.45);
 
 }
+
+/* Keep long donor details inside their cells instead of overlapping the
+   blood-group and adjacent columns.  The scroll container handles narrower
+   viewports, so each column can retain a useful, predictable width. */
+.donor-table {
+
+    width: 1770px;
+    min-width: 1770px;
+    table-layout: fixed;
+
+}
+
+.donor-table th,
+.donor-table td {
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+}
+
+.donor-table th:nth-child(1),
+.donor-table td:nth-child(1) { width: 145px; }
+
+.donor-table th:nth-child(2),
+.donor-table td:nth-child(2) { width: 300px; }
+
+.donor-table th:nth-child(3),
+.donor-table td:nth-child(3) { width: 145px; }
+
+.donor-table th:nth-child(4),
+.donor-table td:nth-child(4) { width: 150px; }
+
+.donor-table th:nth-child(5),
+.donor-table td:nth-child(5) { width: 75px; }
+
+.donor-table th:nth-child(6),
+.donor-table td:nth-child(6) { width: 165px; }
+
+.donor-table th:nth-child(7),
+.donor-table td:nth-child(7) { width: 255px; }
+
+.donor-table th:nth-child(8),
+.donor-table td:nth-child(8) { width: 165px; }
+
+.donor-table th:nth-child(9),
+.donor-table td:nth-child(9) { width: 125px; }
+
+.donor-table th:nth-child(10),
+.donor-table td:nth-child(10) { width: 145px; }
+
+.donor-table td.donor-name-cell {
+
+    height: auto;
+    min-height: 58px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+    text-overflow: clip;
+
+}

@@ -2118,7 +2118,38 @@ async function updateBloodRequestStatus(
 // 8. RENDER BLOOD REQUESTS
 // ==========================================================
 
-async function renderBloodRequests() {
+async function renderBloodRequests(
+    { openCreateForm = false } = {}
+) {
+    if (!moduleView) {
+
+        console.error(
+            "BloodLink: #moduleView was not found."
+        );
+
+        return;
+
+    }
+
+    // Render the themed shell before awaiting the API so module navigation
+    // never exposes the page's default white background.
+    showModuleView();
+
+    moduleView.innerHTML = `
+        <div class="blood-requests-module" aria-busy="true">
+            <div class="blood-requests-loading" role="status">
+                <i data-lucide="loader-circle" aria-hidden="true"></i>
+                <span>Loading blood requests…</span>
+            </div>
+        </div>
+    `;
+
+    if (window.lucide) {
+
+        window.lucide.createIcons();
+
+    }
+
     // ======================================================
     // LOAD REAL BLOOD REQUESTS FROM DATABASE
     // ======================================================
@@ -2137,18 +2168,6 @@ async function renderBloodRequests() {
         );
 
     }
-
-    if (!moduleView) {
-
-        console.error(
-            "BloodLink: #moduleView was not found."
-        );
-
-        return;
-
-    }
-
-    showModuleView();
 
     moduleView.innerHTML = `
 
@@ -2560,6 +2579,14 @@ async function renderBloodRequests() {
 
     }
 
+    if (openCreateForm) {
+
+        renderNewBloodRequestForm();
+
+        return;
+
+    }
+
 
     // ======================================================
     // CONNECT NEW BLOOD REQUEST BUTTON
@@ -2607,36 +2634,7 @@ async function renderBloodRequests() {
 
 
 // ==========================================================
-// 9. NAVIGATION EVENT
-// ==========================================================
-
-window.addEventListener(
-    "bloodlink:navigate",
-    (event) => {
-
-        const page =
-            event.detail?.page;
-
-        if (page === "dashboard") {
-
-            showDashboardView();
-
-            return;
-
-        }
-
-        if (page === "bloodRequests") {
-
-            renderBloodRequests();
-
-        }
-
-    }
-);
-
-
-// ==========================================================
-// 10. EXPORTS
+// 9. EXPORTS
 // ==========================================================
 
 export {

@@ -1,548 +1,152 @@
-/* ============================================================
-   BloodLink - Donation History Module
-   File: donation_history.js
-   Description:
-   Renders the Donation History workspace.
-============================================================ */
-import {
-    getDonationHistory,
-    getDonationSummary,
-    getRecentDonations
-} from "./api.js";
+/* BloodLink donation-history workspace. */
+
+import { authenticatedFetch } from "./api.js";
+
+const donationHistoryState = { records: [], summary: null, filters: { blood_groups: [], districts: [] } };
+
 export function loadDonationHistory() {
     return `
     <section class="donation-history-page">
-
-        <!-- ========================================================= -->
-        <!-- Hero -->
-        <!-- ========================================================= -->
-        <section class="dh-hero glass-card">
-
-            <div class="dh-hero-left">
-
-                <div class="dh-hero-icon">
-                    <i class="fa-solid fa-calendar-days"></i>
-                </div>
-
-                <div class="dh-hero-text">
-                    <h1>Donation History</h1>
-                    <p>View and manage all blood donation records.</p>
-                </div>
-
-            </div>
-
-        </section>
-
-        <!-- ========================================================= -->
-        <!-- KPI Cards -->
-        <!-- ========================================================= -->
+        <section class="dh-hero glass-card"><div class="dh-hero-left"><div class="dh-hero-icon"><i class="fa-solid fa-calendar-days"></i></div><div class="dh-hero-text"><h1>Donation History</h1><p>View confirmed donation records from the BloodLink database.</p></div></div></section>
         <section class="dh-kpi-grid">
-
-            <div class="dh-kpi-card glass-card">
-
-                <div class="dh-kpi-icon blue">
-                    <i class="fa-solid fa-droplet"></i>
-                </div>
-
-                <div class="dh-kpi-content">
-                    <span>Total Donations</span>
-                    <h2 id="kpiTotalDonations">0</h2>
-                    <small class="positive">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        12% from last year
-                    </small>
-                </div>
-
-            </div>
-
-            <div class="dh-kpi-card glass-card">
-
-                <div class="dh-kpi-icon green">
-                    <i class="fa-solid fa-users"></i>
-                </div>
-
-                <div class="dh-kpi-content">
-                    <span>Total Donors</span>
-                    <h2 id="kpiTotalDonors">0</h2>
-                    <small class="positive">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        8% from last year
-                    </small>
-                </div>
-
-            </div>
-
-            <div class="dh-kpi-card glass-card">
-
-                <div class="dh-kpi-icon purple">
-                    <i class="fa-solid fa-syringe"></i>
-                </div>
-
-                <div class="dh-kpi-content">
-                    <span>Units Collected</span>
-                    <h2 id="kpiUnitsCollected">0</h2>
-                    <small class="positive">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        15% from last year
-                    </small>
-                </div>
-
-            </div>
-
-            <div class="dh-kpi-card glass-card">
-
-                <div class="dh-kpi-icon orange">
-                    <i class="fa-solid fa-calendar"></i>
-                </div>
-
-                <div class="dh-kpi-content">
-                    <span>This Month</span>
-                    <h2 id="kpiThisMonth">0</h2>
-                    <small class="positive">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        10% from last month
-                    </small>
-                </div>
-
-            </div>
-
+            <div class="dh-kpi-card glass-card"><div class="dh-kpi-icon blue"><i class="fa-solid fa-droplet"></i></div><div class="dh-kpi-content"><span>Total Donations</span><h2 id="kpiTotalDonations">0</h2><small>Matching records</small></div></div>
+            <div class="dh-kpi-card glass-card"><div class="dh-kpi-icon green"><i class="fa-solid fa-users"></i></div><div class="dh-kpi-content"><span>Total Donors</span><h2 id="kpiTotalDonors">0</h2><small>Unique donors</small></div></div>
+            <div class="dh-kpi-card glass-card"><div class="dh-kpi-icon purple"><i class="fa-solid fa-award"></i></div><div class="dh-kpi-content"><span>Points Awarded</span><h2 id="kpiTotalPoints">0</h2><small>Confirmed donations</small></div></div>
+            <div class="dh-kpi-card glass-card"><div class="dh-kpi-icon orange"><i class="fa-solid fa-hospital"></i></div><div class="dh-kpi-content"><span>Hospitals</span><h2 id="kpiHospitals">0</h2><small>Recorded locations</small></div></div>
         </section>
-
-        <!-- ========================================================= -->
-        <!-- Filter Bar -->
-        <!-- ========================================================= -->
         <section class="dh-filter-bar glass-card">
-
-            <div class="dh-search">
-
-                <i class="fa-solid fa-magnifying-glass"></i>
-
-                <input
-                    id="dhSearch"
-                    type="text"
-                    placeholder="Search by donor name, phone, or ID..."
-                >
-
-            </div>
-
-            <select id="dhBloodGroup">
-                <option>All Blood Groups</option>
-            </select>
-
-            <input
-                type="date"
-                id="dhDate"
-            >
-
-            <select id="dhDistrict">
-                <option>All Districts</option>
-            </select>
-
-            <button id="btnFilter" class="btn-primary">
-                <i class="fa-solid fa-filter"></i>
-                Filter
-            </button>
-
-            <button id="btnReset" class="btn-secondary">
-                Reset
-            </button>
-
+            <div class="dh-search"><i class="fa-solid fa-magnifying-glass"></i><input id="dhSearch" type="search" placeholder="Search donor name, phone, donor code, or record ID..."></div>
+            <select id="dhBloodGroup"><option value="">All Blood Groups</option></select>
+            <input type="date" id="dhDate" aria-label="Donation date">
+            <select id="dhDistrict"><option value="">All Districts</option></select>
+            <button id="btnFilter" class="btn-primary"><i class="fa-solid fa-filter"></i>Filter</button><button id="btnReset" class="btn-secondary">Reset</button>
         </section>
-
-        <!-- ========================================================= -->
-        <!-- Main Layout -->
-        <!-- ========================================================= -->
         <section class="dh-layout">
-
-            <!-- ========================================= -->
-            <!-- Left -->
-            <!-- ========================================= -->
-
-            <div class="dh-main">
-
-                <div class="glass-card">
-
-                    <div class="section-title">
-                        <h2>Donation Records</h2>
-                    </div>
-
-                    <div class="dh-table-wrapper">
-
-                        <table class="dh-table">
-
-                            <thead>
-
-                                <tr>
-
-                                    <th>Donation ID</th>
-                                    <th>Donor Name</th>
-                                    <th>Blood Group</th>
-                                    <th>Donation Date</th>
-                                    <th>Units</th>
-                                    <th>Location</th>
-                                    <th>Donation Type</th>
-                                    <th>Action</th>
-
-                                </tr>
-
-                            </thead>
-
-                            <tbody id="donationHistoryTable">
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                    <div class="dh-pagination">
-
-                        <div class="dh-record-count">
-                            Showing 0 records
-                        </div>
-
-                        <div id="dhPagination">
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- ========================================= -->
-            <!-- Right Sidebar -->
-            <!-- ========================================= -->
-
+            <div class="dh-main"><div class="glass-card"><div class="section-title"><h2>Donation Records</h2></div><div class="dh-table-wrapper"><table class="dh-table"><thead><tr><th>Donation ID</th><th>Donor Name</th><th>Blood Group</th><th>Donation Date</th><th>Points</th><th>Hospital</th><th>Status</th></tr></thead><tbody id="donationHistoryTable"></tbody></table></div><div class="dh-pagination"><div id="dhRecordCount" class="dh-record-count">Showing 0 records</div></div></div></div>
             <aside class="dh-sidebar">
-
-                <div class="glass-card">
-
-                    <div class="sidebar-title">
-
-                        <h3>Donation Summary</h3>
-
-                        <select>
-                            <option>This Year</option>
-                        </select>
-
-                    </div>
-
-                    <div id="donationSummary">
-
-                    </div>
-
-                </div>
-
-                <div class="glass-card">
-
-                    <div class="sidebar-title">
-
-                        <h3>Recent Donors</h3>
-
-                        <button class="link-btn">
-                            View All
-                        </button>
-
-                    </div>
-
-                    <div id="recentDonors">
-
-                    </div>
-
-                </div>
-
-                <div class="glass-card export-card">
-
-                    <h3>
-
-                        <i class="fa-solid fa-download"></i>
-
-                        Export Records
-
-                    </h3>
-
-                    <p>
-                        Download donation history in Excel or PDF format.
-                    </p>
-
-                    <div class="export-buttons">
-
-                        <button class="btn-success">
-
-                            <i class="fa-solid fa-file-excel"></i>
-
-                            Export Excel
-
-                        </button>
-
-                        <button class="btn-danger">
-
-                            <i class="fa-solid fa-file-pdf"></i>
-
-                            Export PDF
-
-                        </button>
-
-                    </div>
-
-                </div>
-
+                <div class="glass-card"><div class="sidebar-title"><h3>Donation Summary</h3><select id="dhSummaryPeriod" aria-label="Donation history period"><option value="">All records</option><option value="current_year">This year</option></select></div><div id="donationSummary"></div></div>
+                <div class="glass-card"><div class="sidebar-title"><h3>Recent Donors</h3></div><div id="recentDonors"></div></div>
+                <div class="glass-card export-card"><h3><i class="fa-solid fa-download"></i>Export Records</h3><p>Download the donation records that match the active filters.</p><div class="export-buttons"><button id="exportExcel" class="btn-success"><i class="fa-solid fa-file-excel"></i>Export Excel</button><button id="exportPdf" class="btn-danger"><i class="fa-solid fa-file-pdf"></i>Export PDF</button></div></div>
             </aside>
-
         </section>
-
-    </section>
-    `;
+    </section>`;
 }
-/* ============================================================
-   Donation History State
-============================================================ */
 
-const donationHistoryState = {
+export function initializeDonationHistory() {
+    document.getElementById("btnFilter")?.addEventListener("click", loadDonationHistoryData);
+    document.getElementById("btnReset")?.addEventListener("click", resetFilters);
+    document.getElementById("dhSearch")?.addEventListener("keydown", (event) => { if (event.key === "Enter") loadDonationHistoryData(); });
+    document.getElementById("dhSummaryPeriod")?.addEventListener("change", loadDonationHistoryData);
+    document.getElementById("exportExcel")?.addEventListener("click", () => exportRecords("excel"));
+    document.getElementById("exportPdf")?.addEventListener("click", () => exportRecords("pdf"));
+    loadDonationHistoryData();
+}
 
-    donations: [],
+function activeFilters() {
+    const value = (id) => document.getElementById(id)?.value.trim() || "";
+    return { search: value("dhSearch"), blood_group: value("dhBloodGroup"), donation_date: value("dhDate"), district: value("dhDistrict"), period: value("dhSummaryPeriod") };
+}
 
-    summary: {
+function queryString(filters = activeFilters()) {
+    const query = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => { if (value) query.set(key, value); });
+    return query.toString();
+}
 
-        total_donations: 0,
-        total_donors: 0,
-        units_collected: 0,
-        average_units: 0,
-        voluntary: 0,
-        replacement: 0,
-        this_month: 0
-
-    },
-
-    recentDonors: []
-
-};
-
-
-/* ============================================================
-   Initialize Module
-============================================================ */
-
-export async function initializeDonationHistory() {
-
-    try {
-
-        donationHistoryState.summary =
-            await getDonationSummary();
-
-        donationHistoryState.donations =
-            await getDonationHistory();
-
-        donationHistoryState.recentDonors =
-            await getRecentDonations();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Unable to initialize Donation History:",
-            error
-        );
-
-    }
-
+async function loadDonationHistoryData() {
+    const response = await authenticatedFetch(`/api/donation-history?${queryString()}`);
+    if (!response) return;
+    if (!response.ok) return renderError("Unable to load donation history.");
+    const data = await response.json();
+    donationHistoryState.records = data.records || [];
+    donationHistoryState.summary = data.summary || {};
+    donationHistoryState.filters = data.filters || donationHistoryState.filters;
+    populateFilterOptions();
     renderKPIs();
-
     renderDonationTable();
-
     renderDonationSummary();
-
-    renderRecentDonors();
-
+    renderRecentDonors(data.recent_donors || []);
 }
-/* ============================================================
-   KPI Rendering
-============================================================ */
+
+function populateFilterOptions() {
+    populateSelect("dhBloodGroup", donationHistoryState.filters.blood_groups, "All Blood Groups");
+    populateSelect("dhDistrict", donationHistoryState.filters.districts, "All Districts");
+}
+
+function populateSelect(id, options, placeholder) {
+    const select = document.getElementById(id);
+    if (!select) return;
+    const selected = select.value;
+    select.innerHTML = `<option value="">${placeholder}</option>${options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join("")}`;
+    select.value = selected;
+}
 
 function renderKPIs() {
-
-    const summary = donationHistoryState.summary;
-
-    document.getElementById("kpiTotalDonations").textContent =
-        (summary.total_donations ?? 0).toLocaleString();
-
-    document.getElementById("kpiTotalDonors").textContent =
-        (summary.total_donors ?? 0).toLocaleString();
-
-    document.getElementById("kpiUnitsCollected").textContent =
-        (summary.units_collected ?? 0).toLocaleString();
-
-    document.getElementById("kpiThisMonth").textContent =
-        (summary.this_month ?? 0).toLocaleString();
-
+    const summary = donationHistoryState.summary || {};
+    setText("kpiTotalDonations", number(summary.total_donations));
+    setText("kpiTotalDonors", number(summary.total_donors));
+    setText("kpiTotalPoints", number(summary.total_points));
+    setText("kpiHospitals", number(summary.hospitals));
 }
-
-
-/* ============================================================
-   Donation Table
-============================================================ */
 
 function renderDonationTable() {
-
-    const tbody = document.getElementById("donationHistoryTable");
-
-    if (!tbody) return;
-
-    if (donationHistoryState.donations.length === 0) {
-
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" class="empty-state">
-                    No donation records found.
-                </td>
-            </tr>
-        `;
-
+    const table = document.getElementById("donationHistoryTable");
+    const count = document.getElementById("dhRecordCount");
+    if (!table || !count) return;
+    count.textContent = `Showing ${donationHistoryState.records.length} record${donationHistoryState.records.length === 1 ? "" : "s"}`;
+    if (!donationHistoryState.records.length) {
+        table.innerHTML = `<tr><td colspan="7" class="dh-empty-row">No donation records match these filters.</td></tr>`;
         return;
-
     }
-
-    tbody.innerHTML = donationHistoryState.donations.map(donation => `
-
-        <tr>
-
-            <td>${donation.donation_id}</td>
-
-            <td>${donation.donor_name}</td>
-
-            <td>
-                <span class="blood-badge ${donation.blood_group.replace("+","plus").replace("-","minus")}">
-                    ${donation.blood_group}
-                </span>
-            </td>
-
-            <td>${donation.donation_date}</td>
-
-            <td>${donation.units} Unit${donation.units > 1 ? "s" : ""}</td>
-
-            <td>${donation.hospital_name}</td>
-
-            <td>
-                <span class="donation-type ${donation.donation_type.toLowerCase()}">
-                    ${donation.donation_type}
-                </span>
-            </td>
-
-            <td>
-                <button class="table-view-btn">
-                    <i class="fa-solid fa-eye"></i>
-                </button>
-            </td>
-
-        </tr>
-
-    `).join("");
-
+    table.innerHTML = donationHistoryState.records.map((donation) => `<tr><td>${escapeHtml(donation.reference)}</td><td>${escapeHtml(donation.donor_name)}</td><td><span class="blood-badge ${bloodGroupClass(donation.blood_group)}">${escapeHtml(donation.blood_group)}</span></td><td>${formatDate(donation.donation_date)}</td><td>${number(donation.points_awarded)}</td><td>${escapeHtml(donation.hospital_name)}</td><td><span class="donation-type voluntary">${escapeHtml(donation.status)}</span></td></tr>`).join("");
 }
-/* ============================================================
-   Donation Summary
-============================================================ */
 
 function renderDonationSummary() {
-
+    const summary = donationHistoryState.summary || {};
     const container = document.getElementById("donationSummary");
-
     if (!container) return;
-
-    container.innerHTML = `
-
-        <div class="summary-row">
-
-            <span>Total Donations</span>
-
-            <strong>${donationHistoryState.summary.totalDonations.toLocaleString()}</strong>
-
-        </div>
-
-        <div class="summary-row">
-
-            <span>Total Donors</span>
-
-            <strong>${donationHistoryState.summary.totalDonors.toLocaleString()}</strong>
-
-        </div>
-
-        <div class="summary-row">
-
-            <span>Units Collected</span>
-
-            <strong>${donationHistoryState.summary.unitsCollected.toLocaleString()}</strong>
-
-        </div>
-
-        <div class="summary-row">
-
-            <span>Average per Donation</span>
-
-            <strong>${donationHistoryState.summary.average}</strong>
-
-        </div>
-
-        <div class="summary-row">
-
-            <span>Voluntary Donations</span>
-
-            <strong>${donationHistoryState.summary.voluntary}</strong>
-
-        </div>
-
-        <div class="summary-row">
-
-            <span>Replacement Donations</span>
-
-            <strong>${donationHistoryState.summary.replacement}</strong>
-
-        </div>
-
-    `;
-
+    container.innerHTML = `<div class="summary-row"><span>Total Donations</span><strong>${number(summary.total_donations)}</strong></div><div class="summary-row"><span>Total Donors</span><strong>${number(summary.total_donors)}</strong></div><div class="summary-row"><span>Points Awarded</span><strong>${number(summary.total_points)}</strong></div><div class="summary-row"><span>Average Points</span><strong>${number(summary.average_points)}</strong></div><div class="summary-row"><span>Confirmed</span><strong>${number(summary.confirmed)}</strong></div><div class="summary-row"><span>Hospitals</span><strong>${number(summary.hospitals)}</strong></div>`;
 }
 
-
-/* ============================================================
-   Recent Donors
-============================================================ */
-
-function renderRecentDonors() {
-
+function renderRecentDonors(donors) {
     const container = document.getElementById("recentDonors");
-
     if (!container) return;
-
-    container.innerHTML = donationHistoryState.recentDonors.map(donor => `
-
-        <div class="recent-donor">
-
-            <div class="recent-avatar">
-
-                ${donor.name.charAt(0)}
-
-            </div>
-
-            <div class="recent-info">
-
-                <strong>${donor.name}</strong>
-
-                <small>${donor.date}</small>
-
-            </div>
-
-            <span class="blood-badge ${donor.group.replace("+","plus").replace("-","minus")}">
-
-                ${donor.group}
-
-            </span>
-
-        </div>
-
-    `).join("");
-
+    if (!donors.length) {
+        container.innerHTML = `<p class="dh-empty-state">No recent donations found.</p>`;
+        return;
+    }
+    container.innerHTML = donors.map((donor) => `<div class="recent-donor"><div class="recent-avatar">${escapeHtml(donor.donor_name.charAt(0).toUpperCase())}</div><div class="recent-info"><strong>${escapeHtml(donor.donor_name)}</strong><small>${formatDate(donor.donation_date)}</small></div><span class="blood-badge ${bloodGroupClass(donor.blood_group)}">${escapeHtml(donor.blood_group)}</span></div>`).join("");
 }
+
+function resetFilters() {
+    ["dhSearch", "dhBloodGroup", "dhDate", "dhDistrict", "dhSummaryPeriod"].forEach((id) => { const input = document.getElementById(id); if (input) input.value = ""; });
+    loadDonationHistoryData();
+}
+
+async function exportRecords(format) {
+    const button = document.getElementById(format === "excel" ? "exportExcel" : "exportPdf");
+    if (button) button.disabled = true;
+    try {
+        const response = await authenticatedFetch(`/api/donation-history/export/${format}?${queryString()}`);
+        if (!response || !response.ok) throw new Error("Export failed");
+        const url = URL.createObjectURL(await response.blob());
+        const link = Object.assign(document.createElement("a"), { href: url, download: `bloodlink-donation-history.${format === "excel" ? "xlsx" : "pdf"}` });
+        document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error(error);
+        window.alert("Unable to export donation history. Please try again.");
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
+
+function renderError(message) {
+    const table = document.getElementById("donationHistoryTable");
+    if (table) table.innerHTML = `<tr><td colspan="7" class="dh-empty-row">${escapeHtml(message)}</td></tr>`;
+}
+
+function setText(id, value) { const element = document.getElementById(id); if (element) element.textContent = value; }
+function number(value) { return Number(value || 0).toLocaleString(); }
+function formatDate(value) { return value ? new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(`${value}T00:00:00`)) : "Not recorded"; }
+function bloodGroupClass(value) { return String(value || "").replace("+", "plus").replace("-", "minus"); }
+function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character])); }

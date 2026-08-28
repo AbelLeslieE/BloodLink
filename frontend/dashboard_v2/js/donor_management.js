@@ -1611,7 +1611,7 @@ function getEditDonorModalTemplate() {
 // ADD DONOR MODAL
 // ==========================================================
 
-function openAddDonorModal() {
+export function openAddDonorModal() {
 
     const modal =
         document.getElementById(
@@ -2532,7 +2532,7 @@ function createDonorRow(donor) {
                 ${escapeHtml(donor.donor_code)}
             </td>
 
-            <td>
+            <td class="donor-name-cell" title="${escapeHtml(donor.full_name)}">
                 ${escapeHtml(donor.full_name)}
             </td>
 
@@ -4222,49 +4222,6 @@ function escapeHtml(
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
 }
-// ==========================================================
-// DONOR MODULE NAVIGATION
-// ==========================================================
-
-window.addEventListener(
-    "bloodlink:navigate",
-    async (event) => {
-
-        const page = event.detail?.page;
-
-        // Only handle the Donors navigation here.
-        if (page !== "donors") {
-            return;
-        }
-
-        const dashboardView =
-            document.getElementById(
-                "dashboardView"
-            );
-
-        const moduleView =
-            document.getElementById(
-                "moduleView"
-            );
-
-
-        // Hide the main dashboard.
-        if (dashboardView) {
-            dashboardView.hidden = true;
-        }
-
-
-        // Show the dynamic module area.
-        if (moduleView) {
-            moduleView.hidden = false;
-        }
-
-
-        // Render and load real donor data.
-        await loadDonorManagement();
-
-    }
-);
 // ==========================================================
 // IMPORT DONORS
 // ==========================================================

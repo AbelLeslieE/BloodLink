@@ -24,8 +24,13 @@ import {
 } from "./find_match.js";
 
 import {
-    loadDonorManagement
+    loadDonorManagement,
+    openAddDonorModal
 } from "./donor_management.js";
+
+import {
+    renderBloodRequests
+} from "./blood-requests.js";
 
 import {
     loadDonationHistory,
@@ -43,6 +48,10 @@ import {
     loadNotifications,
     initializeNotifications
 } from "./notifications.js";
+
+import {
+    navigate
+} from "./router.js";
 // ==========================================================
 // 1. DASHBOARD STATE
 // ==========================================================
@@ -603,25 +612,9 @@ function initializeDashboardActions() {
             "click",
             () => {
 
-                window.dispatchEvent(
-
-                    new CustomEvent(
-                        "bloodlink:navigate",
-                        {
-
-                            detail: {
-
-                                page:
-                                    "bloodRequests",
-
-                                action:
-                                    "create"
-
-                            }
-
-                        }
-                    )
-
+                navigate(
+                    "bloodRequests",
+                    { action: "create" }
                 );
 
             }
@@ -636,25 +629,9 @@ function initializeDashboardActions() {
             "click",
             () => {
 
-                window.dispatchEvent(
-
-                    new CustomEvent(
-                        "bloodlink:navigate",
-                        {
-
-                            detail: {
-
-                                page:
-                                    "donors",
-
-                                action:
-                                    "create"
-
-                            }
-
-                        }
-                    )
-
+                navigate(
+                    "donors",
+                    { action: "create" }
                 );
 
             }
@@ -668,9 +645,12 @@ function initializeDashboardActions() {
 // NAVIGATION HANDLER
 // ==========================================================
 
-function handleNavigation(event) {
+async function handleNavigation(event) {
 
-    const page = event.detail.page;
+    const {
+        page,
+        action
+    } = event.detail || {};
 
     const dashboardView =
         document.getElementById("dashboardView");
@@ -705,6 +685,18 @@ function handleNavigation(event) {
     switch (page) {
 
         /* ======================================================
+        Blood Requests
+        ====================================================== */
+
+        case "bloodRequests":
+
+            renderBloodRequests(
+                { openCreateForm: action === "create" }
+            );
+
+            break;
+
+        /* ======================================================
         Find Match
         ====================================================== */
 
@@ -721,7 +713,13 @@ function handleNavigation(event) {
 
         case "donors":
 
-            loadDonorManagement();
+            await loadDonorManagement();
+
+            if (action === "create") {
+
+                openAddDonorModal();
+
+            }
 
             break;
 
@@ -820,6 +818,13 @@ async function initializeDashboard() {
     // Activate dashboard buttons
     initializeDashboardActions();
 
+    // Register navigation before awaiting dashboard data. This prevents an
+    // early sidebar click from reaching a partial set of page handlers.
+    window.addEventListener(
+        "bloodlink:navigate",
+        handleNavigation
+    );
+
     // Temporary empty charts until backend integration
     // Load dashboard data from backend
     await loadDashboardData();
@@ -830,11 +835,6 @@ async function initializeDashboard() {
         window.lucide.createIcons();
 
     }
-    window.addEventListener(
-        "bloodlink:navigate",
-        handleNavigation
-    );
-
 }
 
 // ==========================================================

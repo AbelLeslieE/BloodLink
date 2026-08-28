@@ -41,7 +41,7 @@ def login(
 
     crud.update_user_last_login(database_session, volunteer)
     return TokenResponse(
-        access_token=create_access_token(volunteer.username),
+        access_token=create_access_token(volunteer.username, volunteer.auth_version),
         volunteer_name=volunteer.full_name,
     )
 
@@ -56,10 +56,12 @@ def get_current_volunteer(
 
 @router.post("/logout", response_model=LogoutResponse)
 def logout(
-    _: Annotated[User, Depends(require_authentication)],
+    current_user: Annotated[User, Depends(require_authentication)],
+    database_session: Annotated[Session, Depends(get_db)],
 ) -> LogoutResponse:
-    """Provide the logout API contract until server-side revocation is added."""
-    # TODO: Add JWT revocation when a token blacklist or rotation strategy exists.
+    """Invalidate active tokens for the authenticated account."""
+    current_user.auth_version += 1
+    database_session.commit()
     return LogoutResponse(
-        detail="Token revocation is not implemented; remove the token on the client."
+        detail="Signed out successfully."
     )

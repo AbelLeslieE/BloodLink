@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BloodLink | Donor registration</title>
+    <link rel="stylesheet" href="/static/dashboard_v2/css/donor_registration.css">
+</head>
+<body>
+    <main class="registration-shell">
+        <section class="registration-intro">
+            <p class="eyebrow">BloodLink</p>
+            <h1>Become a blood donor</h1>
+            <p>Register once, then use your account to receive matched requests, track donations and points, and download your certificates.</p>
+            <ul><li>Your phone number and email can only be used for one donor account.</li><li>You decide whether you are available for each request.</li><li>Donation rewards are confirmed only by an administrator.</li></ul>
+        </section>
+        <section class="registration-card" aria-labelledby="registration-title">
+            <a class="back" href="/login">Already registered? Sign in</a>
+            <h2 id="registration-title">Donor registration</h2>
+            <p class="help">Fields marked with * are required.</p>
+            <form id="donorRegistrationForm">
+                <label>Full name *<input name="full_name" autocomplete="name" required minlength="2" maxlength="200"></label>
+                <div class="pair"><label>Phone number *<input name="phone" autocomplete="tel" inputmode="tel" required maxlength="30"></label><label>Gmail address *<input name="email" autocomplete="email" type="email" required></label></div>
+                <div class="pair"><label>Blood group *<select name="blood_group" required><option value="">Select</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></label><label>Gender <select name="gender"><option value="">Prefer not to say</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Other</option></select></label></div>
+                <label>Class, department, or organisation <input name="department" autocomplete="organization" maxlength="150"></label>
+                <div class="pair"><label>Choose a username *<input name="username" autocomplete="username" required minlength="3" maxlength="100" pattern="[A-Za-z0-9._-]+"></label><label>Choose a password *<input name="password" autocomplete="new-password" type="password" required minlength="8" maxlength="128"></label></div>
+                <p id="formMessage" role="alert" aria-live="polite"></p>
+                <button id="submitRegistration" type="submit">Create my donor account</button>
+            </form>
+        </section>
+    </main>
+    <script type="module" src="/static/dashboard_v2/js/donor_registration.js"></script>
+</body>
+</html>

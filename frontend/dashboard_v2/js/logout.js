@@ -1,37 +1,21 @@
-// ==========================================
-// LOGOUT
-// ==========================================
+"use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
-
-    console.log("Logout JS Loaded");
-
     const logoutButton = document.querySelector(".logout-btn");
-
-    console.log(logoutButton);
+    if (!logoutButton) return;
 
     logoutButton.addEventListener("click", async () => {
-
-        console.log("Logout clicked");
-
+        const token = localStorage.getItem("access_token");
         try {
-
-            const response = await fetch("/api/logout", {
-                method: "POST"
+            await fetch("/api/auth/logout", {
+                method: "POST",
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
-
-            console.log(response.status);
-
-            window.location.href = "/";
-
+        } finally {
+            ["access_token", "volunteer_name", "username", "role", "full_name"].forEach(
+                (key) => localStorage.removeItem(key),
+            );
+            window.location.replace("/login");
         }
-
-        catch(error){
-
-            console.error(error);
-
-        }
-
     });
-
 });
