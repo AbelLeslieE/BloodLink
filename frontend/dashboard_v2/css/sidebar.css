@@ -582,6 +582,29 @@
 }
 
 
+/* Logout now lives directly below Settings in the ACCOUNT group. */
+.nav-item.logout-nav-item {
+    justify-content: flex-start;
+
+    gap: var(--space-md);
+
+    margin-bottom: 0;
+
+    border: 0;
+
+    font-family: inherit;
+
+    text-align: left;
+}
+
+
+.nav-item.logout-nav-item:hover {
+    background: rgba(239, 42, 42, 0.16);
+
+    color: #ff8a8a;
+}
+
+
 /* ==========================================================
    19. COLLAPSED SIDEBAR
 ========================================================== */
@@ -781,6 +804,28 @@
 
     .sidebar.mobile-open {
         transform: translateX(0);
+    }
+
+
+    /*
+       Keep every navigation module reachable on short screens while
+       hiding the visual scrollbar. Touch, wheel, and keyboard scrolling
+       still work normally inside the drawer.
+    */
+
+    .sidebar-nav {
+        overscroll-behavior: contain;
+
+        -webkit-overflow-scrolling: touch;
+
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+
+    .sidebar-nav::-webkit-scrollbar {
+        width: 0;
+        height: 0;
     }
 
 
