@@ -9,7 +9,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
 
-from backend.auth.security import get_token_subject
+from backend.auth.security import get_token_auth_version, get_token_subject
 from backend.database import crud
 from backend.database.database import get_db
 from backend.database.models import User
@@ -34,11 +34,12 @@ def get_current_user(
     """Resolve the active volunteer represented by a valid JWT."""
     try:
         username = get_token_subject(token)
+        token_auth_version = get_token_auth_version(token)
     except JWTError as error:
         raise _authentication_exception() from error
 
     user = crud.get_user_by_username(database_session, username)
-    if user is None or not user.active:
+    if user is None or not user.active or user.auth_version != token_auth_version:
         raise _authentication_exception()
 
     return user
@@ -48,4 +49,28 @@ def require_authentication(
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
     """Reusable dependency that protects future volunteer-only endpoints."""
+    return current_user
+
+
+def require_administrator(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    """Require a server-side administrator role for administrative actions."""
+    if current_user.role.strip().lower() not in {"administrator", "admin"}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator permission is required.",
+        )
+    return current_user
+
+
+def require_donor(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    """Require an account intended for the donor-facing portal."""
+    if current_user.role.strip().lower() in {"administrator", "admin"}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator accounts cannot use the donor portal.",
+        )
     return current_user

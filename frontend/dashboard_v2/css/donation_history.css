@@ -536,6 +536,23 @@
 
     transition:.25s;
 
+    color-scheme:dark;
+
+}
+
+.dh-filter-bar select option,
+.dh-sidebar .sidebar-title select option{
+
+    background:#1E293B;
+
+    color:#FFFFFF;
+
+}
+
+.dh-sidebar .sidebar-title select{
+
+    color-scheme:dark;
+
 }
 
 .dh-filter-bar select:focus{

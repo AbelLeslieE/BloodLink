@@ -99,7 +99,9 @@ form.addEventListener("submit", async (event) => {
         localStorage.setItem("full_name", profile.full_name);
 
         // Redirect
-        window.location.href = "/dashboard";
+        window.location.href = profile.role === "Administrator"
+            ? "/dashboard"
+            : "/donor-dashboard";
 
     }
 

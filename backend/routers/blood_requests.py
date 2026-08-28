@@ -13,7 +13,7 @@ from fastapi import (
 
 from sqlalchemy.orm import Session
 
-from backend.auth.dependencies import require_authentication
+from backend.auth.dependencies import require_administrator
 from backend.database import crud
 from backend.database.database import get_db
 from backend.database.models import User
@@ -33,6 +33,38 @@ router = APIRouter(
     prefix="/api/blood-requests",
     tags=["blood requests"],
 )
+
+# Keep these values in one place so invalid requests do not silently become
+# impossible to match or disappear from the donor portal.
+ALLOWED_BLOOD_GROUPS = {"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"}
+ALLOWED_PRIORITIES = {"Normal", "Urgent", "Emergency"}
+ALLOWED_STATUSES = {
+    "Pending",
+    "Open",
+    "Sent",
+    "In Progress",
+    "Donor Responded",
+    "Awaiting Donation",
+    "Donation Completed",
+    "Points Awarded",
+    "Fulfilled",
+    "Closed",
+    "Cancelled",
+}
+
+
+def _normalise_blood_group(value: str) -> str:
+    return value.strip().upper().replace(" ", "")
+
+
+def _validate_request_values(blood_group: str, priority: str) -> tuple[str, str]:
+    normalised_group = _normalise_blood_group(blood_group)
+    normalised_priority = priority.strip().title()
+    if normalised_group not in ALLOWED_BLOOD_GROUPS:
+        raise HTTPException(status_code=422, detail="Blood group must be one of A+, A-, B+, B-, AB+, AB-, O+, or O-.")
+    if normalised_priority not in ALLOWED_PRIORITIES:
+        raise HTTPException(status_code=422, detail="Priority must be Normal, Urgent, or Emergency.")
+    return normalised_group, normalised_priority
 
 
 # ==========================================================
@@ -54,11 +86,16 @@ def create_blood_request(
 
     current_user: Annotated[
         User,
-        Depends(require_authentication),
+        Depends(require_administrator),
     ],
 
 ) -> BloodRequestResponse:
     """Create a blood request for the authenticated user."""
+
+    request_data.blood_group, request_data.priority = _validate_request_values(
+        request_data.blood_group,
+        request_data.priority,
+    )
 
     return crud.create_blood_request(
         database_session=database_session,
@@ -84,7 +121,7 @@ def list_blood_requests(
 
     _: Annotated[
         User,
-        Depends(require_authentication),
+        Depends(require_administrator),
     ],
 
 ) -> list[BloodRequestResponse]:
@@ -113,18 +150,15 @@ def update_blood_request_status(
 
     _: Annotated[
         User,
-        Depends(require_authentication),
+        Depends(require_administrator),
     ],
 
 ) -> BloodRequestResponse:
     """
     Update the status of an existing blood request.
 
-    Allowed statuses:
-    - Pending
-    - In Progress
-    - Fulfilled
-    - Cancelled
+    The lifecycle supports pending, contact, donation, completion, and closure
+    states while preventing arbitrary status values from entering the system.
     """
 
     # ======================================================
@@ -149,22 +183,14 @@ def update_blood_request_status(
     # 2. VALIDATE STATUS
     # ======================================================
 
-    allowed_statuses = {
-        "Pending",
-        "In Progress",
-        "Fulfilled",
-        "Cancelled",
-    }
+    requested_status = status_data.status.strip().title()
 
-
-    if status_data.status not in allowed_statuses:
+    if requested_status not in ALLOWED_STATUSES:
 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
-                "Invalid blood request status. "
-                "Allowed statuses are Pending, "
-                "In Progress, Fulfilled, and Cancelled."
+                "Invalid blood request status."
             ),
         )
 
@@ -176,7 +202,7 @@ def update_blood_request_status(
     return crud.update_blood_request_status(
         database_session=database_session,
         blood_request=blood_request,
-        new_status=status_data.status,
+        new_status=requested_status,
     )
 # ==========================================================
 # COMPLETE BLOOD REQUEST

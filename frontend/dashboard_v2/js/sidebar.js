@@ -582,6 +582,10 @@ function handleNavigation(event) {
 
     event.preventDefault();
 
+    // Sidebar navigation already dispatches the shared route event below.
+    // Do not let the document-level router dispatch it a second time.
+    event.stopPropagation();
+
 
     const page =
         navigationItem.dataset.page;
@@ -839,9 +843,9 @@ function handleProfileNavigation() {
 // 18. LOGOUT
 // ==========================================================
 
-function handleLogout() {
+async function handleLogout() {
 
-    logoutUser();
+    await logoutUser({ revoke: true });
 
 }   
 

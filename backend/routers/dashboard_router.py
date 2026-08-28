@@ -12,7 +12,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from backend.auth.dependencies import require_authentication
+from backend.auth.dependencies import require_administrator
 from backend.database.database import get_db
 from backend.database.models import User
 from backend.database import crud
@@ -30,7 +30,7 @@ router = APIRouter(
 @router.get("")
 def dashboard_summary(
     database_session: Session = Depends(get_db),
-    _: User = Depends(require_authentication),
+    _: User = Depends(require_administrator),
 ):
     """
     Return dashboard statistics.

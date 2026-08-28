@@ -21,14 +21,15 @@ from fastapi.responses import StreamingResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from fastapi import UploadFile, File
+from zipfile import BadZipFile
 
 from openpyxl import load_workbook  
 # ==========================================================
 # AUTHENTICATION
 # ==========================================================
 
-from backend.auth.dependencies import require_authentication
-from backend.database.models import User
+from backend.auth.dependencies import require_administrator
+from backend.database.models import DonationHistory, User
 
 # ==========================================================
 # ROUTER
@@ -125,7 +126,7 @@ def validate_health_value(
 def create_donor(
     donor_data: DonorCreate,
     database_session: Session = Depends(get_db),
-    current_user: User = Depends(require_authentication),
+    current_user: User = Depends(require_administrator),
 ) -> DonorResponse:
     """Register a new donor in BloodLink."""
 
@@ -214,7 +215,7 @@ def create_donor(
 )
 def list_donors(
     database_session: Session = Depends(get_db),
-    current_user: User = Depends(require_authentication),
+    current_user: User = Depends(require_administrator),
 ) -> list[DonorResponse]:
     """Return all donor records."""
 
@@ -230,7 +231,7 @@ def list_donors(
 @router.get("/export")
 def export_donors(
     database_session: Session = Depends(get_db),
-    current_user: User = Depends(require_authentication),
+    current_user: User = Depends(require_administrator),
 ):
     """
     Export all donor records as an Excel workbook.
@@ -320,18 +321,26 @@ def export_donors(
 async def import_donors(
     file: UploadFile = File(...),
     database_session: Session = Depends(get_db),
-    current_user: User = Depends(require_authentication),
+    current_user: User = Depends(require_administrator),
 ):
     """
     Import donors from an Excel workbook.
     """
 
+    allowed_content_types = {
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/octet-stream",
+    }
+    if file.content_type not in allowed_content_types:
+        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Upload an .xlsx workbook.")
     contents = await file.read()
+    if not contents or len(contents) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Workbook must be between 1 byte and 10 MB.")
 
-    summary = import_donors_from_excel(
-        database_session,
-        contents,
-    )
+    try:
+        summary = import_donors_from_excel(database_session, contents)
+    except (BadZipFile, ValueError) as error:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid Excel workbook.") from error
 
     return {
         "message": "Import completed successfully.",
@@ -352,7 +361,7 @@ async def import_donors(
 def get_donor(
     donor_id: int,
     database_session: Session = Depends(get_db),
-    current_user: User = Depends(require_authentication),
+    current_user: User = Depends(require_administrator),
 ) -> DonorResponse:
     """Return one donor by database ID."""
 
@@ -382,7 +391,7 @@ def get_donor(
 def delete_donor(
     donor_id: int,
     database_session: Session = Depends(get_db),
-    current_user: User = Depends(require_authentication),
+    current_user: User = Depends(require_administrator),
 ) -> dict:
     """Delete an existing donor."""
 
@@ -396,6 +405,15 @@ def delete_donor(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Donor not found.",
+        )
+
+    if (
+        database_session.query(User).filter(User.donor_id == donor.id).first()
+        or database_session.query(DonationHistory).filter(DonationHistory.donor_id == donor.id).first()
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This donor has a linked account or donation history and cannot be deleted.",
         )
 
     crud.delete_donor(
@@ -418,7 +436,7 @@ def update_donor(
     donor_id: int,
     donor_data: DonorUpdate,
     database_session: Session = Depends(get_db),
-    current_user: User = Depends(require_authentication),
+    current_user: User = Depends(require_administrator),
 ) -> DonorResponse:
     """Update an existing donor."""
 

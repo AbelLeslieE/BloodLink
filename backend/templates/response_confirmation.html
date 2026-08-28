@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Confirm response | BloodLink</title></head>
+<body style="font-family:Arial,sans-serif;max-width:620px;margin:48px auto;padding:24px;color:#1f2937">
+    <h1>Confirm your response</h1>
+    <p>You selected <strong>{{ response }}</strong>. This will record your response for the blood donation request.</p>
+    <p>Choosing Yes means you are willing to donate. It does not confirm a donation or award points.</p>
+    <form method="post" action="{{ action_url }}"><button type="submit" style="padding:12px 20px;background:#b91c2c;color:#fff;border:0;border-radius:6px;font-weight:bold">Confirm {{ response }}</button></form>
+</body>
+</html>

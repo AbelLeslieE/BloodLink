@@ -38,7 +38,7 @@
 
     min-height:100vh;
 
-    padding:32px;
+    padding:32px 32px 56px;
 
     display:flex;
 
@@ -484,6 +484,85 @@
 .users-sidebar .glass-card{
 
     padding:22px;
+
+}
+
+/* Keep the final sidebar card clear of the bottom of the viewport. */
+.users-sidebar .donor-registration-card{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:14px;
+
+    padding-bottom:28px;
+
+}
+
+.donor-registration-card .sidebar-title,
+.donor-registration-card p{
+
+    margin:0;
+
+}
+
+.donor-registration-card p{
+
+    color:#E2E8F0 !important;
+
+    line-height:1.5;
+
+    text-shadow:0 1px 2px rgba(0,0,0,.42);
+
+}
+
+.donor-registration-card img{
+
+    width:100%;
+
+    max-width:190px;
+
+    display:block;
+
+    margin:2px auto 6px;
+
+}
+
+.donor-registration-card a{
+
+    align-self:center;
+
+    display:inline-flex;
+
+    align-items:center;
+
+    min-height:38px;
+
+    padding:0 14px;
+
+    border:1px solid rgba(147,197,253,.58);
+
+    border-radius:10px;
+
+    background:rgba(30,58,138,.42);
+
+    color:#FFFFFF !important;
+
+    font-weight:600;
+
+    text-decoration:none;
+
+    text-shadow:0 1px 2px rgba(0,0,0,.42);
+
+}
+
+.donor-registration-card a:hover,
+.donor-registration-card a:focus-visible{
+
+    background:rgba(59,130,246,.42);
+
+    color:#FFFFFF !important;
 
 }
 
@@ -1092,6 +1171,17 @@
 #userModal select{
 
     cursor:pointer;
+
+    /* Keep the browser's native option list consistent with the dark modal. */
+    color-scheme:dark;
+
+}
+
+#userModal select option{
+
+    color:#FFFFFF;
+
+    background:#1E293B;
 
 }
 

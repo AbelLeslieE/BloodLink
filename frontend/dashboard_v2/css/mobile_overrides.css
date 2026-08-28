@@ -1,0 +1,194 @@
+/* Cross-module responsive safeguards. Loaded last so each dashboard view
+   shares the same dependable tablet and phone behaviour. */
+
+html { -webkit-text-size-adjust: 100%; }
+
+img, svg, canvas { max-width: 100%; }
+
+#moduleView,
+.main-content,
+.donor-management-content,
+.find-match-container,
+.notifications-container {
+    min-width: 0;
+}
+
+.donor-table-scroll,
+.users-table-wrapper,
+.dh-table-wrapper,
+.request-table-wrapper,
+.table-responsive {
+    max-width: 100%;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1024px) {
+    .donor-management,
+    .blood-requests-module,
+    .find-match-page,
+    .donation-history-page,
+    .users-page,
+    .notifications-page,
+    .settings-page {
+        min-width: 0;
+    }
+
+    .users-layout,
+    .dh-layout,
+    .fm-main-grid,
+    .notifications-layout {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .users-sidebar,
+    .dh-sidebar {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .donor-management,
+    .blood-requests-module,
+    .find-match-page,
+    .donation-history-page,
+    .users-page,
+    .notifications-page,
+    .settings-page {
+        padding: 18px 14px !important;
+    }
+
+    .donor-header,
+    .module-header,
+    .fm-hero,
+    .users-hero,
+    .settings-hero,
+    .notifications-hero {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+    }
+
+    .donor-actions,
+    .module-header-actions,
+    .hero-actions,
+    .notifications-actions {
+        width: 100%;
+    }
+
+    .donor-actions > *,
+    .module-header-actions > *,
+    .hero-actions > *,
+    .notifications-actions > * {
+        flex: 1 1 160px;
+    }
+
+    .donor-kpi-grid,
+    .users-kpi-grid,
+    .dh-kpi-grid,
+    .request-summary-grid,
+    .find-match-page .kpi-grid,
+    .settings-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .donor-toolbar,
+    .donor-filters,
+    .users-filter,
+    .dh-filter-bar,
+    .request-filters,
+    .search-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        width: 100%;
+    }
+
+    .donor-toolbar,
+    .donor-filters,
+    .users-filter,
+    .dh-filter-bar,
+    .request-filters {
+        align-items: stretch;
+        flex-wrap: wrap;
+    }
+
+    .donor-search,
+    .users-search,
+    .dh-search,
+    .request-search,
+    .donor-filter-select,
+    .users-filter select,
+    .dh-filter-bar select,
+    .dh-filter-bar input,
+    .request-filters select,
+    .request-filters input {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .modal-content,
+    .user-modal-content,
+    .donor-modal-content,
+    .request-modal-content {
+        width: min(100% - 24px, 680px) !important;
+        max-height: calc(100dvh - 24px) !important;
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 560px) {
+    .users-sidebar,
+    .dh-sidebar {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .donor-kpi-grid,
+    .users-kpi-grid,
+    .dh-kpi-grid,
+    .request-summary-grid,
+    .find-match-page .kpi-grid,
+    .settings-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .donor-actions,
+    .module-header-actions,
+    .hero-actions,
+    .notifications-actions {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .donor-actions > *,
+    .module-header-actions > *,
+    .hero-actions > *,
+    .notifications-actions > * {
+        width: 100%;
+    }
+
+    .donor-heading h1,
+    .module-heading h1,
+    .users-hero h1,
+    .settings-hero h1,
+    .fm-hero h1 {
+        font-size: clamp(1.65rem, 8vw, 2.15rem) !important;
+        line-height: 1.15;
+    }
+
+    .blood-requests-module,
+    .find-match-page,
+    .donation-history-page,
+    .users-page,
+    .notifications-page,
+    .settings-page,
+    .donor-management {
+        padding: 14px 11px !important;
+    }
+
+    .donor-data-panel,
+    .users-filter,
+    .dh-filter-bar,
+    .request-filter-section,
+    .find-match-page .search-section {
+        border-radius: 16px !important;
+    }
+}

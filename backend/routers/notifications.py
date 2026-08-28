@@ -9,9 +9,9 @@ from fastapi import Depends
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from backend.auth.dependencies import require_authentication
+from backend.auth.dependencies import require_administrator
 from backend.database.database import get_db
-from backend.database.models import User
+from backend.database.models import DonationHistory, User
 from backend.database import crud
 
 router = APIRouter(
@@ -25,7 +25,7 @@ router = APIRouter(
 @router.get("")
 def get_notifications(
     database_session: Session = Depends(get_db),
-    _: User = Depends(require_authentication),
+    _: User = Depends(require_administrator),
 ):
     """
     Return all notification campaigns together with
@@ -91,11 +91,11 @@ def get_notifications(
 # GET CAMPAIGN
 # ==========================================================
 
-@router.get("/{notification_id}")
+@router.get("/{notification_id:int}")
 def get_notification(
     notification_id: int,
     database_session: Session = Depends(get_db),
-    _: User = Depends(require_authentication),
+    _: User = Depends(require_administrator),
 ):
 
     notification = crud.get_notification_by_id(
@@ -114,11 +114,11 @@ def get_notification(
 # RECIPIENTS
 # ==========================================================
 
-@router.get("/{notification_id}/recipients")
+@router.get("/{notification_id:int}/recipients")
 def get_notification_recipients(
     notification_id: int,
     database_session: Session = Depends(get_db),
-    _: User = Depends(require_authentication),
+    _: User = Depends(require_administrator),
 ):
     """
     Return all recipients belonging to a notification campaign.
@@ -134,6 +134,10 @@ def get_notification_recipients(
     for recipient in recipients:
 
         donor = recipient.donor
+        donation = database_session.query(DonationHistory).filter(
+            DonationHistory.donor_id == donor.id,
+            DonationHistory.blood_request_id == recipient.notification.blood_request_id,
+        ).first()
 
         result.append({
 
@@ -146,6 +150,8 @@ def get_notification_recipients(
             "status": recipient.status,
 
             "responded_at": recipient.responded_at,
+            "donation_confirmed": donation is not None,
+            "points_awarded": donation.points_awarded if donation else 0,
 
             "sent_at": recipient.sent_at,
 
@@ -177,7 +183,7 @@ def get_notification_recipients(
 @router.get("/stats/summary")
 def notification_summary(
     database_session: Session = Depends(get_db),
-    _: User = Depends(require_authentication),
+    _: User = Depends(require_administrator),
 ):
 
     campaigns = crud.get_notifications(

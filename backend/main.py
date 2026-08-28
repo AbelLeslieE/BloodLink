@@ -12,7 +12,6 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.database.database import (
-    Base,
     engine,
     verify_database_connection,
 )
@@ -33,6 +32,10 @@ from backend.routers.donations import (
 from backend.create_default_admin import create_admin
 from backend.routers import dashboard_router
 from backend.routers.user_routes import router as users_router
+from backend.routers.donor_portal import admin_router as donation_admin_router
+from backend.routers.donor_portal import donor_router
+from backend.routers.donor_registration import router as donor_registration_router
+from backend.routers.donation_history import router as donation_history_router
 # ==========================================================
 # Paths
 # ==========================================================
@@ -52,16 +55,8 @@ async def lifespan(_: FastAPI):
     on shutdown.
     """
 
-    # ------------------------------------------------------
-    # Create all database tables
-    # ------------------------------------------------------
-
-    Base.metadata.create_all(bind=engine)
-
-    # ------------------------------------------------------
-    # Create the default administrator
-    # (Only if it doesn't already exist)
-    # ------------------------------------------------------
+    # Schema changes are applied exclusively through Alembic.  create_all()
+    # silently leaves existing databases with missing columns.
 
     create_admin()
 
@@ -98,6 +93,10 @@ app = FastAPI(
 
 app.include_router(auth_router)
 app.include_router(users_router)
+app.include_router(donor_registration_router)
+app.include_router(donor_router)
+app.include_router(donation_admin_router)
+app.include_router(donation_history_router)
 app.include_router(
     blood_requests_router
 )
@@ -156,3 +155,13 @@ async def dashboard():
     return FileResponse(
         FRONTEND_DIR / "dashboard_v2" / "pages" / "dashboard.html"
     )
+
+
+@app.get("/donor-dashboard", include_in_schema=False)
+async def donor_dashboard():
+    return FileResponse(FRONTEND_DIR / "dashboard_v2" / "pages" / "donor_dashboard.html")
+
+
+@app.get("/donor-register", include_in_schema=False)
+async def donor_registration_page():
+    return FileResponse(FRONTEND_DIR / "dashboard_v2" / "pages" / "donor_registration.html")

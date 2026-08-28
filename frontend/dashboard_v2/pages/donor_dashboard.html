@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BloodLink | Donor Dashboard</title>
+    <link rel="stylesheet" href="/static/dashboard_v2/css/donor_dashboard.css">
+</head>
+<body>
+    <main class="donor-shell">
+        <header class="portal-header">
+            <a class="portal-brand" href="/donor-dashboard" aria-label="BloodLink donor portal home">
+                <span class="brand-mark" aria-hidden="true">♥</span>
+                <span><strong>BloodLink</strong><small>Donor portal</small></span>
+            </a>
+            <button id="logout" class="secondary">Log out <span aria-hidden="true">↗</span></button>
+        </header>
+        <section class="welcome-card" aria-labelledby="welcome">
+            <div class="welcome-copy">
+                <p class="eyebrow">Your donation journey</p>
+                <h1 id="welcome">Welcome</h1>
+                <p>See compatible requests, track your impact, and keep your donor profile ready when someone needs you.</p>
+            </div>
+            <div class="welcome-art" aria-hidden="true"><span>+</span><i>♥</i></div>
+        </section>
+        <p id="eligibility" class="notice" role="status"></p>
+        <section class="cards" aria-label="Donation summary">
+            <article class="summary-card points-card"><span class="card-icon" aria-hidden="true">✦</span><div><span>Reward points</span><strong id="points">0</strong><small>Earned through verified donations</small></div></article>
+            <article class="summary-card donations-card"><span class="card-icon" aria-hidden="true">♥</span><div><span>Successful donations</span><strong id="donations">0</strong><small>Your confirmed contributions</small></div></article>
+            <article class="summary-card badge-card"><span class="card-icon" aria-hidden="true">◆</span><div><span>Current badge</span><strong id="badge">New Donor</strong><small>Keep donating to level up</small></div></article>
+            <article class="summary-card pending-card"><span class="card-icon" aria-hidden="true">◷</span><div><span>Awaiting verification</span><strong id="pending">0</strong><small>Donations being reviewed</small></div></article>
+        </section>
+        <section class="panel profile-panel"><div class="section-heading"><div><p class="section-eyebrow">Profile</p><h2>My donor profile</h2><p>These details help BloodLink match you with compatible requests.</p></div><span id="donorCode" class="donor-code"></span></div><div id="profile" class="profile-details"></div></section>
+        <section class="panel requests-panel"><div class="section-heading"><div><p class="section-eyebrow">Opportunities</p><h2>Matched blood requests</h2></div><p class="safe-note"><span aria-hidden="true">✓</span> Safe request details only</p></div><div id="requests" class="request-list"></div></section>
+        <section class="two-column">
+            <section class="panel activity-panel"><div class="section-heading"><div><p class="section-eyebrow">My activity</p><h2>Recent donations</h2></div></div><div id="history"></div></section>
+            <section class="panel leaders-panel"><div class="section-heading"><div><p class="section-eyebrow">Together we give</p><h2>Community leaders</h2></div><label class="privacy-toggle"><input id="hideLeaderboard" type="checkbox"> <span>Hide me</span></label></div><ol id="leaderboard"></ol></section>
+        </section>
+        <section class="panel certificates-panel"><div class="section-heading"><div><p class="section-eyebrow">Records</p><h2>My certificates</h2><p>Your verified donation certificates are ready to download.</p></div><span class="certificate-icon" aria-hidden="true">⌑</span></div><div id="certificates" class="certificate-list"></div></section>
+    </main>
+    <script type="module" src="/static/dashboard_v2/js/donor_dashboard.js"></script>
+</body>
+</html>

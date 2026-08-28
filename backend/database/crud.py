@@ -38,11 +38,11 @@ def create_record(
     model_type: type[ModelType],
     values: Mapping[str, Any],
 ) -> ModelType:
-    """Create a database record.
-
-    TODO: Add approved persistence logic for the supplied model and values.
-    """
-    raise NotImplementedError("CRUD implementation will be added in a later phase.")
+    """Create, persist, and return a generic SQLAlchemy model instance."""
+    record = model_type(**dict(values))
+    database_session.add(record)
+    _commit_and_refresh(database_session, record)
+    return record
 
 
 def read_record(
@@ -50,11 +50,8 @@ def read_record(
     model_type: type[ModelType],
     record_id: int,
 ) -> ModelType | None:
-    """Read one database record by its identifier.
-
-    TODO: Add approved lookup logic for the supplied model and identifier.
-    """
-    raise NotImplementedError("CRUD implementation will be added in a later phase.")
+    """Read one SQLAlchemy model by its primary key."""
+    return database_session.get(model_type, record_id)
 
 
 def update_record(
@@ -62,19 +59,23 @@ def update_record(
     record: ModelType,
     values: Mapping[str, Any],
 ) -> ModelType:
-    """Update an existing database record.
-
-    TODO: Add approved update logic for the supplied record and values.
-    """
-    raise NotImplementedError("CRUD implementation will be added in a later phase.")
+    """Update only mapped attributes supplied by the caller."""
+    for field_name, value in values.items():
+        if not hasattr(record, field_name):
+            raise ValueError(f"Unknown model field: {field_name}")
+        setattr(record, field_name, value)
+    _commit_and_refresh(database_session, record)
+    return record
 
 
 def delete_record(database_session: Session, record: ModelType) -> None:
-    """Delete an existing database record.
-
-    TODO: Add approved deletion logic for the supplied record.
-    """
-    raise NotImplementedError("CRUD implementation will be added in a later phase.")
+    """Delete an existing database record."""
+    try:
+        database_session.delete(record)
+        database_session.commit()
+    except SQLAlchemyError:
+        database_session.rollback()
+        raise
 
 
 def get_user_by_username(database_session: Session, username: str) -> User | None:
@@ -298,7 +299,10 @@ def refresh_notification_statistics(
         notification.id,
     )
 
-    notification.total_sent = len(recipients)
+    notification.total_sent = sum(
+        1 for recipient in recipients
+        if recipient.status != "DELIVERY_FAILED"
+    )
 
     notification.accepted_count = sum(
         1 for recipient in recipients

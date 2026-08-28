@@ -14,12 +14,15 @@ from __future__ import annotations
 
 import secrets
 import resend
+import logging
+from html import escape
 from datetime import datetime, timedelta, timezone
 
 
 from backend.config.settings import get_settings
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 resend.api_key = settings.resend_api_key
 # ==========================================================
@@ -72,20 +75,12 @@ def send_email(
             }
         )
 
-        print("=" * 60)
-        print("EMAIL SENT SUCCESSFULLY")
-        print(response)
-        print("=" * 60)
+        logger.info("Donation request email accepted by provider for %s", recipient_email)
 
         return True
 
-    except Exception as error:
-
-        print("=" * 60)
-        print("EMAIL SEND FAILED")
-        print(type(error).__name__)
-        print(error)
-        print("=" * 60)
+    except Exception:
+        logger.exception("Donation request email delivery failed for %s", recipient_email)
 
         return False
 # ==========================================================
@@ -118,6 +113,13 @@ def build_html_email(
     """
     Build the BloodLink HTML email.
     """
+
+    donor_name = escape(str(donor.full_name))
+    blood_group = escape(str(blood_request.blood_group))
+    hospital_name = escape(str(blood_request.hospital_name))
+    hospital_location = escape(str(blood_request.hospital_location))
+    required_date = escape(str(blood_request.required_date))
+    priority = escape(str(blood_request.priority))
 
     return f"""
 <!DOCTYPE html>
@@ -229,7 +231,7 @@ body{{
 
 <div class="content">
 
-<p>Hello <strong>{donor.full_name}</strong>,</p>
+<p>Hello <strong>{donor_name}</strong>,</p>
 
 <p>
 A compatible blood donation request has been found.
@@ -239,13 +241,8 @@ If you are available, please respond using one of the buttons below.
 <table class="info-table">
 
 <tr>
-<td><strong>Patient</strong></td>
-<td>{blood_request.patient_name}</td>
-</tr>
-
-<tr>
 <td><strong>Blood Group</strong></td>
-<td>{blood_request.blood_group}</td>
+<td>{blood_group}</td>
 </tr>
 
 <tr>
@@ -255,22 +252,22 @@ If you are available, please respond using one of the buttons below.
 
 <tr>
 <td><strong>Hospital</strong></td>
-<td>{blood_request.hospital_name}</td>
+<td>{hospital_name}</td>
 </tr>
 
 <tr>
 <td><strong>Location</strong></td>
-<td>{blood_request.hospital_location}</td>
+<td>{hospital_location}</td>
 </tr>
 
 <tr>
 <td><strong>Required Date</strong></td>
-<td>{blood_request.required_date}</td>
+<td>{required_date}</td>
 </tr>
 
 <tr>
 <td><strong>Priority</strong></td>
-<td>{blood_request.priority}</td>
+<td>{priority}</td>
 </tr>
 
 </table>
@@ -308,4 +305,4 @@ Please do not reply to this email.
 </body>
 
 </html>
-"""    
+"""

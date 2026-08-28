@@ -36,6 +36,12 @@ const REQUEST_API = "/api/blood-requests";
 
 const MATCH_API = "/api/match/find";
 
+const MATCH_SAVE_API = "/api/match/save";
+
+const MATCH_SAVED_API = "/api/match/saved";
+
+const AVAILABILITY_API = "/api/match/availability";
+
 const SEND_NOTIFICATION_API = "/api/match/send";
 
 const NOTIFICATION_STATS_API =
@@ -57,6 +63,8 @@ const state = {
     selectedRequest: null,
 
     selectedDonors: new Set(),
+
+    availability: [],
 
     statistics: {
 
@@ -108,6 +116,8 @@ function initializeState() {
     state.selectedRequest = null;
 
     state.selectedDonors.clear();
+
+    state.availability = [];
 
     state.statistics = {
 
@@ -486,11 +496,7 @@ function getFindMatchTemplate() {
 
                 <div
                     class="availability-grid"
-                    id="bloodAvailabilityGrid">
-
-                    ${renderBloodAvailability()}
-
-                </div>
+                    id="bloodAvailabilityGrid"></div>
 
             </section>
             <!-- =======================================================
@@ -577,20 +583,7 @@ function renderBloodAvailability() {
     );
     if (!container) return;
 
-    const availability = [
-
-        { group: "A+", units: 15 },
-        { group: "A-", units: 4 },
-        { group: "B+", units: 12 },
-        { group: "B-", units: 3 },
-        { group: "AB+", units: 6 },
-        { group: "AB-", units: 2 },
-        { group: "O+", units: 20 },
-        { group: "O-", units: 5 }
-
-    ];
-
-    container.innerHTML = availability
+    container.innerHTML = state.availability
         .map(item => `
             <div class="availability-card">
 
@@ -602,7 +595,7 @@ function renderBloodAvailability() {
 
                 <span class="availability-count">
 
-                    ${item.units}
+                    ${item.available_donors}
 
                 </span>
 
@@ -1051,6 +1044,10 @@ function showToast(message, type = "success") {
 
 function bindEvents() {
 
+    eventAbortController?.abort();
+    eventAbortController = new AbortController();
+    const { signal } = eventAbortController;
+
     /* ---------------- Refresh ---------------- */
 
     document
@@ -1104,11 +1101,11 @@ function bindEvents() {
 
     /* ---------------- Request Selection ---------------- */
 
-    document.addEventListener("click", handleRequestSelection);
+    document.addEventListener("click", handleRequestSelection, { signal });
 
     /* ---------------- Donor Selection ---------------- */
 
-    document.addEventListener("click", handleDonorSelection);
+    document.addEventListener("click", handleDonorSelection, { signal });
     document
         .getElementById("selectAllDonors")
         ?.addEventListener("change", handleSelectAllDonors);
@@ -1121,6 +1118,10 @@ function bindEvents() {
     document
         .getElementById("sendEmailBtn")
         ?.addEventListener("click", sendSelectedEmails);
+
+    document
+        .getElementById("refreshAvailabilityBtn")
+        ?.addEventListener("click", loadBloodAvailability);
 
 }
 
@@ -1476,17 +1477,29 @@ function exportMatches() {
 
     }
 
-    console.table({
-
-        request: state.selectedRequest,
-
-        donors: [...state.selectedDonors]
-
-    });
-
-    showToast(
-        "Export feature will be connected to the backend."
+    const selected = state.filteredDonors.filter(donor =>
+        state.selectedDonors.has(donor.id)
     );
+    const donors = selected.length ? selected : state.filteredDonors;
+    if (!donors.length) {
+        showToast("No compatible donors are available to export.", "warning");
+        return;
+    }
+    const rows = [
+        ["Donor", "Blood Group", "Phone", "Email", "District", "Availability", "Compatibility Score", "Last Donation"],
+        ...donors.map(donor => [donor.name, donor.bloodGroup, donor.phone || "", donor.email || "", donor.district || "", donor.availability, donor.compatibility, donor.lastDonation])
+    ];
+    const csv = rows.map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const link = Object.assign(document.createElement("a"), {
+        href: url,
+        download: `bloodlink-matches-request-${state.selectedRequest.id}.csv`
+    });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showToast("Compatible donor list exported.");
 
 }
 
@@ -1539,9 +1552,7 @@ function findBestMatch() {
    These functions act as the communication layer between the
    Find Match UI and the backend API.
 
-   Currently they use demo data.
-
-   Later they will call authenticatedFetch().
+   All data is loaded through authenticated API requests.
 =================================================================== */
 
 
@@ -1559,7 +1570,7 @@ async function loadBloodRequests() {
             REQUEST_API
         );
 
-        if (!response.ok) {
+        if (!response || !response.ok) {
 
             throw new Error(
                 "Unable to load blood requests."
@@ -1605,15 +1616,11 @@ async function loadBloodRequests() {
         ----------------------------------------------------------
         */
 
-        state.filteredRequests = state.bloodRequests.filter(
-
-            request =>
-
-                request.status === "Pending" ||
-
-                request.status === "In Progress"
-
+        state.bloodRequests = state.bloodRequests.filter(request =>
+            MATCHABLE_REQUEST_STATUSES.has(request.status)
         );
+
+        state.filteredRequests = [...state.bloodRequests];
 
         state.statistics.pending =
             state.filteredRequests.length;
@@ -1673,7 +1680,7 @@ async function loadMatchingDonorsFromAPI(requestId) {
             }
         );
 
-        if (!response.ok) {
+        if (!response || !response.ok) {
 
             throw new Error(
                 "Unable to retrieve compatible donors."
@@ -1710,15 +1717,24 @@ async function loadMatchingDonorsFromAPI(requestId) {
 
             rank: match.rank,
 
-            distance: "-",
+            distance: match.donor.district || "Not recorded",
 
-            lastDonation: "-"
+            lastDonation: formatDate(match.donor.last_donation_date)
 
         }));
 
         state.filteredDonors = [...state.matchingDonors];
 
-        state.selectedDonors.clear();
+        const savedResponse = await authenticatedFetch(
+            `${MATCH_SAVED_API}/${requestId}`
+        );
+        const savedMatches = savedResponse?.ok
+            ? await savedResponse.json()
+            : { donor_ids: [] };
+        const matchingIds = new Set(state.matchingDonors.map(donor => donor.id));
+        state.selectedDonors = new Set(
+            (savedMatches.donor_ids || []).filter(id => matchingIds.has(id))
+        );
 
         updateSelectedCounter();
 
@@ -1759,44 +1775,20 @@ async function saveMatchToDatabase() {
         if (!state.selectedRequest)
             return;
 
-        const payload = {
-
-            blood_request_id: state.selectedRequest.id,
-
-            donor_ids: [...state.selectedDonors]
-
-        };
-
-        /*
-        Future Backend
-
-        await authenticatedFetch(
-
-            MATCH_SAVE_API,
-
-            {
-
-                method: "POST",
-
-                headers: {
-
-                    "Content-Type":"application/json"
-
-                },
-
-                body: JSON.stringify(payload)
-
-            }
-
-        );
-
-        */
-
-        console.log(payload);
-
-        showToast(
-            "Match saved successfully."
-        );
+        const response = await authenticatedFetch(MATCH_SAVE_API, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                blood_request_id: state.selectedRequest.id,
+                donor_ids: [...state.selectedDonors]
+            })
+        });
+        if (!response || !response.ok) {
+            const error = response ? await response.json() : {};
+            throw new Error(error.detail || "Unable to save the donor selection.");
+        }
+        const result = await response.json();
+        showToast(`${result.saved_count} donor selection${result.saved_count === 1 ? "" : "s"} saved.`);
 
     } catch (error) {
 
@@ -1871,19 +1863,15 @@ async function sendEmailsToSelectedDonors() {
 
         );
 
-        if (!response.ok) {
-
-            throw new Error(
-                "Failed to send notification emails."
-            );
-
+        if (!response || !response.ok) {
+            const error = response ? await response.json() : {};
+            throw new Error(error.detail || "Failed to send notification emails.");
         }
 
         const result = await response.json();
 
-        state.statistics.emails += result.emails_sent;
-
-        renderKPICards();
+        await loadDashboardStatistics();
+        await loadBloodRequests();
 
         showToast(
 
@@ -1927,7 +1915,7 @@ async function loadDashboardStatistics() {
             NOTIFICATION_STATS_API
         );
 
-        if (!response.ok) {
+        if (!response || !response.ok) {
 
             throw new Error(
                 "Unable to load dashboard statistics."
@@ -1982,23 +1970,18 @@ async function loadDashboardStatistics() {
 async function loadBloodAvailability() {
 
     try {
-
-        /*
-        Future Backend
-
-        const response =
-            await authenticatedFetch("/api/inventory/summary");
-
-        const inventory =
-            await response.json();
-
-        */
-
+        const response = await authenticatedFetch(AVAILABILITY_API);
+        if (!response || !response.ok) {
+            throw new Error("Unable to load donor availability.");
+        }
+        state.availability = await response.json();
         renderBloodAvailability();
 
     } catch (error) {
 
         console.error(error);
+
+        renderEmptyState("bloodAvailabilityGrid", "Donor availability is unavailable.");
 
     }
 
@@ -2292,6 +2275,9 @@ async function initializeModule() {
 
 function destroyModule() {
 
+    eventAbortController?.abort();
+    eventAbortController = null;
+
     state.selectedDonors.clear();
 
     state.selectedRequest = null;
@@ -2417,3 +2403,9 @@ export {
     debugModuleState
 
 };
+
+let eventAbortController = null;
+
+const MATCHABLE_REQUEST_STATUSES = new Set([
+    "Pending", "Open", "Sent", "In Progress", "Donor Responded", "Awaiting Donation"
+]);

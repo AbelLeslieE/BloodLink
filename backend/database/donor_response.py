@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.database.database import Base
@@ -22,6 +22,11 @@ class DonorResponse(Base):
     """Stores donor responses."""
 
     __tablename__ = "donor_responses"
+    __table_args__ = (
+        UniqueConstraint(
+            "donor_id", "blood_request_id", name="uq_donor_response_donor_request"
+        ),
+    )
 
     # ==========================================================
     # PRIMARY KEY
@@ -37,9 +42,9 @@ class DonorResponse(Base):
     # FOREIGN KEYS
     # ==========================================================
 
-    email_token_id: Mapped[int] = mapped_column(
+    email_token_id: Mapped[int | None] = mapped_column(
         ForeignKey("email_tokens.id"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
 

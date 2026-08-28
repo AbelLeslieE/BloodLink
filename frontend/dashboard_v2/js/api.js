@@ -363,7 +363,7 @@ function clearAuthenticationData() {
 // 7. LOGOUT
 // ==========================================================
 
-function logoutUser() {
+async function logoutUser({ revoke = false } = {}) {
 
     /*
        BloodLink currently uses a JWT stored
@@ -376,6 +376,21 @@ function logoutUser() {
        localStorage.clear() because unrelated
        BloodLink preferences should remain.
     */
+
+    const token = getAccessToken();
+
+    if (revoke && token) {
+        try {
+            await fetch("/api/auth/logout", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+        } catch (error) {
+            // Local cleanup still protects the current browser session when
+            // the network is unavailable.
+            console.warn("Server logout could not be completed.", error);
+        }
+    }
 
     clearAuthenticationData();
 
