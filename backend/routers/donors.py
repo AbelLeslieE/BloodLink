@@ -327,20 +327,27 @@ async def import_donors(
     Import donors from an Excel workbook.
     """
 
-    allowed_content_types = {
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/octet-stream",
-    }
-    if file.content_type not in allowed_content_types:
-        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Upload an .xlsx workbook.")
+    if not (file.filename or "").lower().endswith(".xlsx"):
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Upload an .xlsx workbook.",
+        )
     contents = await file.read()
     if not contents or len(contents) > 10 * 1024 * 1024:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Workbook must be between 1 byte and 10 MB.")
 
     try:
         summary = import_donors_from_excel(database_session, contents)
-    except (BadZipFile, ValueError) as error:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid Excel workbook.") from error
+    except BadZipFile as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid Excel workbook.",
+        ) from error
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(error),
+        ) from error
 
     return {
         "message": "Import completed successfully.",

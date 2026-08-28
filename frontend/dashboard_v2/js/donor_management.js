@@ -5,6 +5,10 @@
 import {
     authenticatedFetch
 } from "./api.js";
+
+import {
+    navigate
+} from "./router.js";
 // ==========================================================
 // BLOODLINK - DONOR MANAGEMENT
 // ==========================================================
@@ -74,7 +78,7 @@ function getDonorModuleTemplate() {
                         <input
                             type="file"
                             id="importDonorFile"
-                            accept=".xlsx,.xls"
+                            accept=".xlsx"
                             hidden
                         >
 
@@ -1981,7 +1985,8 @@ async function deleteDonor(donorId) {
 // ==========================================================
 
 async function getApiErrorMessage(
-    response
+    response,
+    fallbackMessage = "Unable to complete the donor request."
 ) {
 
     try {
@@ -2027,10 +2032,45 @@ async function getApiErrorMessage(
     }
 
 
-    return (
-        `Unable to add donor ` +
-        `(${response.status}).`
-    );
+    return `${fallbackMessage} (${response.status}).`;
+
+}
+
+
+function setDonorActionPending(
+    button,
+    isPending,
+    pendingLabel = "Working…"
+) {
+
+    if (!button) {
+        return;
+    }
+
+
+    if (isPending) {
+
+        button.dataset.defaultContent ??= button.innerHTML;
+
+        button.disabled = true;
+
+        button.textContent = pendingLabel;
+
+        return;
+
+    }
+
+
+    button.disabled = false;
+
+
+    if (button.dataset.defaultContent) {
+
+        button.innerHTML = button.dataset.defaultContent;
+
+        window.lucide?.createIcons?.();
+
+    }
 
 }
 
@@ -2039,6 +2079,16 @@ async function getApiErrorMessage(
 // ==========================================================
 
 async function exportDonorsToExcel() {
+
+    const exportButton = document.getElementById(
+        "exportDonorsButton"
+    );
+
+    setDonorActionPending(
+        exportButton,
+        true,
+        "Exporting…"
+    );
 
     try {
 
@@ -2054,7 +2104,10 @@ async function exportDonorsToExcel() {
         if (!response.ok) {
 
             throw new Error(
-                "Export failed."
+                await getApiErrorMessage(
+                    response,
+                    "Unable to export donor data."
+                )
             );
 
         }
@@ -2090,7 +2143,15 @@ async function exportDonorsToExcel() {
         );
 
         alert(
-            "Unable to export donor data."
+            error.message || "Unable to export donor data."
+        );
+
+    }
+    finally {
+
+        setDonorActionPending(
+            exportButton,
+            false
         );
 
     }
@@ -3809,6 +3870,16 @@ function bindDonorEvents() {
             );
 
     });
+
+
+    document
+        .getElementById("findDonorMatchButton")
+        ?.addEventListener(
+            "click",
+            () => navigate("findMatch")
+        );
+
+
     document
     .getElementById("importDonorsButton")
     ?.addEventListener(
@@ -4233,8 +4304,34 @@ async function handleImportDonors(
     const file =
         event.target.files[0];
 
+    const importButton = document.getElementById(
+        "importDonorsButton"
+    );
+
     if (!file) {
         return;
+    }
+
+
+    if (!file.name.toLowerCase().endsWith(".xlsx")) {
+
+        alert("Select an .xlsx Excel workbook.");
+
+        event.target.value = "";
+
+        return;
+
+    }
+
+
+    if (file.size > 10 * 1024 * 1024) {
+
+        alert("The Excel workbook must be 10 MB or smaller.");
+
+        event.target.value = "";
+
+        return;
+
     }
 
     const formData =
@@ -4243,6 +4340,12 @@ async function handleImportDonors(
     formData.append(
         "file",
         file
+    );
+
+    setDonorActionPending(
+        importButton,
+        true,
+        "Importing…"
     );
 
     try {
@@ -4263,7 +4366,10 @@ async function handleImportDonors(
         if (!response.ok) {
 
             throw new Error(
-                "Import failed."
+                await getApiErrorMessage(
+                    response,
+                    "Unable to import donors."
+                )
             );
 
         }
@@ -4272,7 +4378,9 @@ async function handleImportDonors(
             await response.json();
 
         alert(
-            result.message
+            `${result.message} Imported ${result.imported} of ` +
+            `${result.total_rows} row(s); ${result.duplicates} duplicate(s) ` +
+            `and ${result.skipped} invalid row(s) were skipped.`
         );
 
         await loadDonors();
@@ -4290,6 +4398,11 @@ async function handleImportDonors(
     finally {
 
         event.target.value = "";
+
+        setDonorActionPending(
+            importButton,
+            false
+        );
 
     }
 
