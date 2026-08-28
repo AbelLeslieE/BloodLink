@@ -192,3 +192,17 @@ img, svg, canvas { max-width: 100%; }
         border-radius: 16px !important;
     }
 }
+
+/* Keep every scroll area usable while removing the visible scrollbar chrome. */
+html,
+body,
+* {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+
+html *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
