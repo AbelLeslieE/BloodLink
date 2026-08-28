@@ -93,18 +93,13 @@ def _sync_portal_response_to_notifications(
         recipient.responded_at = responded_at
 
     db.flush()
-    all_responses = list(db.scalars(select(DonorResponse).where(
-        DonorResponse.blood_request_id == request.id
-    )).all())
-    accepted_count = sum(item.response.upper() in {"YES", "ACCEPTED"} for item in all_responses)
-    declined_count = sum(item.response.upper() in {"NO", "DECLINED"} for item in all_responses)
     for campaign in campaigns:
         campaign_recipients = list(db.scalars(select(NotificationRecipient).where(
             NotificationRecipient.notification_id == campaign.id
         )).all())
         campaign.total_sent = sum(item.status != "DELIVERY_FAILED" for item in campaign_recipients)
-        campaign.accepted_count = accepted_count
-        campaign.declined_count = declined_count
+        campaign.accepted_count = sum(item.status == "ACCEPTED" for item in campaign_recipients)
+        campaign.declined_count = sum(item.status == "DECLINED" for item in campaign_recipients)
         campaign.pending_count = sum(item.status == "PENDING" for item in campaign_recipients)
 
     if recipient_status == "ACCEPTED" and request.status == "Pending":
