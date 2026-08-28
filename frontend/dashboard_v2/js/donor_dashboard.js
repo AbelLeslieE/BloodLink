@@ -52,6 +52,7 @@ async function loadDashboard() {
     document.querySelector("#pending").textContent = summary.pending_verification;
     document.querySelector("#eligibility").textContent = summary.eligibility_reminder;
     document.querySelector("#donorCode").textContent = summary.donor.donor_code;
+    document.querySelector("#matchedRequestNote").innerHTML = `<span aria-hidden="true">✓</span> Only ${escapeHtml(summary.donor.blood_group)} requests are shown`;
     document.querySelector("#profile").innerHTML = [
         ["Blood group", summary.donor.blood_group], ["Email", summary.donor.email],
         ["Phone", summary.donor.phone], ["Department", summary.donor.department || "Not provided"],
