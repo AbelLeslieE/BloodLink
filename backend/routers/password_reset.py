@@ -9,7 +9,7 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from jose import JWTError
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -38,7 +38,20 @@ class PasswordResetRequest(BaseModel):
 
 class PasswordResetConfirmation(BaseModel):
     token: str = Field(min_length=20, max_length=4096)
-    new_password: str = Field(min_length=8, max_length=128)
+    new_password: str = Field(max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, value: str) -> str:
+        if len(value) < 8:
+            raise ValueError("Password must contain at least 8 characters.")
+        if value != value.strip():
+            raise ValueError("Password cannot start or end with a space.")
+        if not any(character.isalpha() for character in value):
+            raise ValueError("Password must include at least one letter.")
+        if not any(character.isdigit() for character in value):
+            raise ValueError("Password must include at least one number.")
+        return value
 
 
 def _is_donor_account(user: User) -> bool:
@@ -95,12 +108,6 @@ def confirm_password_reset(
     database_session: Annotated[Session, Depends(get_db)],
 ) -> dict[str, str]:
     """Set a new donor password and revoke all existing sessions."""
-    if data.new_password.isspace():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Password cannot contain only spaces.",
-        )
-
     try:
         username, token_auth_version = get_password_reset_data(data.token)
     except JWTError as error:
