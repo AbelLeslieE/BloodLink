@@ -1775,6 +1775,12 @@ function renderNotificationDetails() {
 
                     </p>
 
+                    <p class="request-sent-at">
+
+                        Campaign sent: ${escapeHtml(selectedNotification.sentAt)}
+
+                    </p>
+
                 </div>
 
                 <span class="priority-badge">
@@ -2028,6 +2034,14 @@ function renderNotificationDetails() {
 
                 </button>
 
+                <button
+                    id="deleteRequestBtn"
+                    class="secondary-btn danger-btn">
+
+                    Delete Request
+
+                </button>
+
             </div>
 
         </div>
@@ -2038,6 +2052,36 @@ function renderNotificationDetails() {
     renderRecipientTable();
 
     renderTimeline();
+
+    bindRequestActionButtons();
+
+}
+
+function bindRequestActionButtons() {
+
+    const notificationId = selectedNotification?.id;
+
+    if (!notificationId) return;
+
+    document.getElementById("resendPendingBtn")?.addEventListener(
+        "click",
+        () => resendPendingEmails(notificationId)
+    );
+
+    document.getElementById("exportBtn")?.addEventListener(
+        "click",
+        () => exportRequestReport(notificationId)
+    );
+
+    document.getElementById("markCompletedBtn")?.addEventListener(
+        "click",
+        () => markRequestCompleted(notificationId)
+    );
+
+    document.getElementById("deleteRequestBtn")?.addEventListener(
+        "click",
+        () => deleteRequest(notificationId)
+    );
 
 }
 /* ==========================================================
@@ -2555,7 +2599,9 @@ async function loadNotificationsFromAPI({ selectedNotificationId = null } = {}) 
 
             subtitle: campaign.blood_request.hospital_name,
 
-            createdAt: formatDate(campaign.created_at),
+            createdAt: formatDateTime(campaign.sent_at || campaign.created_at),
+
+            sentAt: formatDateTime(campaign.sent_at),
 
             request: {
 
@@ -2687,37 +2733,30 @@ async function resendPendingEmails(requestId) {
 
     try {
 
-        /*
-        =======================================================
+        await runRequestAction("resendPendingBtn", "Resending...", async () => {
 
-        FUTURE
+            const response = await authenticatedFetch(
+                `${API.notifications}/${requestId}/resend-pending`,
+                { method: "POST" }
+            );
 
-        POST
+            if (!response?.ok) {
+                throw new Error(await getResponseError(response, "Unable to resend pending emails."));
+            }
 
-        /api/find-match/resend
+            const result = await response.json();
 
-        {
+            alert(`${result.emails_sent} of ${result.pending_recipients} pending email(s) were resent.`);
 
-            request_id
+            await loadNotificationsFromAPI({ selectedNotificationId: requestId });
 
-        }
-
-        =======================================================
-        */
-
-        console.log(
-
-            "Resending pending emails:",
-
-            requestId
-
-        );
+        });
 
     }
 
     catch (error) {
 
-        console.error(error);
+        alert(error.message || "Unable to resend pending emails.");
 
     }
 
@@ -2733,31 +2772,34 @@ async function exportRequestReport(requestId) {
 
     try {
 
-        /*
-        =======================================================
+        await runRequestAction("exportBtn", "Preparing...", async () => {
 
-        FUTURE
+            const response = await authenticatedFetch(
+                `${API.notifications}/${requestId}/export`
+            );
 
-        GET
+            if (!response?.ok) {
+                throw new Error(await getResponseError(response, "Unable to export the report."));
+            }
 
-        /api/reports/request/{id}
+            const report = await response.blob();
+            const downloadUrl = URL.createObjectURL(report);
+            const link = document.createElement("a");
 
-        =======================================================
-        */
+            link.href = downloadUrl;
+            link.download = `blood-request-${selectedNotification?.request.id ?? requestId}-report.csv`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(downloadUrl);
 
-        console.log(
-
-            "Export report:",
-
-            requestId
-
-        );
+        });
 
     }
 
     catch (error) {
 
-        console.error(error);
+        alert(error.message || "Unable to export the report.");
 
     }
 
@@ -2773,38 +2815,100 @@ async function markRequestCompleted(requestId) {
 
     try {
 
-        /*
-        =======================================================
-
-        FUTURE
-
-        PATCH
-
-        /api/blood-requests/{id}
-
-        {
-
-            status:"Completed"
-
+        if (!window.confirm("Mark this blood request as completed? It will no longer be open for donor responses.")) {
+            return;
         }
 
-        =======================================================
-        */
+        await runRequestAction("markCompletedBtn", "Completing...", async () => {
 
-        console.log(
+            const response = await authenticatedFetch(
+                `${API.notifications}/${requestId}/complete`,
+                { method: "POST" }
+            );
 
-            "Mark completed:",
+            if (!response?.ok) {
+                throw new Error(await getResponseError(response, "Unable to complete the request."));
+            }
 
-            requestId
+            await loadNotificationsFromAPI({ selectedNotificationId: requestId });
 
-        );
+        });
 
     }
 
     catch (error) {
 
-        console.error(error);
+        alert(error.message || "Unable to complete the request.");
 
+    }
+
+}
+
+async function deleteRequest(notificationId) {
+
+    if (!window.confirm("Delete this blood request and its campaign data? This cannot be undone.")) {
+        return;
+    }
+
+    try {
+
+        await runRequestAction("deleteRequestBtn", "Deleting...", async () => {
+
+            const response = await authenticatedFetch(
+                `${API.notifications}/${notificationId}`,
+                { method: "DELETE" }
+            );
+
+            if (!response?.ok) {
+                throw new Error(await getResponseError(response, "Unable to delete the request."));
+            }
+
+            await loadNotificationsFromAPI();
+
+        });
+
+    }
+
+    catch (error) {
+
+        alert(error.message || "Unable to delete the request.");
+
+    }
+
+}
+
+async function runRequestAction(buttonId, busyLabel, action) {
+
+    const button = document.getElementById(buttonId);
+    const originalLabel = button?.textContent.trim();
+
+    if (button) {
+        button.disabled = true;
+        button.textContent = busyLabel;
+    }
+
+    try {
+        await action();
+    }
+    finally {
+        if (button?.isConnected) {
+            button.disabled = false;
+            button.textContent = originalLabel;
+        }
+    }
+
+}
+
+async function getResponseError(response, fallback) {
+
+    if (!response) return fallback;
+
+    try {
+        const payload = await response.json();
+        return payload.detail || fallback;
+    }
+    catch {
+        return fallback;
     }
 
 }
@@ -2909,6 +3013,24 @@ function formatDate(date) {
         return date;
 
     }
+
+}
+
+
+function formatDateTime(value) {
+
+    if (!value) return "Not sent yet";
+
+    const timestamp = new Date(value);
+
+    if (Number.isNaN(timestamp.getTime())) {
+        return String(value);
+    }
+
+    return new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "medium"
+    }).format(timestamp);
 
 }
 

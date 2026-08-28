@@ -4,16 +4,22 @@ Notification API Router
 
 from __future__ import annotations
 
+import csv
+import io
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi.responses import StreamingResponse
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from backend.auth.dependencies import require_administrator
 from backend.database.database import get_db
-from backend.database.models import DonationHistory, User
+from backend.database.models import DonationHistory, SavedMatch, User
 from backend.database.donor_response import DonorResponse
 from backend.database import crud
+from backend.services import notification_service
 
 router = APIRouter(
     prefix="/api/notifications",
@@ -33,6 +39,13 @@ def _recipient_response_status(status: str | None) -> str:
     # Old rows can contain delivery/sending placeholders or an empty value.
     # They are not donor decisions, so present them as a pending response.
     return "PENDING"
+
+
+def _notification_or_404(database_session: Session, notification_id: int):
+    notification = crud.get_notification_by_id(database_session, notification_id)
+    if notification is None:
+        raise HTTPException(status_code=404, detail="Notification not found.")
+    return notification
 # ==========================================================
 # GET ALL CAMPAIGNS
 # ==========================================================
@@ -125,6 +138,113 @@ def get_notification(
         )
 
     return notification
+
+
+@router.post("/{notification_id:int}/resend-pending")
+def resend_pending_recipients(
+    notification_id: int,
+    database_session: Session = Depends(get_db),
+    _: User = Depends(require_administrator),
+) -> dict:
+    """Send fresh response links to unresolved recipients in one campaign."""
+    notification = _notification_or_404(database_session, notification_id)
+    if notification.status == "COMPLETED" or notification.blood_request.status in {"Fulfilled", "Closed", "Cancelled"}:
+        raise HTTPException(status_code=409, detail="This request is no longer open for donor responses.")
+
+    pending_count, sent_count = notification_service.resend_pending_recipients(
+        database_session,
+        notification,
+    )
+    if pending_count == 0:
+        raise HTTPException(status_code=409, detail="There are no pending recipients to resend.")
+    return {"success": True, "pending_recipients": pending_count, "emails_sent": sent_count}
+
+
+@router.post("/{notification_id:int}/complete")
+def complete_notification_request(
+    notification_id: int,
+    database_session: Session = Depends(get_db),
+    _: User = Depends(require_administrator),
+) -> dict:
+    """Close a request after its donor-response workflow is complete."""
+    notification = _notification_or_404(database_session, notification_id)
+    notification.status = "COMPLETED"
+    notification.blood_request.status = "Fulfilled"
+    database_session.commit()
+    return {
+        "success": True,
+        "notification_status": notification.status,
+        "request_status": notification.blood_request.status,
+    }
+
+
+@router.get("/{notification_id:int}/export")
+def export_notification_report(
+    notification_id: int,
+    database_session: Session = Depends(get_db),
+    _: User = Depends(require_administrator),
+):
+    """Export the selected blood-request campaign and donor responses as CSV."""
+    notification = _notification_or_404(database_session, notification_id)
+    request = notification.blood_request
+    recipients = crud.get_notification_recipients(database_session, notification.id)
+
+    output = io.StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow([
+        "Campaign ID", "Request ID", "Patient", "Hospital", "Blood Group",
+        "Request Status", "Campaign Sent At", "Donor", "Donor Email",
+        "Recipient Status", "Recipient Sent At", "Responded At", "Distance",
+    ])
+    for recipient in recipients:
+        writer.writerow([
+            notification.id,
+            request.id,
+            request.patient_name,
+            request.hospital_name,
+            request.blood_group,
+            request.status,
+            notification.sent_at.isoformat() if notification.sent_at else "",
+            recipient.donor.full_name,
+            recipient.email,
+            _recipient_response_status(recipient.status),
+            recipient.sent_at.isoformat() if recipient.sent_at else "",
+            recipient.responded_at.isoformat() if recipient.responded_at else "",
+            recipient.distance if recipient.distance is not None else "",
+        ])
+
+    filename = f"blood-request-{request.id}-report.csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.delete("/{notification_id:int}")
+def delete_notification_request(
+    notification_id: int,
+    database_session: Session = Depends(get_db),
+    _: User = Depends(require_administrator),
+) -> dict:
+    """Delete an unfulfilled request and all of its campaign response data."""
+    notification = _notification_or_404(database_session, notification_id)
+    request = notification.blood_request
+    has_donations = database_session.scalar(
+        select(DonationHistory.id).where(DonationHistory.blood_request_id == request.id)
+    )
+    if has_donations is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="A request with confirmed donations cannot be deleted. Mark it completed instead.",
+        )
+
+    database_session.execute(
+        delete(SavedMatch).where(SavedMatch.blood_request_id == request.id)
+    )
+    database_session.delete(request)
+    database_session.commit()
+    return {"success": True, "deleted_request_id": request.id}
 # ==========================================================
 # RECIPIENTS
 # ==========================================================

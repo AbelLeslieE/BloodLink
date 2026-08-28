@@ -1676,6 +1676,29 @@
 
 }
 
+.request-sent-at{
+    margin-top:6px;
+    color:#aebfda;
+    font-size:.82rem;
+}
+
+.request-actions .danger-btn{
+    color:#ffd6db;
+    border-color:rgba(239,68,68,.45);
+    background:rgba(127,29,29,.28);
+}
+
+.request-actions .danger-btn:hover{
+    color:#ffffff;
+    background:rgba(220,38,38,.48);
+    border-color:rgba(254,202,202,.64);
+}
+
+.request-actions button:disabled{
+    cursor:not-allowed;
+    opacity:.65;
+}
+
 
 /* ==========================================================
    RESPONSIVE
