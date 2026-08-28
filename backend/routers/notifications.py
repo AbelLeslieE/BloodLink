@@ -18,6 +18,8 @@ from backend.auth.dependencies import require_administrator
 from backend.database.database import get_db
 from backend.database.models import DonationHistory, SavedMatch, User
 from backend.database.donor_response import DonorResponse
+from backend.database.notification import Notification
+from backend.database.notification_recipient import NotificationRecipient
 from backend.database import crud
 from backend.services import notification_service
 
@@ -328,10 +330,15 @@ def get_notification_recipients(
 
         })
 
-    # Older campaigns can have a recorded email decision without a retained
-    # NotificationRecipient row.  Include those responses so the dashboard
-    # still shows the accepting donor and lets an administrator act on it.
-    recipient_donor_ids = {recipient.donor_id for recipient in recipients}
+    # Older portal-only responses have no NotificationRecipient row. Include
+    # only those donors, never a recipient that belongs to another campaign
+    # for this request. Otherwise a campaign with zero emails can incorrectly
+    # display responses (and totals) from a separate campaign.
+    recipient_donor_ids = set(database_session.scalars(
+        select(NotificationRecipient.donor_id)
+        .join(Notification)
+        .where(Notification.blood_request_id == notification.blood_request_id)
+    ).all())
     response_query = database_session.query(DonorResponse).filter(
         DonorResponse.blood_request_id == notification.blood_request_id,
     )
