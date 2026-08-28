@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from backend.auth.dependencies import require_administrator
 from backend.database.database import get_db
 from backend.database.models import DonationHistory, User
+from backend.database.donor_response import DonorResponse
 from backend.database import crud
 
 router = APIRouter(
@@ -124,6 +125,17 @@ def get_notification_recipients(
     Return all recipients belonging to a notification campaign.
     """
 
+    notification = crud.get_notification_by_id(
+        database_session,
+        notification_id,
+    )
+
+    if notification is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Notification not found.",
+        )
+
     recipients = crud.get_notification_recipients(
         database_session,
         notification_id,
@@ -173,6 +185,45 @@ def get_notification_recipients(
 
             }
 
+        })
+
+    # Older campaigns can have a recorded email decision without a retained
+    # NotificationRecipient row.  Include those responses so the dashboard
+    # still shows the accepting donor and lets an administrator act on it.
+    recipient_donor_ids = {recipient.donor_id for recipient in recipients}
+    response_query = database_session.query(DonorResponse).filter(
+        DonorResponse.blood_request_id == notification.blood_request_id,
+    )
+    if recipient_donor_ids:
+        response_query = response_query.filter(
+            ~DonorResponse.donor_id.in_(recipient_donor_ids),
+        )
+
+    for donor_response in response_query.all():
+        donor = donor_response.donor
+        donation = database_session.query(DonationHistory).filter(
+            DonationHistory.donor_id == donor.id,
+            DonationHistory.blood_request_id == notification.blood_request_id,
+        ).first()
+
+        result.append({
+            "id": donor_response.id,
+            "email": donor.email or "Not provided",
+            "distance": None,
+            "status": donor_response.response,
+            "responded_at": donor_response.responded_at,
+            "donation_confirmed": donation is not None,
+            "points_awarded": donation.points_awarded if donation else 0,
+            "sent_at": None,
+            "donor": {
+                "id": donor.id,
+                "full_name": donor.full_name,
+                "blood_group": donor.blood_group,
+                "phone": donor.phone,
+                "email": donor.email,
+                "district": donor.district,
+                "status": donor.status,
+            },
         })
 
     return result
