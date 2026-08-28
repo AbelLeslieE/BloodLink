@@ -64,9 +64,9 @@ def create_donor_account(
     if any(_phone_key(phone) == _phone_key(clean_phone) for phone in registered_phones):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="That phone number is already registered.")
     if db.scalar(select(User.id).where(func.lower(User.email) == clean_email)):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="That phone number or email address is already registered.")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="That email address is already registered.")
     if db.scalar(select(Donor.id).where(func.lower(Donor.email) == clean_email)):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="That phone number or email address is already registered.")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="That email address is already registered.")
 
     donor = Donor(
         donor_code=crud.generate_donor_code(db),
@@ -88,7 +88,13 @@ def create_donor_account(
         db.commit()
     except IntegrityError as error:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This donor account conflicts with an existing record.") from error
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "This account conflicts with an existing record. Try a different "
+                "username, phone number, or email address."
+            ),
+        ) from error
     db.refresh(donor)
     db.refresh(account)
     return donor, account
