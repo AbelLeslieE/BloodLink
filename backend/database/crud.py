@@ -21,6 +21,8 @@ from backend.database.notification import Notification
 from backend.database.notification_recipient import NotificationRecipient
 from backend.database.email_token import EmailToken
 from backend.database.donor_response import DonorResponse
+from backend.config.rewards import POINTS_PER_CONFIRMED_DONATION
+from backend.services.certificate_service import ensure_certificate
 
 from backend.database.schemas import (
     BloodRequestCreate,
@@ -946,6 +948,7 @@ def complete_blood_request(
     database_session: Session,
     blood_request: BloodRequest,
     donor: Donor,
+    recorded_by: int,
     donation_type: str = "Voluntary",
     remarks: str | None = None,
 ) -> BloodRequest:
@@ -963,95 +966,124 @@ def complete_blood_request(
         5. Commit.
     """
 
-    # ------------------------------------------------------
-    # Prevent duplicate completion
-    # ------------------------------------------------------
-
-    # ------------------------------------------------------
-    # Validate request status
-    # ------------------------------------------------------
-
-    if blood_request.status == "Fulfilled":
-
-        raise ValueError(
-            "This blood request has already been fulfilled."
-        )
-
-    if blood_request.status != "In Progress":
-
-        raise ValueError(
-            "Only requests that are In Progress can be completed."
-        )
-
-    # ------------------------------------------------------
-    # Create donation history
-    # ------------------------------------------------------
-
-    donation = DonationHistory(
-
-        donor_id=donor.id,
-
-        blood_request_id=blood_request.id,
-
-        hospital_name=blood_request.hospital_name,
-
-        donation_date=datetime.now(
-            timezone.utc
-        ).date(),
-
-        units=blood_request.units_required,
-
+    confirm_donation_for_request(
+        database_session=database_session,
+        blood_request=blood_request,
+        donor=donor,
+        recorded_by=recorded_by,
         donation_type=donation_type,
-
         remarks=remarks,
+    )
+    database_session.refresh(blood_request)
+    return blood_request
 
-        recorded_by=blood_request.created_by,
 
+def confirm_donation_for_request(
+    database_session: Session,
+    blood_request: BloodRequest,
+    donor: Donor,
+    recorded_by: int,
+    donation_type: str = "Voluntary",
+    remarks: str | None = None,
+) -> tuple[DonationHistory, bool]:
+    """Confirm one donation and keep every workflow view in sync.
+
+    The Blood Requests modal and the Donor Response Center both finish the
+    same real-world event.  Keeping the reward, certificate, request state,
+    and campaign state in one transaction prevents one UI from recording a
+    donation without updating the donor portal.
+    """
+    if donor.blood_group.strip().upper() != blood_request.blood_group.strip().upper():
+        raise ValueError("The selected donor's blood group does not match this request.")
+
+    existing = database_session.scalar(
+        select(DonationHistory).where(
+            DonationHistory.donor_id == donor.id,
+            DonationHistory.blood_request_id == blood_request.id,
+        )
     )
 
-    database_session.add(
-        donation
+    if existing is not None:
+        _close_completed_request(database_session, blood_request)
+        try:
+            database_session.commit()
+        except SQLAlchemyError:
+            database_session.rollback()
+            raise
+        return existing, True
+
+    if blood_request.status in {"Fulfilled", "Closed", "Cancelled"}:
+        raise ValueError("This blood request is no longer open for donation confirmation.")
+
+    donor_response = database_session.scalar(
+        select(DonorResponse).where(
+            DonorResponse.donor_id == donor.id,
+            DonorResponse.blood_request_id == blood_request.id,
+        )
     )
+    if donor_response is not None and donor_response.response.upper() not in {"YES", "ACCEPTED"}:
+        raise ValueError("This donor declined the request and cannot be confirmed.")
 
-    # ------------------------------------------------------
-    # Update donor statistics
-    # ------------------------------------------------------
+    now = datetime.now(timezone.utc)
+    donation = DonationHistory(
+        donor_id=donor.id,
+        blood_request_id=blood_request.id,
+        hospital_name=blood_request.hospital_name,
+        donation_date=now.date(),
+        units=blood_request.units_required,
+        donation_type=donation_type.strip() or "Voluntary",
+        remarks=remarks,
+        recorded_by=recorded_by,
+        points_awarded=POINTS_PER_CONFIRMED_DONATION,
+        status="Points Awarded",
+        awarded_at=now,
+    )
+    database_session.add(donation)
 
+    # ``total_donations`` is retained for the administration dashboard;
+    # ``donation_count`` and ``total_points`` power the donor portal.
     donor.total_donations += 1
-
+    donor.donation_count += 1
+    donor.total_points += POINTS_PER_CONFIRMED_DONATION
     donor.last_donation_date = donation.donation_date
-
     donor.status = "Unavailable"
 
-    # ------------------------------------------------------
-    # Update request
-    # ------------------------------------------------------
+    linked_users = database_session.scalars(
+        select(User).where(
+            (User.donor_id == donor.id)
+            | (func.lower(User.email) == func.lower(donor.email))
+        )
+    ).all()
+    for account in linked_users:
+        account.donation_count += 1
+        account.total_points += POINTS_PER_CONFIRMED_DONATION
 
-    blood_request.status = "Fulfilled"
+    _close_completed_request(database_session, blood_request)
 
     try:
-
+        database_session.flush()
+        ensure_certificate(database_session, donation)
         database_session.commit()
-
-        database_session.refresh(
-            donation
-        )
-
-        database_session.refresh(
-            donor
-        )
-
-        database_session.refresh(
-            blood_request
-        )
-
+        database_session.refresh(donation)
+        database_session.refresh(donor)
     except SQLAlchemyError:
-
         database_session.rollback()
-
         raise
 
-    return blood_request
+    return donation, False
+
+
+def _close_completed_request(
+    database_session: Session,
+    blood_request: BloodRequest,
+) -> None:
+    """Mark a fulfilled request and all of its campaigns as completed."""
+    blood_request.status = "Fulfilled"
+    campaigns = database_session.scalars(
+        select(Notification).where(Notification.blood_request_id == blood_request.id)
+    ).all()
+    for campaign in campaigns:
+        campaign.status = "COMPLETED"
 
 
 def get_donation_history(

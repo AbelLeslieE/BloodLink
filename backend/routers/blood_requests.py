@@ -15,7 +15,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from backend.auth.dependencies import require_administrator, require_authentication
+from backend.auth.dependencies import require_administrator
 from backend.database import crud
 from backend.database.database import get_db
 from backend.database.models import DonationHistory, SavedMatch, User
@@ -308,9 +308,9 @@ def complete_blood_request(
         Depends(get_db),
     ],
 
-    _: Annotated[
+    administrator: Annotated[
         User,
-        Depends(require_authentication),
+        Depends(require_administrator),
     ],
 
 ) -> BloodRequestResponse:
@@ -361,6 +361,7 @@ def complete_blood_request(
             database_session=database_session,
             blood_request=blood_request,
             donor=donor,
+            recorded_by=administrator.id,
             donation_type=request_data.donation_type,
             remarks=request_data.remarks,
         )
