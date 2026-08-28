@@ -385,6 +385,159 @@
     }
 
 }
+
+
+/* ==========================================================
+   SELECTED REQUEST PANEL
+   Keep request details self-contained instead of inheriting
+   generic dashboard column sizing from other modules.
+========================================================== */
+
+.notifications-layout .right-column {
+    min-width: 0;
+
+    height: auto;
+    min-height: 0;
+}
+
+
+.notification-details {
+    min-height: 0;
+
+    overflow: hidden auto;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    background: linear-gradient(
+        155deg,
+        rgba(9, 25, 45, 0.97),
+        rgba(5, 18, 34, 0.96)
+    );
+
+    border-color: rgba(125, 160, 210, 0.2);
+
+    box-shadow: 0 24px 48px rgba(2, 10, 24, 0.28);
+}
+
+
+.notification-details::-webkit-scrollbar {
+    display: none;
+}
+
+
+.request-details-wrapper {
+    min-height: 100%;
+
+    gap: 22px;
+
+    padding: 26px;
+}
+
+
+/* Request facts: four stable cards with aligned labels and values. */
+.request-info-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 14px;
+}
+
+
+.request-info-grid .info-card {
+    display: flex;
+
+    flex-direction: column;
+    justify-content: center;
+
+    min-width: 0;
+    min-height: 96px;
+
+    padding: 16px 18px;
+
+    overflow: hidden;
+
+    background: linear-gradient(
+        145deg,
+        rgba(20, 42, 73, 0.62),
+        rgba(12, 28, 51, 0.7)
+    );
+
+    border-color: rgba(130, 158, 198, 0.18);
+}
+
+
+.request-info-grid .info-card span {
+    margin-bottom: 9px;
+
+    overflow: hidden;
+
+    color: #a9bbd6;
+
+    font-size: 0.72rem;
+    line-height: 1.2;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.request-info-grid .info-card strong {
+    overflow: hidden;
+
+    color: #f8fbff;
+
+    font-size: clamp(1.18rem, 1.65vw, 1.55rem);
+    line-height: 1.1;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.recipient-overview .overview-card {
+    display: grid;
+    place-content: center;
+
+    min-height: 146px;
+
+    padding: 18px;
+
+    background: rgba(8, 24, 45, 0.56);
+
+    border-color: rgba(130, 158, 198, 0.16);
+}
+
+
+.recipient-section,
+.timeline-section {
+    background: rgba(7, 22, 41, 0.64);
+
+    border-color: rgba(130, 158, 198, 0.16);
+}
+
+
+@media (max-width: 1300px) {
+
+    .request-info-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (max-width: 620px) {
+
+    .request-details-wrapper {
+        padding: 18px;
+    }
+
+
+    .request-info-grid,
+    .recipient-overview {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+}
 /* ==========================================================
    BloodLink - Notifications
    Part 2
