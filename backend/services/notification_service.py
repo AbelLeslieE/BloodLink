@@ -14,6 +14,8 @@ Responsibilities
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from sqlalchemy.orm import Session
 
 from backend.database import crud
@@ -21,6 +23,42 @@ from backend.database.models import BloodRequest, Donor
 from backend.database.notification import Notification
 
 from backend.services import email_service
+
+
+def _send_to_recipient(
+    database_session: Session,
+    blood_request: BloodRequest,
+    recipient,
+) -> bool:
+    """Send a new, one-time response link to an existing campaign recipient."""
+    donor = recipient.donor
+    token = email_service.generate_email_token()
+    email_token = crud.create_email_token(
+        database_session=database_session,
+        recipient=recipient,
+        token=token,
+        expires_at=email_service.generate_expiry_time(),
+    )
+    settings = email_service.settings
+    accept_url = f"{settings.backend_url}/email/accept/{email_token.token}"
+    decline_url = f"{settings.backend_url}/email/decline/{email_token.token}"
+    success = email_service.send_email(
+        recipient_email=recipient.email,
+        subject=email_service.build_email_subject(blood_request),
+        html_body=email_service.build_html_email(
+            donor=donor,
+            blood_request=blood_request,
+            accept_url=accept_url,
+            decline_url=decline_url,
+        ),
+    )
+
+    recipient.sent_at = datetime.now(timezone.utc)
+    recipient.responded_at = None
+    recipient.status = "PENDING" if success else "DELIVERY_FAILED"
+    database_session.commit()
+    database_session.refresh(recipient)
+    return success
 
 # ==========================================================
 # CREATE CAMPAIGN
@@ -141,76 +179,37 @@ def send_notification_campaign(
     successful_deliveries = 0
     for recipient in recipients:
 
-        donor = recipient.donor
-
-        # ----------------------------------------------
-        # Generate Token
-        # ----------------------------------------------
-
-        token = email_service.generate_email_token()
-
-        expiry = email_service.generate_expiry_time()
-
-        email_token = crud.create_email_token(
-            database_session=database_session,
-            recipient=recipient,
-            token=token,
-            expires_at=expiry,
-        )
-
-        # ----------------------------------------------
-        # Create URLs
-        # ----------------------------------------------
-
-        settings = email_service.settings
-
-        accept_url = (
-            f"{settings.backend_url}"
-            f"/email/accept/{token}"
-        )
-
-        decline_url = (
-            f"{settings.backend_url}"
-            f"/email/decline/{token}"
-        )
-        # ----------------------------------------------
-        # Build Email
-        # ----------------------------------------------
-
-        subject = email_service.build_email_subject(
-            blood_request,
-        )
-
-        html = email_service.build_html_email(
-            donor=donor,
-            blood_request=blood_request,
-            accept_url=accept_url,
-            decline_url=decline_url,
-        )
-
-        # ----------------------------------------------
-        # Send Email
-        # ----------------------------------------------
-
-        success = email_service.send_email(
-            recipient_email=recipient.email,
-            subject=subject,
-            html_body=html,
-        )
-
-        if success:
+        if _send_to_recipient(database_session, blood_request, recipient):
             successful_deliveries += 1
-        else:
-            recipient.status = "DELIVERY_FAILED"
-            database_session.commit()
 
     # ------------------------------------------------------
     # Refresh Statistics
     # ------------------------------------------------------
 
+    notification.sent_at = datetime.now(timezone.utc)
     refresh_statistics(
         database_session,
         notification,
     )
 
     return notification, successful_deliveries
+
+
+def resend_pending_recipients(
+    database_session: Session,
+    notification: Notification,
+) -> tuple[int, int]:
+    """Resend a campaign only to donors who have not responded yet."""
+    pending_recipients = [
+        recipient
+        for recipient in crud.get_notification_recipients(database_session, notification.id)
+        if recipient.status == "PENDING"
+    ]
+    successful_deliveries = sum(
+        _send_to_recipient(database_session, notification.blood_request, recipient)
+        for recipient in pending_recipients
+    )
+    if pending_recipients:
+        notification.sent_at = datetime.now(timezone.utc)
+        refresh_statistics(database_session, notification)
+    return len(pending_recipients), successful_deliveries
