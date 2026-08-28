@@ -210,7 +210,7 @@ def get_notification_recipients(
             "id": donor_response.id,
             "email": donor.email or "Not provided",
             "distance": None,
-            "status": donor_response.response,
+            "status": "ACCEPTED" if donor_response.response.upper() in {"YES", "ACCEPTED"} else "DECLINED",
             "responded_at": donor_response.responded_at,
             "donation_confirmed": donation is not None,
             "points_awarded": donation.points_awarded if donation else 0,

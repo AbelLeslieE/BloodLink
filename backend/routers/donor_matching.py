@@ -43,9 +43,7 @@ def _compatible_donors(database_session: Session, blood_request_id: int) -> tupl
             status_code=409,
             detail="This blood request is no longer open for donor matching.",
         )
-    compatible_groups = donor_matching_service.get_compatible_blood_groups(
-        blood_request.blood_group
-    )
+    compatible_groups = [blood_request.blood_group.strip().upper()]
     donors = crud.get_eligible_donors(database_session, compatible_groups)
     return blood_request, donor_matching_service.rank_matching_donors(
         patient_blood_group=blood_request.blood_group,
@@ -129,9 +127,7 @@ def send_notifications(
 
     selected_donors = []
     selected_donor_ids: set[int] = set()
-    compatible_groups = donor_matching_service.get_compatible_blood_groups(
-        blood_request.blood_group
-    )
+    compatible_groups = [blood_request.blood_group.strip().upper()]
 
     for donor_id in request.donor_ids:
 
