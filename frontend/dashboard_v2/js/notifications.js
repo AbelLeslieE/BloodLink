@@ -2398,6 +2398,23 @@ async function refreshNotifications() {
 
 }
 
+function normalizeRecipientResponse(status) {
+
+    const normalized = String(status ?? "").trim().toUpperCase();
+
+    if (["ACCEPTED", "YES"].includes(normalized)) {
+        return "ACCEPTED";
+    }
+
+    if (["DECLINED", "NO"].includes(normalized)) {
+        return "DECLINED";
+    }
+
+    /* Missing, legacy, or delivery-only states are not a donor decision. */
+    return "PENDING";
+
+}
+
 
 
 /* ==========================================================
@@ -3013,30 +3030,36 @@ async function loadNotificationRecipients(notificationId) {
             return;
         }
 
-        selectedNotification.recipients = recipients.map(recipient => ({
+        selectedNotification.recipients = recipients.map(recipient => {
 
-            id: recipient.id,
-            donorId: recipient.donor.id,
+            const responseStatus = normalizeRecipientResponse(recipient.status);
 
-            donor: recipient.donor.full_name,
+            return {
 
-            bloodGroup: recipient.donor.blood_group,
+                id: recipient.id,
+                donorId: recipient.donor.id,
 
-            distance: recipient.distance,
+                donor: recipient.donor.full_name,
 
-            email: recipient.email,
+                bloodGroup: recipient.donor.blood_group,
 
-            phone: recipient.donor.phone,
+                distance: recipient.distance,
 
-            response: recipient.status,
-            donationConfirmed: recipient.donation_confirmed,
-            pointsAwarded: recipient.points_awarded,
+                email: recipient.email,
 
-            respondedAt: formatDate(
-                recipient.responded_at
-            )
+                phone: recipient.donor.phone,
 
-        }));
+                response: responseStatus,
+                donationConfirmed: recipient.donation_confirmed,
+                pointsAwarded: recipient.points_awarded,
+
+                respondedAt: responseStatus === "PENDING"
+                    ? "--"
+                    : formatDate(recipient.responded_at)
+
+            };
+
+        });
 
         renderRecipientTable();
 

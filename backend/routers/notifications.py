@@ -19,6 +19,20 @@ router = APIRouter(
     prefix="/api/notifications",
     tags=["Notifications"],
 )
+
+
+def _recipient_response_status(status: str | None) -> str:
+    """Return the three response states understood by the administrator UI."""
+    normalized = (status or "").strip().upper()
+
+    if normalized in {"ACCEPTED", "YES"}:
+        return "ACCEPTED"
+    if normalized in {"DECLINED", "NO"}:
+        return "DECLINED"
+
+    # Old rows can contain delivery/sending placeholders or an empty value.
+    # They are not donor decisions, so present them as a pending response.
+    return "PENDING"
 # ==========================================================
 # GET ALL CAMPAIGNS
 # ==========================================================
@@ -146,6 +160,9 @@ def get_notification_recipients(
     for recipient in recipients:
 
         donor = recipient.donor
+        response_status = _recipient_response_status(
+            recipient.status,
+        )
         donation = database_session.query(DonationHistory).filter(
             DonationHistory.donor_id == donor.id,
             DonationHistory.blood_request_id == recipient.notification.blood_request_id,
@@ -159,9 +176,13 @@ def get_notification_recipients(
 
             "distance": recipient.distance,
 
-            "status": recipient.status,
+            "status": response_status,
 
-            "responded_at": recipient.responded_at,
+            "responded_at": (
+                recipient.responded_at
+                if response_status in {"ACCEPTED", "DECLINED"}
+                else None
+            ),
             "donation_confirmed": donation is not None,
             "points_awarded": donation.points_awarded if donation else 0,
 
