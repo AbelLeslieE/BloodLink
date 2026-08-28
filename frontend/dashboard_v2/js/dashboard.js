@@ -662,6 +662,14 @@ async function handleNavigation(event) {
         return;
     }
 
+    // Each module is a new screen. Reset the document scroll so a sticky
+    // top bar never covers the newly rendered module heading.
+    window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto"
+    });
+
     // ---------------- Dashboard ----------------
 
     if (page === "dashboard") {

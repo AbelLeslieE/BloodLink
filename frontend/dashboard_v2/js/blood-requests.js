@@ -2135,6 +2135,13 @@ async function renderBloodRequests(
     // never exposes the page's default white background.
     showModuleView();
 
+    // Start every request screen at the top, below the sticky application bar.
+    window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto"
+    });
+
     moduleView.innerHTML = `
         <div class="blood-requests-module" aria-busy="true">
             <div class="blood-requests-loading" role="status">
@@ -2664,6 +2671,14 @@ function renderNewBloodRequestForm() {
     }
 
     showModuleView();
+
+    // This form can be opened from a scrolled request list. Put its header
+    // at the true top of the new screen, below the sticky application bar.
+    window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto"
+    });
 
     moduleView.innerHTML = `
 
