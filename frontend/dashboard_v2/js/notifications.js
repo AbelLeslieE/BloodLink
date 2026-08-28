@@ -1401,13 +1401,15 @@ function updateKPIs() {
 
     notificationFeed.forEach(notification => {
 
-        emailsSent += notification.request.emailsSent;
+        /* Campaign fields arrive from the database. Coerce them here so a
+           campaign with an omitted count can never turn every KPI into NaN. */
+        emailsSent += Number(notification.request.emailsSent) || 0;
 
-        accepted += notification.request.accepted;
+        accepted += Number(notification.request.accepted) || 0;
 
-        declined += notification.request.declined;
+        declined += Number(notification.request.declined) || 0;
 
-        pending += notification.request.pending;
+        pending += Number(notification.request.pending) || 0;
 
     });
 
@@ -2363,13 +2365,36 @@ function applyFilters() {
    19. REFRESH MODULE
 ========================================================== */
 
-function refreshNotifications() {
+async function refreshNotifications() {
 
-    console.log(
-        "Refreshing Notification Center..."
-    );
+    if (!elements.refreshButton) return;
 
-    loadNotificationsFromAPI();
+    const originalLabel = elements.refreshButton.textContent.trim();
+
+    elements.refreshButton.disabled = true;
+    elements.refreshButton.textContent = "Refreshing...";
+
+    try {
+
+        /* Keep the selected campaign open, but reload both its summary and
+           its recipients so a donor's Yes or No decision is immediately
+           reflected in the details and all KPI cards. */
+        const refreshed = await loadNotificationsFromAPI({
+            selectedNotificationId: selectedNotification?.id ?? null
+        });
+
+        if (!refreshed) {
+            alert("Unable to refresh donor responses. Please try again.");
+        }
+
+    }
+
+    finally {
+
+        elements.refreshButton.disabled = false;
+        elements.refreshButton.textContent = originalLabel;
+
+    }
 
 }
 
@@ -2474,7 +2499,7 @@ function setupEventListeners() {
    LOAD NOTIFICATIONS FROM DATABASE
 ========================================================== */
 
-async function loadNotificationsFromAPI() {
+async function loadNotificationsFromAPI({ selectedNotificationId = null } = {}) {
 
     try {
 
@@ -2483,7 +2508,7 @@ async function loadNotificationsFromAPI() {
         );
 
         if (!response) {
-            return;
+            return false;
         }
 
         if (!response.ok) {
@@ -2553,13 +2578,33 @@ async function loadNotificationsFromAPI() {
 
         }));
 
-        filteredFeed = [...notificationFeed];
+        if (elements.searchInput) {
+            applyFilters();
+        }
+        else {
+            filteredFeed = [...notificationFeed];
+            renderNotificationFeed();
+        }
 
         updateKPIs();
 
-        renderNotificationFeed();
+        const preservedNotification = selectedNotificationId === null
+            ? null
+            : notificationFeed.find(item => item.id === selectedNotificationId);
 
-        clearDetailsPanel();
+        if (preservedNotification) {
+            selectedNotification = preservedNotification;
+            selectedRequest = preservedNotification.request;
+
+            renderNotificationDetails();
+            await loadNotificationRecipients(preservedNotification.id);
+        }
+        else {
+            resetSelection();
+            clearDetailsPanel();
+        }
+
+        return true;
 
     }
 
@@ -2569,6 +2614,8 @@ async function loadNotificationsFromAPI() {
             "Unable to load notifications.",
             error
         );
+
+        return false;
 
     }
 
