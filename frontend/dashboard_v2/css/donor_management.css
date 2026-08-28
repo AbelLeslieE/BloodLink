@@ -1852,9 +1852,20 @@ body.donor-modal-open {
 
     overflow-y: auto;
 
+    overscroll-behavior: contain;
+
+    -webkit-overflow-scrolling: touch;
+
     padding: 24px 26px;
 
-    scrollbar-width: thin;
+    /* Keep scrolling available without showing a visual scrollbar. */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+
+.donor-modal-body::-webkit-scrollbar {
+    display: none;
 }
 
 
