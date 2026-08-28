@@ -846,6 +846,18 @@
    18. TABLE ACTION BUTTON
 ========================================================== */
 
+.request-table-actions {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+}
+
 .table-action-button {
 
     width: 38px;
@@ -893,6 +905,36 @@
     width: 18px;
 
     height: 18px;
+
+}
+
+.table-delete-button {
+
+    background: rgba(127, 29, 29, 0.18);
+
+    color: #fda4af;
+
+    border-color: rgba(248, 113, 113, 0.38);
+
+}
+
+.table-delete-button:hover {
+
+    background: var(--danger);
+
+    color: #ffffff;
+
+    border-color: var(--danger);
+
+}
+
+.table-action-button:disabled {
+
+    cursor: wait;
+
+    opacity: 0.68;
+
+    transform: none;
 
 }
 

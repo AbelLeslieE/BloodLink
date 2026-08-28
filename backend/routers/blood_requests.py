@@ -11,12 +11,14 @@ from fastapi import (
     status,
 )
 
+from sqlalchemy import delete, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from backend.auth.dependencies import require_administrator, require_authentication
 from backend.database import crud
 from backend.database.database import get_db
-from backend.database.models import User
+from backend.database.models import DonationHistory, SavedMatch, User
 from backend.database.schemas import (
     BloodRequestCompleteRequest,
     BloodRequestCreate,
@@ -204,6 +206,90 @@ def update_blood_request_status(
         blood_request=blood_request,
         new_status=requested_status,
     )
+
+
+# ==========================================================
+# DELETE BLOOD REQUEST
+# ==========================================================
+
+@router.delete(
+    "/{request_id}",
+)
+def delete_blood_request(
+    request_id: int,
+
+    database_session: Annotated[
+        Session,
+        Depends(get_db),
+    ],
+
+    _: Annotated[
+        User,
+        Depends(require_administrator),
+    ],
+
+) -> dict:
+    """Delete a mistaken request that has no confirmed donations."""
+
+    blood_request = crud.get_blood_request_by_id(
+        database_session,
+        request_id,
+    )
+
+    if blood_request is None:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Blood request not found.",
+        )
+
+    has_confirmed_donations = database_session.scalar(
+        select(DonationHistory.id).where(
+            DonationHistory.blood_request_id == request_id
+        )
+    )
+
+    if has_confirmed_donations is not None:
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "A request with confirmed donations cannot be deleted. "
+                "Mark it completed instead."
+            ),
+        )
+
+    try:
+
+        # Saved matches have no database-level relationship to a request, so
+        # remove them explicitly before deleting its related campaign data.
+        database_session.execute(
+            delete(SavedMatch).where(
+                SavedMatch.blood_request_id == request_id
+            )
+        )
+
+        database_session.delete(blood_request)
+        database_session.commit()
+
+    except SQLAlchemyError as error:
+
+        database_session.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "Unable to delete this blood request because it is still "
+                "referenced by related records."
+            ),
+        ) from error
+
+    return {
+        "success": True,
+        "deleted_request_id": request_id,
+    }
+
+
 # ==========================================================
 # COMPLETE BLOOD REQUEST
 # ==========================================================

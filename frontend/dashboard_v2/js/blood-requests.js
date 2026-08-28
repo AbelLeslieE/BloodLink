@@ -393,16 +393,33 @@ function buildRequestRows(requests = bloodRequests) {
 
                     <td>
 
-                        <button
-                            type="button"
-                            class="table-action-button"
-                            data-request-id="${request.id}"
-                            aria-label="View ${displayRequestId}"
-                        >
+                        <div class="request-table-actions">
 
-                            <i data-lucide="eye"></i>
+                            <button
+                                type="button"
+                                class="table-action-button"
+                                data-request-id="${request.id}"
+                                aria-label="View ${displayRequestId}"
+                                title="View request details"
+                            >
 
-                        </button>
+                                <i data-lucide="eye"></i>
+
+                            </button>
+
+                            <button
+                                type="button"
+                                class="table-action-button table-delete-button"
+                                data-delete-request-id="${request.id}"
+                                aria-label="Delete ${displayRequestId}"
+                                title="Delete request"
+                            >
+
+                                <i data-lucide="trash-2"></i>
+
+                            </button>
+
+                        </div>
 
                     </td>
 
@@ -2152,6 +2169,155 @@ async function updateBloodRequestStatus(
     }
 
 }
+
+
+// ==========================================================
+// DELETE BLOOD REQUEST
+// ==========================================================
+
+async function deleteBloodRequest(
+    requestId,
+    deleteButton
+) {
+
+    const numericRequestId = Number(requestId);
+
+    const selectedRequest = bloodRequests.find(
+        (request) => request.id === numericRequestId
+    );
+
+    const displayRequestId =
+        `BR-${String(numericRequestId).padStart(4, "0")}`;
+
+    const patientName = selectedRequest?.patient_name || "this patient";
+
+    const shouldDelete = window.confirm(
+        `Delete ${displayRequestId} for ${patientName}? This cannot be undone.`
+    );
+
+    if (!shouldDelete) {
+
+        return;
+
+    }
+
+    const accessToken =
+        localStorage.getItem("access_token") ||
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("token");
+
+    if (!accessToken) {
+
+        alert(
+            "Your login session could not be found. Please log in again."
+        );
+
+        return;
+
+    }
+
+    const originalButtonMarkup = deleteButton?.innerHTML;
+
+    if (deleteButton) {
+
+        deleteButton.disabled = true;
+        deleteButton.setAttribute("aria-busy", "true");
+        deleteButton.innerHTML = "<i data-lucide=\"loader-circle\"></i>";
+
+        if (window.lucide) {
+
+            window.lucide.createIcons({
+                nodes: [deleteButton]
+            });
+
+        }
+
+    }
+
+    try {
+
+        const response = await fetch(
+            `/api/blood-requests/${numericRequestId}`,
+            {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${accessToken}`
+                }
+            }
+        );
+
+        let responseData = null;
+
+        try {
+
+            responseData = await response.json();
+
+        }
+
+        catch {
+
+            responseData = null;
+
+        }
+
+        if (!response.ok) {
+
+            throw new Error(
+                responseData?.detail ||
+                "Unable to delete the blood request."
+            );
+
+        }
+
+        // Update immediately so the table and KPI cards remain accurate even
+        // if the follow-up refresh is temporarily unavailable.
+        bloodRequests = bloodRequests.filter(
+            (request) => request.id !== numericRequestId
+        );
+
+        // Reloading then reconciles the local list with changes made by other
+        // administrators in the meantime.
+        await renderBloodRequests();
+
+        alert(`${displayRequestId} was deleted.`);
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "BloodLink: Error deleting blood request:",
+            error
+        );
+
+        alert(
+            error.message ||
+            "Unable to delete the blood request."
+        );
+
+    }
+
+    finally {
+
+        if (deleteButton?.isConnected) {
+
+            deleteButton.disabled = false;
+            deleteButton.removeAttribute("aria-busy");
+            deleteButton.innerHTML = originalButtonMarkup;
+
+            if (window.lucide) {
+
+                window.lucide.createIcons({
+                    nodes: [deleteButton]
+                });
+
+            }
+
+        }
+
+    }
+
+}
 // ==========================================================
 // 8. RENDER BLOOD REQUESTS
 // ==========================================================
@@ -2648,6 +2814,28 @@ async function renderBloodRequests(
 
                             openBloodRequestDetails(
                                 button.dataset.requestId
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        document
+            .querySelectorAll(
+                ".table-delete-button[data-delete-request-id]"
+            )
+            .forEach(
+                (button) => {
+
+                    button.addEventListener(
+                        "click",
+                        () => {
+
+                            deleteBloodRequest(
+                                button.dataset.deleteRequestId,
+                                button
                             );
 
                         }
