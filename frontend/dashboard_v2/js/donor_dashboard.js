@@ -7,6 +7,19 @@ const authFetch = (url, options = {}) => fetch(url, {
 });
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
 
+async function dashboardData(url) {
+    const response = await authFetch(url);
+    if (response.status === 401 || response.status === 403) {
+        await clearSession();
+        return null;
+    }
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(payload.detail || "Unable to load this section.");
+    }
+    return payload;
+}
+
 async function clearSession({ revoke = false } = {}) {
     if (revoke && token) {
         try {
@@ -20,14 +33,18 @@ async function clearSession({ revoke = false } = {}) {
 }
 
 async function loadDashboard() {
-    const [summaryResponse, requestsResponse, leaderboardResponse, certificatesResponse] = await Promise.all([
-        authFetch("/api/donor-dashboard/summary"), authFetch("/api/donor-dashboard/requests"), authFetch("/api/donor-dashboard/leaderboard"), authFetch("/api/donor-dashboard/certificates"),
+    const [summaryResult, requestsResult, leadersResult, certificatesResult] = await Promise.allSettled([
+        dashboardData("/api/donor-dashboard/summary"),
+        dashboardData("/api/donor-dashboard/requests"),
+        dashboardData("/api/donor-dashboard/leaderboard"),
+        dashboardData("/api/donor-dashboard/certificates"),
     ]);
-    if ([summaryResponse, requestsResponse, leaderboardResponse, certificatesResponse].some((response) => response.status === 401 || response.status === 403)) return clearSession();
-    const summary = await summaryResponse.json();
-    const requests = await requestsResponse.json();
-    const leaders = await leaderboardResponse.json();
-    const certificates = await certificatesResponse.json();
+
+    if (summaryResult.status !== "fulfilled" || !summaryResult.value) {
+        throw summaryResult.reason || new Error("Unable to load the donor profile.");
+    }
+
+    const summary = summaryResult.value;
     document.querySelector("#welcome").textContent = `Welcome, ${summary.donor.name}`;
     document.querySelector("#points").textContent = summary.total_points;
     document.querySelector("#donations").textContent = summary.donation_count;
@@ -39,10 +56,16 @@ async function loadDashboard() {
         ["Blood group", summary.donor.blood_group], ["Email", summary.donor.email],
         ["Phone", summary.donor.phone], ["Department", summary.donor.department || "Not provided"],
     ].map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
-    renderRequests(requests);
+    if (requestsResult.status === "fulfilled" && requestsResult.value) {
+        renderRequests(requestsResult.value);
+    } else {
+        document.querySelector("#requests").innerHTML = '<p class="empty">Matched requests are temporarily unavailable. Please refresh shortly.</p>';
+    }
     document.querySelector("#history").innerHTML = summary.recent_donations.length ? summary.recent_donations.map((item) => `<div class="history-row"><strong>${escapeHtml(item.hospital_name)}</strong><br><span>${escapeHtml(item.donation_date)} · ${item.points_awarded} points · ${escapeHtml(item.status)}</span></div>`).join("") : '<p class="empty">No confirmed donations yet.</p>';
+    const leaders = leadersResult.status === "fulfilled" && leadersResult.value ? leadersResult.value : [];
     document.querySelector("#leaderboard").innerHTML = leaders.map((item) => `<li><strong>${escapeHtml(item.name)}</strong> — ${item.points} points, ${item.donations} donations (${escapeHtml(item.badge)})</li>`).join("") || '<li class="empty">No donors to show.</li>';
     const certificateContainer = document.querySelector("#certificates");
+    const certificates = certificatesResult.status === "fulfilled" && certificatesResult.value ? certificatesResult.value : [];
     certificateContainer.innerHTML = certificates.length ? certificates.map((certificate) => `<article class="certificate"><div><strong>${escapeHtml(certificate.hospital_name)}</strong><span>${escapeHtml(certificate.donation_date)} · ${escapeHtml(certificate.certificate_number)}</span></div><button type="button" data-certificate-url="${escapeHtml(certificate.download_url)}">Download PDF</button></article>`).join("") : '<p class="empty">Certificates appear here after an administrator confirms a donation.</p>';
     certificateContainer.querySelectorAll("button[data-certificate-url]").forEach((button) => button.addEventListener("click", async () => {
         button.disabled = true;
