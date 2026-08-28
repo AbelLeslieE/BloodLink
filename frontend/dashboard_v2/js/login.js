@@ -8,6 +8,8 @@ const message = document.getElementById("message");
 const usernameInput = document.getElementById("username");
 const passwordInput = document.getElementById("password");
 const togglePassword = document.getElementById("togglePassword");
+const loginButton = form.querySelector("button[type=submit]");
+const loginButtonLabel = loginButton.innerHTML;
 
 // ======================================================
 // PASSWORD VISIBILITY
@@ -37,6 +39,12 @@ form.addEventListener("submit", async (event) => {
 
     const username = usernameInput.value.trim();
     const password = passwordInput.value;
+
+    loginButton.disabled = true;
+    loginButton.setAttribute("aria-busy", "true");
+    loginButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> LOGGING IN…';
+    message.style.color = "#2F67F6";
+    message.textContent = "Logging in…";
 
     // OAuth2PasswordRequestForm requires form data
     const formData = new URLSearchParams();
@@ -92,6 +100,10 @@ form.addEventListener("submit", async (event) => {
 
         });
 
+        if (!profileResponse.ok) {
+            throw new Error("Unable to load the signed-in account.");
+        }
+
         const profile = await profileResponse.json();
 
         localStorage.setItem("username", profile.username);
@@ -112,6 +124,14 @@ form.addEventListener("submit", async (event) => {
         message.style.color = "#dc2626";
         message.textContent =
             "Unable to connect to the server.";
+
+    }
+
+    finally {
+
+        loginButton.disabled = false;
+        loginButton.removeAttribute("aria-busy");
+        loginButton.innerHTML = loginButtonLabel;
 
     }
 

@@ -692,6 +692,18 @@ label{
 
 }
 
+.login-btn:disabled{
+
+    cursor:wait;
+
+    opacity:.8;
+
+    transform:none;
+
+    box-shadow:none;
+
+}
+
 .forgot-password-link,
 .back-to-login{
 

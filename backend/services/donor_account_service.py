@@ -58,7 +58,7 @@ def create_donor_account(
     if clean_group not in ALLOWED_BLOOD_GROUPS:
         raise HTTPException(status_code=422, detail="Select a valid blood group.")
 
-    if db.scalar(select(User.id).where(User.username == clean_username)):
+    if db.scalar(select(User.id).where(func.lower(User.username) == clean_username)):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="That username is already registered.")
     registered_phones = list(db.scalars(select(User.phone))) + list(db.scalars(select(Donor.phone)))
     if any(_phone_key(phone) == _phone_key(clean_phone) for phone in registered_phones):

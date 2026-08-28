@@ -79,8 +79,9 @@ def delete_record(database_session: Session, record: ModelType) -> None:
 
 
 def get_user_by_username(database_session: Session, username: str) -> User | None:
-    """Return one volunteer account matching the supplied username."""
-    statement = select(User).where(User.username == username)
+    """Return one volunteer account using a case-insensitive username match."""
+    cleaned_username = username.strip().lower()
+    statement = select(User).where(func.lower(User.username) == cleaned_username)
     return database_session.scalar(statement)
 
 
