@@ -80,7 +80,7 @@ export function loadSettings() {
 
                         <img
                             id="profilePreview"
-                            src="../assets/settings/profile.png"
+                            src="/static/assets/user.png"
                             alt="Profile">
 
                         <button
