@@ -13,7 +13,7 @@ from fastapi import (
 
 from sqlalchemy.orm import Session
 
-from backend.auth.dependencies import require_administrator
+from backend.auth.dependencies import require_administrator, require_authentication
 from backend.database import crud
 from backend.database.database import get_db
 from backend.database.models import User

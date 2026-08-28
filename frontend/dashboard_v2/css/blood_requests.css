@@ -2444,3 +2444,196 @@
     font-size:12px;
 
 }
+
+/* Donation completion is a focused task, so its panel uses a denser,
+   scan-friendly layout without inheriting the broader request-form styles. */
+.complete-donation-overlay{
+    overflow-y:auto;
+    padding:28px;
+    background:rgba(3,10,24,.76);
+    backdrop-filter:blur(14px);
+}
+
+.complete-donation-modal{
+    max-width:780px;
+    margin:auto;
+    background:linear-gradient(145deg,#172842 0%,#101c31 100%);
+    border:1px solid rgba(148,163,184,.34);
+    border-radius:28px;
+    box-shadow:0 32px 90px rgba(0,0,0,.55);
+}
+
+.complete-donation-header{
+    padding:30px 34px 26px;
+    background:linear-gradient(110deg,rgba(59,130,246,.15),rgba(217,30,64,.08));
+}
+
+.complete-donation-eyebrow{
+    display:block;
+    margin-bottom:8px;
+    color:#8db9ff;
+    font-size:.73rem;
+    font-weight:800;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+}
+
+.complete-donation-header h2{
+    font-size:clamp(1.65rem,3vw,2.15rem);
+    letter-spacing:-.03em;
+}
+
+.complete-donation-header p{
+    max-width:480px;
+    margin:9px 0 0;
+    color:#cbd8eb;
+}
+
+.complete-donation-close{
+    display:grid;
+    flex:0 0 44px;
+    place-items:center;
+}
+
+.complete-donation-body{
+    gap:24px;
+    padding:28px 34px 30px;
+}
+
+.donation-request-summary{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    overflow:hidden;
+    border:1px solid rgba(148,163,184,.22);
+    border-radius:16px;
+    background:rgba(5,15,31,.34);
+}
+
+.donation-summary-item{
+    display:grid;
+    grid-template-columns:24px 1fr;
+    gap:4px 9px;
+    min-width:0;
+    padding:16px 17px;
+    border-right:1px solid rgba(148,163,184,.2);
+}
+
+.donation-summary-item:last-child{border-right:0;}
+.donation-summary-item svg{grid-row:span 2;width:19px;color:#76a9ff;}
+.donation-summary-item span{color:#9bacc5;font-size:.73rem;font-weight:750;text-transform:uppercase;letter-spacing:.07em;}
+.donation-summary-item strong{overflow:hidden;color:#f4f7fb;font-size:.95rem;text-overflow:ellipsis;white-space:nowrap;}
+
+.complete-donation-field-label{
+    display:block;
+    margin-bottom:5px;
+    color:#f4f7fb !important;
+    font-weight:800 !important;
+}
+
+.complete-donation-field-hint{
+    margin:0 0 12px;
+    color:#aebbd0;
+    font-size:.87rem;
+}
+
+.donation-source-options{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+}
+
+.donation-source-options .donation-source-option{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-height:78px;
+    padding:14px;
+    border:1px solid rgba(148,163,184,.26);
+    border-radius:15px;
+    background:rgba(255,255,255,.045);
+    color:#f8fafc;
+    cursor:pointer;
+    transition:border-color .18s ease,background .18s ease,transform .18s ease;
+}
+
+.donation-source-options .donation-source-option:hover:not(.is-disabled){
+    transform:translateY(-1px);
+    border-color:rgba(96,165,250,.72);
+    background:rgba(59,130,246,.1);
+}
+
+.donation-source-option input{
+    position:absolute;
+    width:1px;
+    height:1px;
+    opacity:0;
+}
+
+.donation-source-option:has(input:checked){
+    border-color:#4b91ff;
+    background:linear-gradient(120deg,rgba(37,99,235,.28),rgba(59,130,246,.1));
+    box-shadow:inset 0 0 0 1px rgba(147,197,253,.24);
+}
+
+.donation-source-option-icon{
+    display:grid;
+    flex:0 0 40px;
+    width:40px;
+    height:40px;
+    place-items:center;
+    border-radius:12px;
+    background:rgba(147,197,253,.14);
+    color:#9cc3ff;
+}
+
+.donation-source-option>span:last-child{display:grid;gap:3px;}
+.donation-source-option strong{color:#f7f9fd;font-size:.95rem;}
+.donation-source-option small{color:#b5c2d7;font-size:.75rem;line-height:1.3;}
+.donation-source-option.is-disabled{opacity:.5;cursor:not-allowed;}
+
+.complete-donation-modal .form-field input,
+.complete-donation-modal .form-field textarea{
+    background:rgba(5,15,31,.42);
+    border-color:rgba(148,163,184,.3);
+}
+
+.complete-donation-modal .form-field input:focus,
+.complete-donation-modal .form-field textarea:focus{
+    background:rgba(8,23,47,.78);
+    border-color:#60a5fa;
+    box-shadow:0 0 0 4px rgba(59,130,246,.15);
+}
+
+.donor-selection-status{
+    min-height:20px;
+    margin:9px 0 0;
+    color:#8ee2b0;
+    font-size:.84rem;
+    font-weight:700;
+}
+
+.complete-donation-error{
+    margin:0;
+    padding:12px 14px;
+    border:1px solid rgba(251,113,133,.55);
+    border-radius:12px;
+    background:rgba(190,24,93,.16);
+    color:#fecdd3;
+    font-size:.9rem;
+    line-height:1.45;
+}
+
+.complete-donation-modal .request-form-actions{
+    padding:20px 34px 28px;
+    background:rgba(5,15,31,.28);
+}
+
+@media(max-width:700px){
+    .complete-donation-overlay{align-items:flex-start;padding:14px;}
+    .complete-donation-modal{border-radius:20px;}
+    .complete-donation-header,.complete-donation-body,.complete-donation-modal .request-form-actions{padding-left:20px;padding-right:20px;}
+    .donation-request-summary,.donation-source-options{grid-template-columns:1fr;}
+    .donation-summary-item,.donation-summary-item:last-child{border-right:0;border-bottom:1px solid rgba(148,163,184,.2);}
+    .donation-summary-item:last-child{border-bottom:0;}
+}

@@ -1349,13 +1349,15 @@ async function openCompleteDonationModal(request) {
 
     modal.innerHTML = `
 
-        <div class="complete-donation-modal">
+        <div class="complete-donation-modal" role="dialog" aria-modal="true" aria-labelledby="completeDonationTitle">
 
             <div class="complete-donation-header">
 
                 <div>
 
-                    <h2>
+                    <span class="complete-donation-eyebrow">Finalise request</span>
+
+                    <h2 id="completeDonationTitle">
                         Complete Donation
                     </h2>
 
@@ -1381,47 +1383,34 @@ async function openCompleteDonationModal(request) {
 
                 <!-- Request Summary -->
 
-                <div class="request-detail-list">
-
-                    <div>
-
+                <section class="donation-request-summary" aria-label="Blood request details">
+                    <div class="donation-summary-item">
+                        <i data-lucide="clipboard-check" aria-hidden="true"></i>
                         <span>Request</span>
-
                         <strong>${displayRequestId}</strong>
-
                     </div>
-
-                    <div>
-
+                    <div class="donation-summary-item">
+                        <i data-lucide="building-2" aria-hidden="true"></i>
                         <span>Hospital</span>
-
                         <strong>${request.hospital_name}</strong>
-
                     </div>
-
-                    <div>
-
-                        <span>Blood Group</span>
-
+                    <div class="donation-summary-item">
+                        <i data-lucide="droplet" aria-hidden="true"></i>
+                        <span>Blood group</span>
                         <strong>${request.blood_group}</strong>
-
                     </div>
-
-                </div>
+                </section>
 
                 <!-- Donation Source -->
 
                 <div class="form-field">
 
-                    <label>
-
-                        Donation Source
-
-                    </label>
+                    <label class="complete-donation-field-label">Donation source</label>
+                    <p class="complete-donation-field-hint">Choose the registered donor who completed this request.</p>
 
                     <div class="donation-source-options">
 
-                        <label>
+                        <label class="donation-source-option">
 
                             <input
                                 type="radio"
@@ -1430,19 +1419,22 @@ async function openCompleteDonationModal(request) {
                                 checked
                             >
 
-                            Registered Donor
+                            <span class="donation-source-option-icon"><i data-lucide="badge-check" aria-hidden="true"></i></span>
+                            <span><strong>Registered donor</strong><small>Record a verified BloodLink donor</small></span>
 
                         </label>
 
-                        <label>
+                        <label class="donation-source-option is-disabled" aria-disabled="true">
 
                             <input
                                 type="radio"
                                 name="donationSource"
                                 value="external"
+                                disabled
                             >
 
-                            External Donor
+                            <span class="donation-source-option-icon"><i data-lucide="user-round" aria-hidden="true"></i></span>
+                            <span><strong>External donor</strong><small>Available in a future update</small></span>
 
                         </label>
 
@@ -1457,23 +1449,22 @@ async function openCompleteDonationModal(request) {
                     id="registeredDonorContainer"
                 >
 
-                    <label>
-
-                        Registered Donor
-
-                    </label>
+                    <label for="donorSearchInput">Registered donor</label>
 
                     <input
                         id="donorSearchInput"
                         type="text"
                         autocomplete="off"
                         placeholder="Search donor name or donor code"
+                        aria-describedby="donorSelectionStatus"
                     >
 
                     <div
                         id="donorSearchResults"
                         class="donor-search-results"
                     ></div>
+
+                    <p id="donorSelectionStatus" class="donor-selection-status" role="status"></p>
 
                 </div>
 
@@ -1517,6 +1508,8 @@ async function openCompleteDonationModal(request) {
 
                 </div>
 
+                <p id="completeDonationError" class="complete-donation-error" role="alert" hidden></p>
+
             </div>
 
             <div class="request-form-actions">
@@ -1549,6 +1542,10 @@ async function openCompleteDonationModal(request) {
 
     document.body.appendChild(modal);
 
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+
     // ======================================================
     // DOM REFERENCES
     // ======================================================
@@ -1574,6 +1571,12 @@ async function openCompleteDonationModal(request) {
     const completeButton =
         document.getElementById("completeDonationButton");
 
+    const selectionStatus =
+        document.getElementById("donorSelectionStatus");
+
+    const completionError =
+        document.getElementById("completeDonationError");
+
     const radios =
         document.querySelectorAll(
             'input[name="donationSource"]'
@@ -1588,6 +1591,26 @@ async function openCompleteDonationModal(request) {
     let selectedDonor = null;
 
     let donationSource = "registered";
+
+    const clearCompletionError = () => {
+        completionError.hidden = true;
+        completionError.textContent = "";
+    };
+
+    const showCompletionError = (message) => {
+        completionError.textContent = message;
+        completionError.hidden = false;
+    };
+
+    const completionErrorMessage = (payload) => {
+        if (typeof payload?.detail === "string") return payload.detail;
+        if (Array.isArray(payload?.detail)) {
+            return payload.detail
+                .map((issue) => issue?.msg || "Invalid completion details.")
+                .join(" ");
+        }
+        return "Unable to complete donation. Please check the selected donor and try again.";
+    };
 
     // ======================================================
     // LOAD DONORS
@@ -1661,6 +1684,9 @@ async function openCompleteDonationModal(request) {
 
                     selectedDonor = null;
 
+                    selectionStatus.textContent = "";
+                    clearCompletionError();
+
                     donorSearchInput.value = "";
 
                     donorSearchResults.innerHTML = "";
@@ -1698,6 +1724,9 @@ async function openCompleteDonationModal(request) {
             () => {
 
                 selectedDonor = null;
+
+                selectionStatus.textContent = "";
+                clearCompletionError();
 
                 donorSearchResults.innerHTML = "";
 
@@ -1778,6 +1807,10 @@ async function openCompleteDonationModal(request) {
 
                                 donorSearchResults.innerHTML = "";
 
+                                selectionStatus.textContent = `${donor.full_name} selected · ${donor.donor_code} · ${donor.blood_group}`;
+
+                                clearCompletionError();
+
                             }
                         );
 
@@ -1853,9 +1886,7 @@ async function openCompleteDonationModal(request) {
 
                 if (!selectedDonor) {
 
-                    alert(
-                        "Please select a registered donor."
-                    );
+                    showCompletionError("Select a registered donor from the search results before completing this request.");
 
                     return;
 
@@ -1875,9 +1906,7 @@ async function openCompleteDonationModal(request) {
 
                 }
 
-                alert(
-                    "External donor recording is not implemented yet."
-                );
+                showCompletionError("External donor recording is not available yet. Select a registered donor instead.");
 
                 return;
 
@@ -1927,13 +1956,12 @@ async function openCompleteDonationModal(request) {
                     );
 
                 const responseData =
-                    await response.json();
+                    await response.json().catch(() => ({}));
 
                 if (!response.ok) {
 
                     throw new Error(
-                        responseData.detail ||
-                        "Unable to complete donation."
+                        completionErrorMessage(responseData)
                     );
 
                 }
@@ -1961,10 +1989,6 @@ async function openCompleteDonationModal(request) {
 
                 modal.remove();
 
-                alert(
-                    "Donation recorded successfully."
-                );
-
                 renderBloodRequestDetails(
                     responseData
                 );
@@ -1978,7 +2002,7 @@ async function openCompleteDonationModal(request) {
                     error
                 );
 
-                alert(
+                showCompletionError(
                     error.message ||
                     "Unable to complete donation."
                 );
