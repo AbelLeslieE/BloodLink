@@ -11,6 +11,11 @@ const togglePassword = document.getElementById("togglePassword");
 const loginButton = form.querySelector("button[type=submit]");
 const loginButtonLabel = loginButton.innerHTML;
 
+if (new URLSearchParams(window.location.search).get("reset") === "success") {
+    message.style.color = "#167950";
+    message.textContent = "Password updated. Sign in with your new password.";
+}
+
 // ======================================================
 // PASSWORD VISIBILITY
 // ======================================================
