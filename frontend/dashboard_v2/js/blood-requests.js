@@ -133,6 +133,20 @@ async function loadBloodRequests() {
     return bloodRequests;
 
 }
+
+function requestStatistics(requests = bloodRequests) {
+    const hasStatus = (request, status) =>
+        String(request.status || "").trim().toLowerCase() === status;
+    const hasPriority = (request, priority) =>
+        String(request.priority || "").trim().toLowerCase() === priority;
+
+    return {
+        total: requests.length,
+        emergency: requests.filter((request) => hasPriority(request, "emergency")).length,
+        pending: requests.filter((request) => hasStatus(request, "pending")).length,
+        fulfilled: requests.filter((request) => hasStatus(request, "fulfilled")).length,
+    };
+}
 // ==========================================================
 // 3. SHOW MODULE VIEW
 // ==========================================================
@@ -2176,6 +2190,10 @@ async function renderBloodRequests(
 
     }
 
+    const statistics = requestStatistics();
+    const visibleRequestCount = bloodRequests.length;
+    const firstVisibleRequest = visibleRequestCount ? 1 : 0;
+
     moduleView.innerHTML = `
 
         <div class="blood-requests-module">
@@ -2250,7 +2268,7 @@ async function renderBloodRequests(
                         </span>
 
                         <strong>
-                            128
+                            ${statistics.total}
                         </strong>
 
                         <small>
@@ -2277,7 +2295,7 @@ async function renderBloodRequests(
                         </span>
 
                         <strong>
-                            8
+                            ${statistics.emergency}
                         </strong>
 
                         <small>
@@ -2304,7 +2322,7 @@ async function renderBloodRequests(
                         </span>
 
                         <strong>
-                            24
+                            ${statistics.pending}
                         </strong>
 
                         <small>
@@ -2331,7 +2349,7 @@ async function renderBloodRequests(
                         </span>
 
                         <strong>
-                            96
+                            ${statistics.fulfilled}
                         </strong>
 
                         <small>
@@ -2516,9 +2534,9 @@ async function renderBloodRequests(
 
                     <p>
                         Showing
-                        <strong>1–4</strong>
+                        <strong>${firstVisibleRequest}–${visibleRequestCount}</strong>
                         of
-                        <strong>128</strong>
+                        <strong>${statistics.total}</strong>
                         requests
                     </p>
 
@@ -2539,32 +2557,9 @@ async function renderBloodRequests(
                         <button
                             type="button"
                             class="active"
+                            disabled
                         >
                             1
-                        </button>
-
-
-                        <button
-                            type="button"
-                        >
-                            2
-                        </button>
-
-
-                        <button
-                            type="button"
-                        >
-                            3
-                        </button>
-
-
-                        <button
-                            type="button"
-                            aria-label="Next page"
-                        >
-
-                            <i data-lucide="chevron-right"></i>
-
                         </button>
 
                     </div>
