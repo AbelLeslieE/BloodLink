@@ -2450,6 +2450,239 @@ html{
     min-width:220px;
 
 }
+
+
+/* ==========================================================
+   COMPATIBLE DONOR PANEL — RESPONSIVE POLISH
+========================================================== */
+
+.right-column {
+    align-self: start;
+
+    position: sticky;
+    top: 18px;
+
+    height: clamp(500px, calc(100dvh - 140px), 720px);
+    min-height: 0;
+    max-height: calc(100dvh - 96px);
+}
+
+
+.right-column > .section-card {
+    min-height: 0;
+
+    height: 100%;
+
+    padding: 20px;
+
+    border-color: rgba(148, 163, 184, 0.26);
+
+    background:
+        linear-gradient(
+            160deg,
+            rgba(15, 38, 64, 0.94),
+            rgba(9, 26, 45, 0.92)
+        );
+
+    box-shadow: 0 22px 46px rgba(2, 12, 27, 0.24);
+}
+
+
+.right-column .section-header {
+    align-items: flex-start;
+
+    gap: 16px;
+
+    padding: 0 0 18px;
+
+    margin: 0;
+}
+
+
+.right-column .section-header h2 {
+    flex: 0 1 9ch;
+
+    color: #f8fbff;
+
+    font-size: clamp(1.45rem, 2.2vw, 2rem);
+}
+
+
+.right-column .section-actions {
+    flex: 1 1 220px;
+
+    display: grid;
+
+    gap: 10px;
+}
+
+
+.right-column .donor-search-input {
+    width: 100%;
+    min-width: 0;
+    height: 46px;
+
+    padding: 0 14px;
+
+    color: #f8fbff;
+
+    background: rgba(4, 19, 35, 0.62);
+
+    border-color: rgba(148, 163, 184, 0.32);
+
+    border-radius: 12px;
+}
+
+
+.right-column .donor-search-input::placeholder {
+    color: #aabbd0;
+}
+
+
+.right-column .select-all-wrapper {
+    min-width: 0;
+
+    color: #d9e5f4;
+
+    font-size: 0.84rem;
+}
+
+
+.right-column .select-all-wrapper span {
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+.right-column .donor-panel {
+    gap: 14px;
+}
+
+
+.right-column .donor-list {
+    padding-right: 2px;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+
+.right-column .donor-list::-webkit-scrollbar {
+    display: none;
+}
+
+
+.right-column .donor-list > .empty-state {
+    flex: 1;
+
+    min-height: 190px;
+
+    padding: 28px 22px;
+
+    color: #c9d8e9;
+
+    border-color: rgba(148, 163, 184, 0.3);
+
+    background: rgba(4, 19, 35, 0.3);
+}
+
+
+.right-column .donor-panel-footer {
+    display: grid;
+
+    grid-template-columns: minmax(0, 1fr);
+
+    gap: 14px;
+
+    margin-top: 0;
+
+    padding: 14px;
+
+    border: 1px solid rgba(148, 163, 184, 0.18);
+
+    border-radius: 14px;
+
+    background: rgba(2, 15, 29, 0.44);
+}
+
+
+.right-column .selected-info {
+    justify-content: space-between;
+
+    color: #e8f0fa;
+}
+
+
+.right-column .selected-info strong {
+    width: 30px;
+    height: 30px;
+
+    color: #ffffff;
+
+    background: #e63342;
+}
+
+
+.right-column .panel-actions {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+}
+
+
+.right-column .panel-actions button {
+    min-width: 0;
+
+    min-height: 42px;
+
+    padding: 0 10px;
+
+    font-size: 0.88rem;
+}
+
+
+@media (max-width: 992px) {
+
+    .right-column {
+        position: static;
+
+        height: auto;
+        max-height: none;
+    }
+
+
+    .right-column > .section-card {
+        min-height: 520px;
+    }
+
+}
+
+
+@media (max-width: 560px) {
+
+    .right-column > .section-card {
+        padding: 16px;
+
+        min-height: 480px;
+    }
+
+
+    .right-column .section-header {
+        flex-direction: column;
+    }
+
+
+    .right-column .section-header h2,
+    .right-column .section-actions {
+        width: 100%;
+    }
+
+}
 /* ==========================================================
    END OF FILE
 ========================================================== */
