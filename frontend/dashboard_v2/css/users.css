@@ -293,8 +293,6 @@
     grid-template-columns:
         2fr
         1fr
-        1fr
-        1fr
         auto;
 
     gap:18px;
@@ -399,7 +397,17 @@
 
     backdrop-filter:blur(18px);
 
-    color:var(--heading);
+    color:#FFFFFF;
+
+    color-scheme:dark;
+
+}
+
+.users-filter select option{
+
+    background:#1E293B;
+
+    color:#FFFFFF;
 
 }
 

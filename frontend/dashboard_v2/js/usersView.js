@@ -198,38 +198,10 @@ export function loadUsers() {
 
             </div>
 
-            <select id="deptFilter">
-
-                <option value="">
-                    All Departments
-                </option>
-
-            </select>
-
             <select id="roleFilter">
 
                 <option value="">
                     All Roles
-                </option>
-
-            </select>
-
-            <select id="sortUsers">
-
-                <option value="">
-                    Sort By
-                </option>
-
-                <option value="name">
-                    Name
-                </option>
-
-                <option value="department">
-                    Department
-                </option>
-
-                <option value="role">
-                    Role
                 </option>
 
             </select>
@@ -374,21 +346,7 @@ export function initializeUsers() {
         );
 
     document
-        .getElementById("deptFilter")
-        ?.addEventListener(
-            "change",
-            filterUsers
-        );
-
-    document
         .getElementById("roleFilter")
-        ?.addEventListener(
-            "change",
-            filterUsers
-        );
-
-    document
-        .getElementById("sortUsers")
         ?.addEventListener(
             "change",
             filterUsers
@@ -412,10 +370,8 @@ authenticatedFetch('/api/users')
 .then(data=>{
 usersCache=data;
 
-let depts=[...new Set(data.map(x=>x.department))];
 let roles=[...new Set(data.map(x=>x.role))];
 
-deptFilter.innerHTML='<option value="">All Departments</option>'+depts.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');
 roleFilter.innerHTML='<option value="">All Roles</option>'+roles.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');
 
 displayUsers(data);
@@ -550,11 +506,8 @@ function renderUserSummary() {
     const admins =
         usersCache.filter(user => user.role === "Administrator").length;
 
-    const bmes =
+    const donors =
         usersCache.filter(user => user.role === "Donor").length;
-
-    const users =
-        usersCache.filter(user => user.active).length;
 
     container.innerHTML = `
 
@@ -576,17 +529,9 @@ function renderUserSummary() {
 
         <div class="summary-row">
 
-            <span>NSS Volunteer</span>
+            <span>Donors</span>
 
-            <strong>${bmes}</strong>
-
-        </div>
-
-        <div class="summary-row">
-
-            <span>Users</span>
-
-            <strong>${users}</strong>
+            <strong>${donors}</strong>
 
         </div>
 
@@ -637,16 +582,15 @@ function renderRecentUsers() {
 
 function filterUsers(){
 
-let text=userSearch.value.toLowerCase();
+const searchInput = document.getElementById("userSearch");
+const roleSelect = document.getElementById("roleFilter");
+const text = searchInput?.value.toLowerCase() || "";
+const role = roleSelect?.value || "";
 
 let result=usersCache.filter(u=>
 u.full_name.toLowerCase().includes(text) &&
-(!deptFilter.value || u.department==deptFilter.value) &&
-(!roleFilter.value || u.role==roleFilter.value)
+(!role || u.role===role)
 );
-
-if(sortUsers.value)
-result.sort((a,b)=>a[sortUsers.value].localeCompare(b[sortUsers.value]));
 
 displayUsers(result);
 
