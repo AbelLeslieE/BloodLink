@@ -40,6 +40,23 @@ def create_access_token(subject: str, auth_version: int) -> str:
     )
 
 
+def create_password_reset_token(subject: str, auth_version: int) -> str:
+    """Create a short-lived, single-use-after-reset password recovery token."""
+    settings = get_settings()
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=30)
+    payload = {
+        "sub": subject,
+        "ver": auth_version,
+        "purpose": "password-reset",
+        "exp": expires_at,
+    }
+    return jwt.encode(
+        payload,
+        settings.secret_key,
+        algorithm=settings.jwt_algorithm,
+    )
+
+
 def get_token_subject(token: str) -> str:
     """Decode a token and return its subject or raise a JWT validation error."""
     settings = get_settings()
@@ -66,3 +83,23 @@ def get_token_auth_version(token: str) -> int:
     if not isinstance(auth_version, int) or auth_version < 0:
         raise JWTError("Token session version is missing.")
     return auth_version
+
+
+def get_password_reset_data(token: str) -> tuple[str, int]:
+    """Validate a password-reset JWT and return its account identity and version."""
+    settings = get_settings()
+    payload = jwt.decode(
+        token,
+        settings.secret_key,
+        algorithms=[settings.jwt_algorithm],
+    )
+    if payload.get("purpose") != "password-reset":
+        raise JWTError("Token is not a password reset token.")
+
+    subject = payload.get("sub")
+    auth_version = payload.get("ver")
+    if not isinstance(subject, str) or not subject:
+        raise JWTError("Password reset token subject is missing.")
+    if not isinstance(auth_version, int) or auth_version < 0:
+        raise JWTError("Password reset token version is missing.")
+    return subject, auth_version

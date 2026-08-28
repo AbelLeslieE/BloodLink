@@ -16,6 +16,7 @@ from backend.database.database import (
     verify_database_connection,
 )
 from backend.routers.auth import router as auth_router
+from backend.routers.password_reset import router as password_reset_router
 from backend.routers.blood_requests import router as blood_requests_router
 from backend.routers.donors import router as donors_router
 logger = logging.getLogger(__name__)
@@ -92,6 +93,7 @@ app = FastAPI(
 # ==========================================================
 
 app.include_router(auth_router)
+app.include_router(password_reset_router)
 app.include_router(users_router)
 app.include_router(donor_registration_router)
 app.include_router(donor_router)
@@ -148,6 +150,13 @@ async def root():
 async def login_page():
     return FileResponse(
         FRONTEND_DIR / "dashboard_v2" / "pages" / "login.html"
+    )
+
+
+@app.get("/reset-password", include_in_schema=False)
+async def reset_password_page():
+    return FileResponse(
+        FRONTEND_DIR / "dashboard_v2" / "pages" / "reset_password.html"
     )
 
 @app.get("/dashboard", include_in_schema=False)
