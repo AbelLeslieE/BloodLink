@@ -38,7 +38,7 @@ function renderSettings() {
             <div class="header-image">
 
                 <img
-                    src="/static/dashboard_v2/assets/settings/settings-banner.png"
+                    src="/static/assets/settings.png"
                     alt="Settings Banner">
 
             </div>
@@ -85,7 +85,7 @@ function renderSettings() {
         <img
             id="profilePreview"
             class="profile-image"
-            src="/static/dashboard_v2/assets/settings/profile.png"
+            src="/static/assets/user.png"
             alt="Profile Picture">
 
         <button
