@@ -66,6 +66,19 @@ def upgrade() -> None:
 
     # The old prototype used the same table name with incompatible columns.
     if "notifications" in inspector.get_table_names() and "title" not in _columns("notifications"):
+        # PostgreSQL constraint indexes share the schema namespace.  Renaming
+        # the legacy table alone leaves its ``pk_notifications`` index in
+        # place, which prevents the replacement table from using the naming
+        # convention's primary-key name.  SQLite does not expose named
+        # primary-key constraints in the same way, so keep this PostgreSQL-
+        # specific operation narrowly scoped.
+        if op.get_bind().dialect.name == "postgresql":
+            legacy_primary_key = inspector.get_pk_constraint("notifications").get("name")
+            if legacy_primary_key == "pk_notifications":
+                op.execute(
+                    'ALTER TABLE notifications RENAME CONSTRAINT "pk_notifications" '
+                    'TO "pk_legacy_notifications"'
+                )
         # SQLite index names are global. Remove the old conflicting index
         # before preserving the legacy table under a different name.
         old_indexes = {item["name"] for item in inspector.get_indexes("notifications")}
