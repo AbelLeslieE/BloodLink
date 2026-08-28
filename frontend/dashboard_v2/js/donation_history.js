@@ -22,11 +22,15 @@ export function loadDonationHistory() {
             <button id="btnFilter" class="btn-primary"><i class="fa-solid fa-filter"></i>Filter</button><button id="btnReset" class="btn-secondary">Reset</button>
         </section>
         <section class="dh-layout">
-            <div class="dh-main"><div class="glass-card"><div class="section-title"><h2>Donation Records</h2></div><div class="dh-table-wrapper"><table class="dh-table"><thead><tr><th>Donation ID</th><th>Donor Name</th><th>Blood Group</th><th>Donation Date</th><th>Points</th><th>Hospital</th><th>Status</th></tr></thead><tbody id="donationHistoryTable"></tbody></table></div><div class="dh-pagination"><div id="dhRecordCount" class="dh-record-count">Showing 0 records</div></div></div></div>
+            <div class="dh-content-stack">
+                <div class="dh-main"><div class="glass-card"><div class="section-title"><h2>Donation Records</h2></div><div class="dh-table-wrapper"><table class="dh-table"><thead><tr><th>Donation ID</th><th>Donor Name</th><th>Blood Group</th><th>Donation Date</th><th>Points</th><th>Hospital</th><th>Status</th></tr></thead><tbody id="donationHistoryTable"></tbody></table></div><div class="dh-pagination"><div id="dhRecordCount" class="dh-record-count">Showing 0 records</div></div></div></div>
+                <section class="dh-bottom-panels" aria-label="Donation history actions">
+                    <div class="glass-card"><div class="sidebar-title"><h3>Recent Donors</h3></div><div id="recentDonors"></div></div>
+                    <div class="glass-card export-card"><h3><i class="fa-solid fa-download"></i>Export Records</h3><p>Download the donation records that match the active filters.</p><div class="export-buttons"><button id="exportExcel" class="btn-success"><i class="fa-solid fa-file-excel"></i>Export Excel</button><button id="exportPdf" class="btn-danger"><i class="fa-solid fa-file-pdf"></i>Export PDF</button></div></div>
+                </section>
+            </div>
             <aside class="dh-sidebar">
                 <div class="glass-card"><div class="sidebar-title"><h3>Donation Summary</h3><select id="dhSummaryPeriod" aria-label="Donation history period"><option value="">All records</option><option value="current_year">This year</option></select></div><div id="donationSummary"></div></div>
-                <div class="glass-card"><div class="sidebar-title"><h3>Recent Donors</h3></div><div id="recentDonors"></div></div>
-                <div class="glass-card export-card"><h3><i class="fa-solid fa-download"></i>Export Records</h3><p>Download the donation records that match the active filters.</p><div class="export-buttons"><button id="exportExcel" class="btn-success"><i class="fa-solid fa-file-excel"></i>Export Excel</button><button id="exportPdf" class="btn-danger"><i class="fa-solid fa-file-pdf"></i>Export PDF</button></div></div>
             </aside>
         </section>
     </section>`;
