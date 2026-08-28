@@ -2789,6 +2789,181 @@ html{
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================
+   COMPATIBLE DONORS — CONTENT-SAFE PANEL
+   Keep the compact donor column readable at every width.  The
+   original header and footer used fixed minimum widths, which made
+   their labels and actions overflow in the narrow right-hand column.
+========================================================== */
+
+.find-match-page .right-column {
+    min-width: 0;
+    container-type: inline-size;
+    container-name: compatible-donors;
+}
+
+.find-match-page .right-column > .section-card {
+    gap: 0;
+    overflow: hidden;
+}
+
+.find-match-page .right-column .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+}
+
+.find-match-page .right-column .section-header h2,
+.find-match-page .right-column .section-actions,
+.find-match-page .right-column .donor-search-input {
+    min-width: 0;
+    width: 100%;
+}
+
+.find-match-page .right-column .section-header h2 {
+    flex: 0 0 auto;
+    overflow-wrap: anywhere;
+}
+
+.find-match-page .right-column .section-actions {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.find-match-page .right-column .select-all-wrapper {
+    width: fit-content;
+    max-width: 100%;
+}
+
+.find-match-page .right-column .select-all-wrapper span {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.find-match-page .right-column .donor-panel {
+    min-width: 0;
+}
+
+.find-match-page .right-column .donor-list {
+    min-width: 0;
+    min-height: 172px;
+    max-height: min(48dvh, 480px);
+    padding-right: 0;
+}
+
+.find-match-page .right-column .donor-card {
+    min-width: 0;
+    padding: 16px;
+    gap: 16px;
+    border-color: rgba(147, 197, 253, 0.2);
+    background: linear-gradient(
+        145deg,
+        rgba(20, 54, 91, 0.82),
+        rgba(8, 29, 53, 0.88)
+    );
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.find-match-page .right-column .donor-card.selected {
+    border-color: rgba(74, 222, 128, 0.82);
+    background: linear-gradient(
+        145deg,
+        rgba(18, 83, 69, 0.72),
+        rgba(7, 42, 48, 0.88)
+    );
+}
+
+.find-match-page .right-column .donor-header,
+.find-match-page .right-column .info-item,
+.find-match-page .right-column .compatibility-section {
+    min-width: 0;
+}
+
+.find-match-page .right-column .donor-header h3,
+.find-match-page .right-column .info-item strong,
+.find-match-page .right-column .compatibility-header {
+    color: #f7fbff;
+}
+
+.find-match-page .right-column .donor-header h3,
+.find-match-page .right-column .donor-header p,
+.find-match-page .right-column .info-item strong,
+.find-match-page .right-column .compatibility-header {
+    overflow-wrap: anywhere;
+}
+
+.find-match-page .right-column .donor-header p,
+.find-match-page .right-column .info-label {
+    color: #b7c9df;
+}
+
+.find-match-page .right-column .donor-information {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.find-match-page .right-column .donor-footer {
+    justify-content: stretch;
+}
+
+.find-match-page .right-column .select-donor-btn {
+    width: 100%;
+    min-width: 0;
+}
+
+.find-match-page .right-column .donor-panel-footer {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    min-width: 0;
+    gap: 12px;
+    padding: 14px;
+}
+
+.find-match-page .right-column .selected-info {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.find-match-page .right-column .panel-actions {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.find-match-page .right-column .panel-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    padding: 10px 12px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.find-match-page .right-column .donor-list > .empty-state {
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+    line-height: 1.55;
+}
+
+@container compatible-donors (max-width: 360px) {
+    .panel-actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .donor-information {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
 /* ==========================================================
    END OF FILE
 ========================================================== */
