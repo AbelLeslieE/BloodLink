@@ -16,7 +16,8 @@ from backend.database.schemas import DonorCreate
 # EXPECTED EXCEL HEADERS
 # ==========================================================
 
-EXPECTED_HEADERS = {
+HEADER_ALIASES = {
+    # BloodLink's original import template.
     "NAME": "full_name",
     "PHONE NUMBER": "phone",
     "CLASS": "class_department",
@@ -24,6 +25,21 @@ EXPECTED_HEADERS = {
     "EMAIL-ID": "email",
     "GENDER": "gender",
     "AGE": "age",
+
+    # Columns produced by the BloodLink donor export.
+    "FULL NAME": "full_name",
+    "PHONE": "phone",
+    "BLOOD GROUP": "blood_group",
+    "EMAIL": "email",
+    "EMAIL ID": "email",
+    "DEPARTMENT": "class_department",
+    "CLASS / DEPARTMENT": "class_department",
+}
+
+REQUIRED_IMPORT_FIELDS = {
+    "full_name",
+    "phone",
+    "blood_group",
 }
 
 # ==========================================================
@@ -109,32 +125,44 @@ def load_excel_workbook(
 
 def build_header_map(
     worksheet: Worksheet,
-) -> dict[str, int]:
+) -> tuple[dict[str, int], int]:
     """
-    Read the second row of the spreadsheet
-    and map header names to column indexes.
+    Locate the header row and map supported header names to columns.
+
+    Legacy import files place headers on row two, while files exported
+    from BloodLink place headers on row one. Supporting both means an
+    exported workbook can be imported again without manual edits.
     """
 
-    header_map: dict[str, int] = {}
-
-    HEADER_ROW = 2
-
-    for index, cell in enumerate(
-        worksheet[HEADER_ROW],
+    for row_number, row in enumerate(
+        worksheet.iter_rows(
+            min_row=1,
+            max_row=min(10, worksheet.max_row),
+        ),
         start=1,
     ):
 
-        value = (
-            str(cell.value).strip().upper()
-            if cell.value
-            else ""
-        )
+        header_map: dict[str, int] = {}
 
-        if value:
+        for index, cell in enumerate(row, start=1):
 
-            header_map[value] = index
+            normalized_header = (
+                " ".join(str(cell.value).strip().upper().split())
+                if cell.value is not None
+                else ""
+            )
 
-    return header_map
+            field_name = HEADER_ALIASES.get(normalized_header)
+
+            if field_name:
+                header_map[field_name] = index
+
+        if REQUIRED_IMPORT_FIELDS.issubset(header_map):
+            return header_map, row_number
+
+    raise ValueError(
+        "Missing required headers: Full Name, Phone, and Blood Group."
+    )
 # ==========================================================
 # CELL HELPERS
 # ==========================================================
@@ -221,14 +249,14 @@ def parse_donor_row(
         get_cell_value(
             row,
             header_map,
-            "BLOODGROUP",
+            "blood_group",
         )
     )
 
     age = get_cell_value(
         row,
         header_map,
-        "AGE",
+        "age",
     )
 
     try:
@@ -241,13 +269,13 @@ def parse_donor_row(
         "full_name": get_cell_value(
             row,
             header_map,
-            "NAME",
+            "full_name",
         ),
 
         "phone": get_cell_value(
             row,
             header_map,
-            "PHONE NUMBER",
+            "phone",
         ),
 
         "blood_group": blood_group,
@@ -255,19 +283,19 @@ def parse_donor_row(
         "class_department": get_cell_value(
             row,
             header_map,
-            "CLASS",
+            "class_department",
         ),
 
         "email": get_cell_value(
             row,
             header_map,
-            "EMAIL-ID",
+            "email",
         ),
 
         "gender": get_cell_value(
             row,
             header_map,
-            "GENDER",
+            "gender",
         ),
 
         "age": parsed_age,
@@ -290,19 +318,19 @@ def import_donors_from_excel(
 
     worksheet = load_excel_workbook(file_bytes)
 
-    header_map = build_header_map(
+    header_map, header_row = build_header_map(
         worksheet
     )
 
     summary = ImportSummary()
 
     # ------------------------------------------------------
-    # Excel data starts from row 3
+    # Data starts immediately after the detected header row.
     # ------------------------------------------------------
 
     for excel_row_number, row in enumerate(
-        worksheet.iter_rows(min_row=3),
-        start=3,
+        worksheet.iter_rows(min_row=header_row + 1),
+        start=header_row + 1,
     ):
 
         # ----------------------------------------------
