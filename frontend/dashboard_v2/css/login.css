@@ -313,7 +313,9 @@ body{
    FORM
 ========================================================== */
 
-#loginForm{
+#loginForm,
+#passwordResetRequestForm,
+#passwordResetConfirmForm{
 
     display:flex;
 
@@ -687,5 +689,42 @@ label{
     .subtitle{
         font-size:15px;
     }
+
+}
+
+.forgot-password-link,
+.back-to-login{
+
+    margin-top:14px;
+
+    text-align:right;
+
+    font-size:14px;
+
+}
+
+.forgot-password-link a,
+.back-to-login a{
+
+    color:var(--primary-dark);
+
+    font-weight:700;
+
+    text-decoration:none;
+
+}
+
+.forgot-password-link a:hover,
+.back-to-login a:hover{
+
+    text-decoration:underline;
+
+}
+
+.back-to-login{
+
+    margin-top:22px;
+
+    text-align:center;
 
 }
