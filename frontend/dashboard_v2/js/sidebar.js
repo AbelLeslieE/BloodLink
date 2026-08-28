@@ -492,6 +492,40 @@ function renderSidebarNavigation() {
     });
 
 
+    /*
+       Keep logout with the other account actions instead of
+       separating it in the fixed profile footer. The same button
+       instance is moved, so its existing logout listener is kept.
+    */
+
+    const accountGroup = Array.from(
+        sidebarNav.querySelectorAll(
+            ".nav-group"
+        )
+    ).find((group) =>
+        group.querySelector(".nav-group-title")?.textContent === "ACCOUNT"
+    );
+
+
+    if (logoutButton && accountGroup) {
+
+        logoutButton.classList.add(
+            "nav-item",
+            "logout-nav-item"
+        );
+
+        logoutButton.setAttribute(
+            "aria-label",
+            "Log out"
+        );
+
+        accountGroup.appendChild(
+            logoutButton
+        );
+
+    }
+
+
     refreshLucideIcons();
 }
 
