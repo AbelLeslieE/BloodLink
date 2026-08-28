@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.auth.dependencies import require_administrator, require_authentication, require_donor
-from backend.config.rewards import POINTS_PER_CONFIRMED_DONATION, badge_for
+from backend.config.rewards import badge_for
 from backend.database.database import get_db
+from backend.database import crud
 from backend.database.donor_response import DonorResponse
 from backend.database.models import BloodRequest, DonationCertificate, DonationHistory, Donor, User
 from backend.database.notification import Notification
@@ -93,13 +94,27 @@ def _sync_portal_response_to_notifications(
         recipient.responded_at = responded_at
 
     db.flush()
+    recipient_donor_ids = set(db.scalars(
+        select(NotificationRecipient.donor_id)
+        .join(Notification)
+        .where(Notification.blood_request_id == request.id)
+    ).all())
+    portal_only_responses = list(db.scalars(
+        select(DonorResponse).where(
+            DonorResponse.blood_request_id == request.id,
+            ~DonorResponse.donor_id.in_(recipient_donor_ids) if recipient_donor_ids else True,
+        )
+    ).all())
+    portal_accepted = sum(item.response.upper() in {"YES", "ACCEPTED"} for item in portal_only_responses)
+    portal_declined = sum(item.response.upper() in {"NO", "DECLINED"} for item in portal_only_responses)
+
     for campaign in campaigns:
         campaign_recipients = list(db.scalars(select(NotificationRecipient).where(
             NotificationRecipient.notification_id == campaign.id
         )).all())
         campaign.total_sent = sum(item.status != "DELIVERY_FAILED" for item in campaign_recipients)
-        campaign.accepted_count = sum(item.status == "ACCEPTED" for item in campaign_recipients)
-        campaign.declined_count = sum(item.status == "DECLINED" for item in campaign_recipients)
+        campaign.accepted_count = sum(item.status == "ACCEPTED" for item in campaign_recipients) + portal_accepted
+        campaign.declined_count = sum(item.status == "DECLINED" for item in campaign_recipients) + portal_declined
         campaign.pending_count = sum(item.status == "PENDING" for item in campaign_recipients)
 
     if recipient_status == "ACCEPTED" and request.status == "Pending":
@@ -302,37 +317,30 @@ def confirm_donation(
     response = db.scalar(select(DonorResponse).where(DonorResponse.donor_id == donor_id, DonorResponse.blood_request_id == request_id))
     if response is None or response.response.upper() not in {"YES", "ACCEPTED"}:
         raise HTTPException(status_code=409, detail="Only donors who responded Yes can be confirmed.")
-    existing = db.scalar(select(DonationHistory).where(DonationHistory.donor_id == donor_id, DonationHistory.blood_request_id == request_id))
-    if existing is not None:
-        return {"success": True, "already_confirmed": True, "points_awarded": existing.points_awarded,
-                "total_points": donor.total_points}
-    now = datetime.now(timezone.utc)
-    donation = DonationHistory(donor_id=donor_id, blood_request_id=request_id, hospital_name=request.hospital_name,
-                               donation_date=date.today(), recorded_by=administrator.id,
-                               points_awarded=POINTS_PER_CONFIRMED_DONATION, status="Points Awarded", awarded_at=now)
-    donor.total_points += POINTS_PER_CONFIRMED_DONATION
-    donor.donation_count += 1
-    linked_users = db.scalars(select(User).where(or_(User.donor_id == donor_id, func.lower(User.email) == func.lower(donor.email)))).all()
-    for account in linked_users:
-        account.total_points += POINTS_PER_CONFIRMED_DONATION
-        account.donation_count += 1
-    db.add(donation)
     try:
-        db.flush()
-        ensure_certificate(db, donation)
-        db.commit()
+        donation, already_confirmed = crud.confirm_donation_for_request(
+            database_session=db,
+            blood_request=request,
+            donor=donor,
+            recorded_by=administrator.id,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
     except IntegrityError:
-        # The database unique constraint is the final guard when two admins
-        # confirm the same donation concurrently.
+        # A competing confirmation may have created the unique donation row.
+        # Return the final record rather than allowing a double reward.
         db.rollback()
-        existing = db.scalar(select(DonationHistory).where(
+        donation = db.scalar(select(DonationHistory).where(
             DonationHistory.donor_id == donor_id,
             DonationHistory.blood_request_id == request_id,
         ))
-        if existing is None:
+        if donation is None:
             raise
-        return {"success": True, "already_confirmed": True,
-                "points_awarded": existing.points_awarded,
-                "total_points": donor.total_points}
-    return {"success": True, "already_confirmed": False, "points_awarded": POINTS_PER_CONFIRMED_DONATION,
-            "total_points": donor.total_points, "badge": badge_for(donor.total_points, donor.donation_count)}
+        already_confirmed = True
+    return {
+        "success": True,
+        "already_confirmed": already_confirmed,
+        "points_awarded": donation.points_awarded,
+        "total_points": donor.total_points,
+        "badge": badge_for(donor.total_points, donor.donation_count),
+    }

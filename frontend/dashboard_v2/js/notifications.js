@@ -2211,17 +2211,30 @@ function renderRecipientTable() {
         `;
 
         row.querySelector(".confirm-donation-btn")?.addEventListener("click", async () => {
+            const button = row.querySelector(".confirm-donation-btn");
+            const originalLabel = button?.textContent;
+            if (button) {
+                button.disabled = true;
+                button.textContent = "Confirming...";
+            }
             const response = await authenticatedFetch(
                 `/api/admin/donations/requests/${selectedNotification.request.id}/donors/${recipient.donorId}/confirm`,
                 { method: "POST" },
             );
             if (!response || !response.ok) {
-                alert("Unable to confirm the donation.");
+                const error = response
+                    ? await response.json().catch(() => ({}))
+                    : {};
+                alert(error?.detail || "Unable to confirm the donation.");
+                if (button?.isConnected) {
+                    button.disabled = false;
+                    button.textContent = originalLabel;
+                }
                 return;
             }
-            recipient.donationConfirmed = true;
-            recipient.pointsAwarded = (await response.json()).points_awarded;
-            renderRecipientTable();
+            const result = await response.json();
+            alert(`${recipient.donor} was confirmed and received ${result.points_awarded} reward points.`);
+            await loadNotificationsFromAPI({ selectedNotificationId: selectedNotification.id });
         });
         tableBody.appendChild(row);
 
