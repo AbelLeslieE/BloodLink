@@ -60,7 +60,7 @@ document.querySelectorAll("[data-password-toggle]").forEach((toggle) => {
     });
 });
 
-document.getElementById("resetEmail").addEventListener("input", (event) => {
+document.getElementById("resetUsername").addEventListener("input", (event) => {
     setInvalid(event.target, false);
     requestMessage.textContent = "";
 });
@@ -77,18 +77,18 @@ setResetMode();
 requestForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const email = document.getElementById("resetEmail");
-    const cleanEmail = email.value.trim();
+    const username = document.getElementById("resetUsername");
+    const cleanUsername = username.value.trim();
     requestMessage.textContent = "";
 
-    if (!cleanEmail || !email.validity.valid) {
-        setInvalid(email, true);
+    if (!cleanUsername || cleanUsername.length < 3 || /\s/.test(cleanUsername)) {
+        setInvalid(username, true);
         showMessage(
             requestMessage,
-            "Enter a valid email address, for example name@example.com.",
+            "Enter your username using at least 3 characters and no spaces.",
             true
         );
-        email.focus();
+        username.focus();
         return;
     }
 
@@ -100,7 +100,7 @@ requestForm.addEventListener("submit", async (event) => {
         const response = await fetch("/api/auth/password-reset/request", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: cleanEmail }),
+            body: JSON.stringify({ username: cleanUsername }),
         });
         const data = await response.json().catch(() => ({}));
         showMessage(

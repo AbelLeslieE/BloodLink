@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class SchemaBase(BaseModel):
@@ -559,13 +559,15 @@ class BloodRequestCompleteRequest(SchemaBase):
     Request body used when completing a blood request.
 
     The backend will:
-    - validate the donor
+    - validate a registered donor or external donor name
     - create the donation history record
-    - update the donor statistics
+    - update registered-donor statistics when applicable
     - mark the request as fulfilled
     """
 
-    donor_id: int = Field(gt=0)
+    donor_id: int | None = Field(default=None, gt=0)
+
+    external_donor_name: str | None = Field(default=None, max_length=200)
 
     donation_type: str = Field(
         default="Voluntary",
@@ -574,6 +576,16 @@ class BloodRequestCompleteRequest(SchemaBase):
     )
 
     remarks: str | None = None
+
+    @model_validator(mode="after")
+    def validate_donation_source(self) -> "BloodRequestCompleteRequest":
+        external_name = " ".join((self.external_donor_name or "").split())
+        if self.donor_id is None and not external_name:
+            raise ValueError("Select a registered donor or enter an external donor name.")
+        if self.donor_id is not None and external_name:
+            raise ValueError("Choose either a registered donor or an external donor, not both.")
+        self.external_donor_name = external_name or None
+        return self
 # ==========================================================
 # BLOOD REQUEST RESPONSE
 # ==========================================================

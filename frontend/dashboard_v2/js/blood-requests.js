@@ -1423,7 +1423,7 @@ async function openCompleteDonationModal(request) {
                 <div class="form-field">
 
                     <label class="complete-donation-field-label">Donation source</label>
-                    <p class="complete-donation-field-hint">Choose the registered donor who completed this request.</p>
+                    <p class="complete-donation-field-hint">Choose a registered BloodLink donor or record an external donor for this request.</p>
 
                     <div class="donation-source-options">
 
@@ -1441,17 +1441,16 @@ async function openCompleteDonationModal(request) {
 
                         </label>
 
-                        <label class="donation-source-option is-disabled" aria-disabled="true">
+                        <label class="donation-source-option">
 
                             <input
                                 type="radio"
                                 name="donationSource"
                                 value="external"
-                                disabled
                             >
 
                             <span class="donation-source-option-icon"><i data-lucide="user-round" aria-hidden="true"></i></span>
-                            <span><strong>External donor</strong><small>Available in a future update</small></span>
+                            <span><strong>External donor</strong><small>Record a donor who is not registered in BloodLink</small></span>
 
                         </label>
 
@@ -1493,7 +1492,7 @@ async function openCompleteDonationModal(request) {
                     style="display:none;"
                 >
 
-                    <label>
+                    <label for="externalDonorName">
 
                         External Donor Name
 
@@ -1715,6 +1714,7 @@ async function openCompleteDonationModal(request) {
                         externalContainer.style.display = "none";
 
                         externalDonorInput.value = "";
+                        externalDonorInput.required = false;
 
                     }
 
@@ -1723,6 +1723,8 @@ async function openCompleteDonationModal(request) {
                         registeredContainer.style.display = "none";
 
                         externalContainer.style.display = "";
+                        externalDonorInput.required = true;
+                        externalDonorInput.focus();
 
                     }
 
@@ -1915,17 +1917,12 @@ async function openCompleteDonationModal(request) {
 
                 if (!externalDonorInput.value.trim()) {
 
-                    alert(
-                        "Please enter the external donor name."
-                    );
+                    showCompletionError("Please enter the external donor name.");
+                    externalDonorInput.focus();
 
                     return;
 
                 }
-
-                showCompletionError("External donor recording is not available yet. Select a registered donor instead.");
-
-                return;
 
             }
 
@@ -1956,18 +1953,19 @@ async function openCompleteDonationModal(request) {
 
                             },
 
-                            body: JSON.stringify({
-
-                                donor_id:
-                                    selectedDonor.id,
-
-                                donation_type:
-                                    "Voluntary",
-
-                                remarks:
-                                    remarksInput.value.trim() || null
-
-                            })
+                            body: JSON.stringify(
+                                donationSource === "registered"
+                                    ? {
+                                        donor_id: selectedDonor.id,
+                                        donation_type: "Voluntary",
+                                        remarks: remarksInput.value.trim() || null
+                                    }
+                                    : {
+                                        external_donor_name: externalDonorInput.value.trim(),
+                                        donation_type: "Voluntary",
+                                        remarks: remarksInput.value.trim() || null
+                                    }
+                            )
 
                         }
                     );

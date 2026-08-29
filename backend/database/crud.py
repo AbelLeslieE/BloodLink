@@ -978,6 +978,52 @@ def complete_blood_request(
     return blood_request
 
 
+def complete_blood_request_with_external_donor(
+    database_session: Session,
+    blood_request: BloodRequest,
+    external_donor_name: str,
+    recorded_by: int,
+    donation_type: str = "Voluntary",
+    remarks: str | None = None,
+) -> BloodRequest:
+    """Record an externally fulfilled request without creating a donor account.
+
+    External donors are captured for operational history only. They must not
+    alter registered-donor eligibility, points, certificates, or portal data.
+    """
+    clean_name = " ".join(external_donor_name.split())
+    if len(clean_name) < 2:
+        raise ValueError("External donor name must contain at least 2 characters.")
+    if blood_request.status in {"Fulfilled", "Closed", "Cancelled"}:
+        raise ValueError("This blood request is no longer open for donation confirmation.")
+
+    now = datetime.now(timezone.utc)
+    donation = DonationHistory(
+        donor_id=None,
+        external_donor_name=clean_name,
+        blood_request_id=blood_request.id,
+        hospital_name=blood_request.hospital_name,
+        donation_date=now.date(),
+        units=blood_request.units_required,
+        donation_type=donation_type.strip() or "Voluntary",
+        remarks=remarks,
+        recorded_by=recorded_by,
+        points_awarded=0,
+        status="Donation Confirmed",
+    )
+    database_session.add(donation)
+    _close_completed_request(database_session, blood_request)
+
+    try:
+        database_session.commit()
+        database_session.refresh(blood_request)
+    except SQLAlchemyError:
+        database_session.rollback()
+        raise
+
+    return blood_request
+
+
 def confirm_donation_for_request(
     database_session: Session,
     blood_request: BloodRequest,
@@ -1225,7 +1271,7 @@ def get_donation_dashboard_summary(
         or 0
     )
 
-    total_donors = (
+    registered_donors = (
         database_session.query(
             func.count(
                 func.distinct(
@@ -1246,6 +1292,17 @@ def get_donation_dashboard_summary(
         .scalar()
         or 0
     )
+
+    external_donors = (
+        database_session.query(
+            func.count(func.distinct(DonationHistory.external_donor_name))
+        )
+        .filter(DonationHistory.external_donor_name.is_not(None))
+        .scalar()
+        or 0
+    )
+
+    total_donors = registered_donors + external_donors
 
     replacement = (
         database_session.query(

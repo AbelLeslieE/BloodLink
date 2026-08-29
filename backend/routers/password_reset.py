@@ -1,4 +1,4 @@
-"""Public, email-based password recovery for donor portal accounts."""
+"""Public, username-based password recovery for donor portal accounts."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from jose import JWTError
-from pydantic import BaseModel, EmailStr, Field, field_validator
-from sqlalchemy import select
+from pydantic import BaseModel, Field, field_validator
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from backend.auth.security import (
@@ -28,12 +28,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/auth/password-reset", tags=["password recovery"])
 
 GENERIC_REQUEST_MESSAGE = (
-    "If a donor account uses this email address, a password reset link has been sent."
+    "If a donor account uses this username, a password reset link has been sent."
 )
 
 
 class PasswordResetRequest(BaseModel):
-    email: EmailStr
+    username: str = Field(min_length=3, max_length=100)
+
+    @field_validator("username")
+    @classmethod
+    def normalise_username(cls, value: str) -> str:
+        clean_value = value.strip()
+        if len(clean_value) < 3:
+            raise ValueError("Username must contain at least 3 characters.")
+        if any(character.isspace() for character in clean_value):
+            raise ValueError("Username cannot contain spaces.")
+        return clean_value.lower()
 
 
 class PasswordResetConfirmation(BaseModel):
@@ -80,9 +90,14 @@ def request_password_reset(
     data: PasswordResetRequest,
     database_session: Annotated[Session, Depends(get_db)],
 ) -> dict[str, str]:
-    """Email a recovery link without exposing whether an account exists."""
-    email = str(data.email).strip().lower()
-    user = database_session.scalar(select(User).where(User.email == email))
+    """Email a recovery link to the address stored for a username.
+
+    The response is deliberately identical whether the username exists or not,
+    preventing the endpoint from being used to enumerate donor accounts.
+    """
+    user = database_session.scalar(
+        select(User).where(func.lower(User.username) == data.username)
+    )
 
     if user and user.active and _is_donor_account(user):
         settings = get_settings()

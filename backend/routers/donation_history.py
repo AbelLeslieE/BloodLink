@@ -14,12 +14,12 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
-from sqlalchemy import or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from backend.auth.dependencies import require_administrator
 from backend.database.database import get_db
-from backend.database.models import DonationHistory, Donor, User
+from backend.database.models import BloodRequest, DonationHistory, Donor, User
 
 
 router = APIRouter(prefix="/api/donation-history", tags=["donation history"])
@@ -37,8 +37,12 @@ def _filtered_donations(
     """Return confirmed donations matching the report filters."""
     statement = (
         select(DonationHistory)
-        .join(Donor, DonationHistory.donor_id == Donor.id)
-        .options(joinedload(DonationHistory.donor))
+        .outerjoin(Donor, DonationHistory.donor_id == Donor.id)
+        .join(BloodRequest, DonationHistory.blood_request_id == BloodRequest.id)
+        .options(
+            joinedload(DonationHistory.donor),
+            joinedload(DonationHistory.blood_request),
+        )
         .order_by(DonationHistory.donation_date.desc(), DonationHistory.id.desc())
     )
 
@@ -49,13 +53,22 @@ def _filtered_donations(
             Donor.phone.ilike(pattern),
             Donor.email.ilike(pattern),
             Donor.donor_code.ilike(pattern),
+            DonationHistory.external_donor_name.ilike(pattern),
         ]
         if term.isdigit():
             search_fields.append(DonationHistory.id == int(term))
         statement = statement.where(or_(*search_fields))
 
     if blood_group:
-        statement = statement.where(Donor.blood_group == blood_group)
+        statement = statement.where(
+            or_(
+                Donor.blood_group == blood_group,
+                and_(
+                    DonationHistory.external_donor_name.is_not(None),
+                    BloodRequest.blood_group == blood_group,
+                ),
+            )
+        )
     if donation_date:
         statement = statement.where(DonationHistory.donation_date == donation_date)
     if district:
@@ -72,14 +85,16 @@ def _filtered_donations(
 
 def _record(donation: DonationHistory) -> dict:
     donor = donation.donor
+    is_external = donor is None
     return {
         "id": donation.id,
         "reference": f"DON-{donation.donation_date:%Y}-{donation.id:04d}",
-        "donor_name": donor.full_name,
-        "donor_code": donor.donor_code,
-        "phone": donor.phone,
-        "blood_group": donor.blood_group,
-        "district": donor.district,
+        "donor_name": donor.full_name if donor else donation.external_donor_name or "External donor",
+        "donor_code": donor.donor_code if donor else "External",
+        "phone": donor.phone if donor else None,
+        "blood_group": donor.blood_group if donor else donation.blood_request.blood_group,
+        "district": donor.district if donor else "External",
+        "source": "external" if is_external else "registered",
         "hospital_name": donation.hospital_name,
         "donation_date": donation.donation_date.isoformat(),
         "points_awarded": donation.points_awarded,
@@ -90,7 +105,10 @@ def _record(donation: DonationHistory) -> dict:
 def _summary(donations: list[DonationHistory]) -> dict:
     total_donations = len(donations)
     total_points = sum(item.points_awarded for item in donations)
-    unique_donors = len({item.donor_id for item in donations})
+    unique_donors = len({
+        item.donor_id if item.donor_id is not None else f"external:{item.id}"
+        for item in donations
+    })
     return {
         "total_donations": total_donations,
         "total_donors": unique_donors,
@@ -103,8 +121,10 @@ def _summary(donations: list[DonationHistory]) -> dict:
 
 def _filters(database_session: Session) -> dict:
     blood_groups = database_session.scalars(
-        select(Donor.blood_group)
-        .join(DonationHistory, DonationHistory.donor_id == Donor.id)
+        select(func.coalesce(Donor.blood_group, BloodRequest.blood_group))
+        .select_from(DonationHistory)
+        .outerjoin(Donor, DonationHistory.donor_id == Donor.id)
+        .join(BloodRequest, DonationHistory.blood_request_id == BloodRequest.id)
         .distinct()
         .order_by(Donor.blood_group)
     ).all()

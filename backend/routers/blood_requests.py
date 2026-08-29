@@ -336,14 +336,30 @@ def complete_blood_request(
         )
 
     # ------------------------------------------------------
-    # Find donor
+    # Complete the request using either a registered donor or the supplied
+    # external donor name. The request schema ensures exactly one source.
     # ------------------------------------------------------
+
+    if request_data.external_donor_name:
+        try:
+            return crud.complete_blood_request_with_external_donor(
+                database_session=database_session,
+                blood_request=blood_request,
+                external_donor_name=request_data.external_donor_name,
+                recorded_by=administrator.id,
+                donation_type=request_data.donation_type,
+                remarks=request_data.remarks,
+            )
+        except ValueError as error:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(error),
+            ) from error
 
     donor = crud.get_donor_by_id(
         database_session,
         request_data.donor_id,
     )
-
     if donor is None:
 
         raise HTTPException(
