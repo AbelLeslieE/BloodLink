@@ -234,7 +234,7 @@ export function loadUsers() {
 
                 </div>
 
-                <div class="users-table-wrapper">
+                <div class="users-table-wrapper" tabindex="0" role="region" aria-label="User directory table. Scroll horizontally to view all columns.">
 
                     <table class="users-table">
 

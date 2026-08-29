@@ -551,10 +551,18 @@ class DonationHistory(Base):
     # RELATIONSHIPS
     # ======================================================
 
-    donor_id: Mapped[int] = mapped_column(
+    donor_id: Mapped[int | None] = mapped_column(
         ForeignKey("donors.id"),
         index=True,
-        nullable=False,
+        nullable=True,
+    )
+
+    # Present only when this request was fulfilled by someone who is not a
+    # registered BloodLink donor. External donors never receive account-based
+    # rewards, certificates, or donor-history entries.
+    external_donor_name: Mapped[str | None] = mapped_column(
+        String(200),
+        nullable=True,
     )
 
     blood_request_id: Mapped[int] = mapped_column(
@@ -626,7 +634,7 @@ class DonationHistory(Base):
     # RELATIONSHIPS
     # ======================================================
 
-    donor: Mapped["Donor"] = relationship(
+    donor: Mapped["Donor | None"] = relationship(
         back_populates="donation_history_entries"
     )
     blood_request: Mapped["BloodRequest"] = relationship(

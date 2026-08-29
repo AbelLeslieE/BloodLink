@@ -38,17 +38,17 @@ def get_donations(
 
                 "donation_id": f"DON-{donation.id:06d}",
 
-                "donor_id": donor.id,
+                "donor_id": donor.id if donor else None,
 
-                "donor_code": donor.donor_code,
+                "donor_code": donor.donor_code if donor else "External",
 
-                "donor_name": donor.full_name,
+                "donor_name": donor.full_name if donor else donation.external_donor_name or "External donor",
 
-                "phone": donor.phone,
+                "phone": donor.phone if donor else None,
 
-                "district": donor.district,
+                "district": donor.district if donor else "External",
 
-                "blood_group": donor.blood_group,
+                "blood_group": donor.blood_group if donor else donation.blood_request.blood_group,
 
                 "hospital_name": donation.blood_request.hospital_name,
 
@@ -103,8 +103,8 @@ def recent_donations(
 
         response.append(
             {
-                "name": donation.donor.full_name,
-                "blood_group": donation.donor.blood_group,
+                "name": donation.donor.full_name if donation.donor else donation.external_donor_name or "External donor",
+                "blood_group": donation.donor.blood_group if donation.donor else donation.blood_request.blood_group,
                 "date": donation.donation_date,
             }
         )
