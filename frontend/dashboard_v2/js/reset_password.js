@@ -3,6 +3,7 @@ const confirmForm = document.getElementById("passwordResetConfirmForm");
 const requestMessage = document.getElementById("resetRequestMessage");
 const confirmMessage = document.getElementById("resetConfirmMessage");
 const resetToken = new URLSearchParams(window.location.search).get("token");
+const isPasswordSetup = window.location.pathname === "/setup-password";
 const newPassword = document.getElementById("newPassword");
 const confirmPassword = document.getElementById("confirmPassword");
 
@@ -42,9 +43,14 @@ function setResetMode() {
     confirmForm.hidden = !hasToken;
 
     if (hasToken) {
-        document.getElementById("resetTitle").textContent = "Choose a new password";
+        document.getElementById("resetTitle").textContent = isPasswordSetup ? "Create your password" : "Choose a new password";
         document.getElementById("resetSubtitle").textContent =
-            "Use a strong password that you do not use elsewhere.";
+            isPasswordSetup
+                ? "Choose a strong password to complete your donor registration."
+                : "Use a strong password that you do not use elsewhere.";
+        confirmForm.querySelector("button[type=submit]").innerHTML = isPasswordSetup
+            ? '<i class="fa-solid fa-shield-heart"></i> Create password'
+            : '<i class="fa-solid fa-shield-heart"></i> Update password';
     }
 }
 
@@ -151,11 +157,16 @@ confirmForm.addEventListener("submit", async (event) => {
     submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating…';
 
     try {
-        const response = await fetch("/api/auth/password-reset/confirm", {
+        const response = await fetch(
+            isPasswordSetup
+                ? "/api/donor-registration/password-setup/confirm"
+                : "/api/auth/password-reset/confirm",
+            {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: resetToken, new_password: newPassword.value }),
-        });
+            }
+        );
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
@@ -167,10 +178,10 @@ confirmForm.addEventListener("submit", async (event) => {
             return;
         }
 
-        showMessage(confirmMessage, "Password updated. Taking you to sign in…");
+        showMessage(confirmMessage, isPasswordSetup ? "Password created. Taking you to sign in…" : "Password updated. Taking you to sign in…");
         confirmForm.reset();
         setTimeout(() => {
-            window.location.assign("/login?reset=success");
+            window.location.assign(isPasswordSetup ? "/login?registration=success" : "/login?reset=success");
         }, 1200);
     } catch {
         showMessage(
@@ -180,6 +191,8 @@ confirmForm.addEventListener("submit", async (event) => {
         );
     } finally {
         submitButton.disabled = false;
-        submitButton.innerHTML = '<i class="fa-solid fa-shield-heart"></i> Update password';
+        submitButton.innerHTML = isPasswordSetup
+            ? '<i class="fa-solid fa-shield-heart"></i> Create password'
+            : '<i class="fa-solid fa-shield-heart"></i> Update password';
     }
 });

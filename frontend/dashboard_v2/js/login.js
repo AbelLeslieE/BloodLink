@@ -15,6 +15,10 @@ if (new URLSearchParams(window.location.search).get("reset") === "success") {
     message.style.color = "#167950";
     message.textContent = "Password updated. Sign in with your new password.";
 }
+if (new URLSearchParams(window.location.search).get("registration") === "success") {
+    message.style.color = "#167950";
+    message.textContent = "Your password has been created. Sign in with your username and password.";
+}
 
 // ======================================================
 // PASSWORD VISIBILITY

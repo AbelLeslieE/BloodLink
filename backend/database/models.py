@@ -13,6 +13,8 @@ from backend.database.donor_response import DonorResponse
 from backend.database.database import Base
 from backend.database.notification import Notification
 from backend.database.notification_recipient import NotificationRecipient
+from backend.database.push_subscription import PushSubscription
+from backend.database.donor_profile import DonorProfile
 
 class User(Base):
     """BloodLink system user."""
@@ -107,6 +109,24 @@ class User(Base):
         Integer, default=0, server_default="0", nullable=False
     )
 
+    # Existing accounts default to ACTIVE. New QR registrations remain unable
+    # to sign in until their one-time email password setup is completed.
+    registration_status: Mapped[str] = mapped_column(
+        String(30), default="ACTIVE", server_default="ACTIVE", nullable=False
+    )
+    email_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    password_setup_token_hash: Mapped[str | None] = mapped_column(
+        String(128), nullable=True, unique=True
+    )
+    password_setup_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    password_setup_sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     blood_requests: Mapped[list["BloodRequest"]] = relationship(
         back_populates="created_by_user"
     )
@@ -118,6 +138,11 @@ class User(Base):
     donor: Mapped["Donor | None"] = relationship(
         foreign_keys=[donor_id],
         back_populates="user_account",
+    )
+
+    push_subscriptions: Mapped[list["PushSubscription"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
 
@@ -360,6 +385,12 @@ class Donor(Base):
         foreign_keys="User.donor_id",
         back_populates="donor",
         uselist=False,
+    )
+
+    profile: Mapped["DonorProfile | None"] = relationship(
+        back_populates="donor",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
 
 
@@ -637,6 +668,7 @@ class DonationHistory(Base):
     donor: Mapped["Donor | None"] = relationship(
         back_populates="donation_history_entries"
     )
+
     blood_request: Mapped["BloodRequest"] = relationship(
         back_populates="donation_history_entries"
     )

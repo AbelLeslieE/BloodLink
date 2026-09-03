@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BloodLink | Donor Dashboard</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#b31337">
+    <link rel="apple-touch-icon" href="/static/pwa/icon-192.png">
     <link rel="stylesheet" href="/static/dashboard_v2/css/donor_dashboard.css">
+    <link rel="stylesheet" href="/static/dashboard_v2/css/pwa.css">
 </head>
 <body>
     <main class="donor-shell">
@@ -13,7 +17,7 @@
                 <span class="brand-mark" aria-hidden="true">♥</span>
                 <span><strong>BloodLink</strong><small>Donor portal</small></span>
             </a>
-            <button id="logout" class="secondary">Log out <span aria-hidden="true">↗</span></button>
+            <div class="portal-actions"><button id="pwaInstall" class="secondary" hidden>Install BloodLink</button><button id="notificationToggle" class="secondary notification-toggle" type="button" hidden aria-describedby="notificationStatus">Enable notifications</button><span id="notificationStatus" class="notification-status" role="status" aria-live="polite">Checking notification availability…</span><button id="logout" class="secondary">Log out <span aria-hidden="true">↗</span></button></div>
         </header>
         <section class="welcome-card" aria-labelledby="welcome">
             <div class="welcome-copy">
@@ -39,5 +43,6 @@
         <section class="panel certificates-panel"><div class="section-heading"><div><p class="section-eyebrow">Records</p><h2>My certificates</h2><p>Your verified donation certificates are ready to download.</p></div><span class="certificate-icon" aria-hidden="true">⌑</span></div><div id="certificates" class="certificate-list"></div></section>
     </main>
     <script type="module" src="/static/dashboard_v2/js/donor_dashboard.js"></script>
+    <script src="/static/dashboard_v2/js/pwa.js"></script>
 </body>
 </html>

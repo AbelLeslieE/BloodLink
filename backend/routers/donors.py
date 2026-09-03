@@ -30,6 +30,7 @@ from openpyxl import load_workbook
 
 from backend.auth.dependencies import require_administrator
 from backend.database.models import DonationHistory, User
+from backend.database.donor_profile import DonorProfile
 
 # ==========================================================
 # ROUTER
@@ -360,6 +361,22 @@ async def import_donors(
 # ==========================================================
 # GET ONE DONOR
 # ==========================================================
+
+@router.get("/{donor_id}/profile")
+def get_donor_profile(
+    donor_id: int,
+    database_session: Session = Depends(get_db),
+    _: User = Depends(require_administrator),
+) -> dict:
+    """Return the structured status profile without changing legacy donor APIs."""
+    donor = crud.get_donor_by_id(database_session, donor_id)
+    if donor is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Donor not found.")
+    profile = donor.profile
+    if profile is None:
+        return {"donor_id": donor_id, "profile": None}
+    fields = [column.name for column in DonorProfile.__table__.columns if column.name not in {"id", "donor_id"}]
+    return {"donor_id": donor_id, "profile": {name: getattr(profile, name) for name in fields}}
 
 @router.get(
     "/{donor_id}",
