@@ -144,7 +144,7 @@ class RegistrationDetails(BaseModel):
                 require("institution_name", "school_class", "education_board")
                 if self.education_board == "Other": require("education_board_other")
             elif self.education_level == "College / University":
-                require("institution_name", "course_level", "course_name", "academic_department", "semester_or_year", "university")
+                require("institution_name", "course_level", "course_name", "semester_or_year", "university")
                 if self.course_level == "Other": require("course_level_other")
             elif self.education_level == "Other":
                 require("education_level_other", "institution_name")
