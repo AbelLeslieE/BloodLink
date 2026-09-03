@@ -52,6 +52,13 @@ class Settings:
     backend_url: str
     frontend_url: str
 
+    # Web Push. The private VAPID key is deliberately server-only. Leaving
+    # these unset disables push delivery without preventing the website from
+    # starting (useful for local development).
+    vapid_public_key: str
+    vapid_private_key: str
+    vapid_subject: str
+
 
 @dataclass(frozen=True)
 class DefaultVolunteerCredentials:
@@ -118,6 +125,10 @@ def get_settings() -> Settings:
         # Application URLs
         backend_url=_required_value("BACKEND_URL"),
         frontend_url=_required_value("FRONTEND_URL"),
+
+        vapid_public_key=os.getenv("VAPID_PUBLIC_KEY", "").strip(),
+        vapid_private_key=os.getenv("VAPID_PRIVATE_KEY", "").strip(),
+        vapid_subject=os.getenv("VAPID_SUBJECT", "").strip(),
     )
 def get_default_volunteer_credentials() -> DefaultVolunteerCredentials:
     """Load initial volunteer credentials."""

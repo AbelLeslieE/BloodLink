@@ -19,6 +19,7 @@ from backend.auth.dependencies import require_administrator
 from backend.database import crud
 from backend.database.database import get_db
 from backend.database.models import DonationHistory, SavedMatch, User
+from backend.services import push_notification_service
 from backend.database.schemas import (
     BloodRequestCompleteRequest,
     BloodRequestCreate,
@@ -99,11 +100,15 @@ def create_blood_request(
         request_data.priority,
     )
 
-    return crud.create_blood_request(
+    blood_request = crud.create_blood_request(
         database_session=database_session,
         request_data=request_data,
         created_by=current_user.id,
     )
+    # The request is committed before delivery begins. Push failures are logged
+    # and cannot make a real medical request disappear or be duplicated.
+    push_notification_service.notify_matching_donors(database_session, blood_request)
+    return blood_request
 
 
 # ==========================================================

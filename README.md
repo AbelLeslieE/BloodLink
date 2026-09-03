@@ -85,6 +85,56 @@ alembic upgrade head
 uvicorn backend.main:app --reload
 ```
 
+## PWA and secure push notifications
+
+BloodLink is served normally and as one installable PWA from the same Render
+deployment. Set these **Render server environment variables** to enable real
+browser push delivery; never put the private key in frontend files:
+
+```text
+VAPID_PUBLIC_KEY=<base64url public VAPID key>
+VAPID_PRIVATE_KEY=<private VAPID key>
+VAPID_SUBJECT=mailto:alerts@example.org
+```
+
+Generate one VAPID key pair securely, store it in Render's encrypted environment
+settings, and keep the same pair across redeployments. Apply `alembic upgrade
+head` during deployment. Donors enable notifications explicitly from their donor
+dashboard; subscriptions are authenticated and are removed when a push provider
+reports them invalid. New requests are created through `POST /api/blood-requests`
+and server-side push targeting uses the current donor blood group and availability,
+leaving a policy hook for structured district/city and emergency-priority targeting.
+
+## Donor registration email setup
+
+Public QR registration verifies personal and structured student/employment
+details first, then sends a one-time password-setup email. Configure these
+Render environment variables for this flow:
+
+```text
+RESEND_API_KEY=<Resend server API key>
+EMAIL_FROM=<verified sender address>
+BACKEND_URL=<public BloodLink HTTPS URL>
+```
+
+New registrations are inactive until their 30-minute, single-use setup token
+is redeemed. Existing users and administrator-created donor accounts remain
+active and continue to use their current passwords. Apply `alembic upgrade
+head` to add the pending-registration fields and `donor_profiles` table.
+
+### Render deployment commands
+
+This repository has no `render.yaml`, so keep the existing Render service and
+set its commands in the Render dashboard:
+
+```text
+Build Command: pip install -r requirements.txt
+Start Command: alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+```
+
+The start command applies all current migrations before the application starts,
+including Web Push subscriptions and pending donor registration profiles.
+
 The first administrator is created from `DEFAULT_VOLUNTEER_USERNAME` and
 `DEFAULT_VOLUNTEER_PASSWORD`; no default password is shipped in source code.
 
@@ -94,6 +144,6 @@ patient or bystander contact information.
 
 ## QR donor registration and certificates
 
-Administrators can open **Users** in the dashboard to display the donor-registration QR code or create a linked donor account themselves. The QR code opens `/donor-register`, where a donor supplies their name, phone, email, blood group, username, and password. Phone numbers and email addresses are checked across both donor and user records, so a registered donor cannot create a second account through formatting variations.
+Administrators can open **Users** in the dashboard to display the donor-registration QR code or create a linked donor account themselves. The QR code opens `/donor-register`, where a donor verifies their details, receives a one-time password-setup email, and then creates their password. Phone numbers and email addresses are checked across both donor and user records, so a registered donor cannot create a second account through formatting variations.
 
 After an administrator confirms a donation, BloodLink issues a single PDF certificate automatically. The donor can find it under **My certificates** in `/donor-dashboard` and download it directly to a mobile device. Set `BACKEND_URL` to the public URL reachable by donor phones before printing or sharing the QR code.

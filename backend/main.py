@@ -37,6 +37,7 @@ from backend.routers.donor_portal import admin_router as donation_admin_router
 from backend.routers.donor_portal import donor_router
 from backend.routers.donor_registration import router as donor_registration_router
 from backend.routers.donation_history import router as donation_history_router
+from backend.routers.push_notifications import router as push_notifications_router
 # ==========================================================
 # Paths
 # ==========================================================
@@ -112,6 +113,7 @@ app.include_router(email_router)
 app.include_router(
     notifications_router
 )
+app.include_router(push_notifications_router)
 
 app.include_router(
     donations_router,
@@ -132,6 +134,19 @@ app.mount(
     StaticFiles(directory=str(FRONTEND_DIR)),
     name="static",
 )
+
+
+# These files must be served at the origin root: a root-scoped service worker
+# may control both the normal site and the installed PWA. Revalidation headers
+# ensure Render deployments are discovered rather than held by an HTTP cache.
+@app.get("/manifest.webmanifest", include_in_schema=False)
+async def manifest() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "pwa" / "manifest.webmanifest", media_type="application/manifest+json", headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/sw.js", include_in_schema=False)
+async def service_worker() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "pwa" / "sw.js", media_type="application/javascript", headers={"Cache-Control": "no-cache", "Service-Worker-Allowed": "/"})
 
 # ==========================================================
 # Frontend Routes
@@ -158,6 +173,12 @@ async def reset_password_page():
     return FileResponse(
         FRONTEND_DIR / "dashboard_v2" / "pages" / "reset_password.html"
     )
+
+
+@app.get("/setup-password", include_in_schema=False)
+async def setup_password_page():
+    """Reuse the existing password page for first-time email setup."""
+    return FileResponse(FRONTEND_DIR / "dashboard_v2" / "pages" / "reset_password.html")
 
 @app.get("/dashboard", include_in_schema=False)
 async def dashboard():
