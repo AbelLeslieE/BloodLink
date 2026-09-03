@@ -7,7 +7,7 @@ let phase = "verify";
 let verifiedUsername = null;
 
 const fieldLabels = { full_name: "Full name", phone: "Phone number", email: "Email address", blood_group: "Blood group", current_status: "Current status", username: "Username" };
-const select = (name, label, options, required = true) => `<label>${label}${required ? " *" : ""}<select name="${name}" ${required ? "required" : ""}><option value="">Select</option>${options.map((option) => `<option>${option}</option>`).join("")}</select></label>`;
+const select = (name, label, options, required = true, selectedValue = "") => `<label>${label}${required ? " *" : ""}<select name="${name}" ${required ? "required" : ""}><option value="">Select</option>${options.map((option) => `<option value="${option}"${option === selectedValue ? " selected" : ""}>${option}</option>`).join("")}</select></label>`;
 const input = (name, label, { required = true, list = "", type = "text", hint = "" } = {}) => `<label>${label}${required ? " *" : ""}<input name="${name}" type="${type}" ${list ? `list="${list}"` : ""} ${required ? "required" : ""} maxlength="${type === "number" ? "4" : "255"}">${hint ? `<small class="field-hint">${hint}</small>` : ""}</label>`;
 const pair = (...fields) => `<div class="pair">${fields.join("")}</div>`;
 
@@ -22,9 +22,9 @@ function schoolFields() {
 function collegeFields() {
   return `<div class="conditional-card">${input("institution_name", "College / University name", { list: "institutions", hint: "Choose a listed institution or type one not listed." })}${pair(select("course_level", "Course level / qualification", ["Diploma", "B.Tech / B.E.", "B.Sc", "B.Com", "BBA", "BA", "BCA", "MBBS", "BDS", "Nursing", "M.Tech", "M.Sc", "MBA", "MA", "PhD", "Other"]), input("course_name", "Course / branch", { list: "courses" }))}<div data-other="course_level" hidden>${input("course_level_other", "Specify qualification")}</div>${pair(input("academic_department", "Department"), input("semester_or_year", "Current semester / year", { list: "study-periods" }))}${input("university", "University / syllabus / curriculum", { list: "institutions" })}${input("expected_graduation_year", "Expected graduation year", { required: false, type: "number" })}</div>`;
 }
-function studentFields() {
-  const level = form.elements.namedItem("education_level")?.value || "";
-  const base = select("education_level", "Education level", ["School", "College / University", "Other"]);
+function studentFields(selectedLevel = "") {
+  const level = selectedLevel || form.elements.namedItem("education_level")?.value || "";
+  const base = select("education_level", "Education level", ["School", "College / University", "Other"], true, level);
   if (level === "School") return `${base}${schoolFields()}`;
   if (level === "College / University") return `${base}${collegeFields()}`;
   if (level === "Other") return `${base}<div class="conditional-card">${input("education_level_other", "Describe education level")}${input("institution_name", "Institution name", { list: "institutions" })}</div>`;
@@ -36,17 +36,17 @@ function employedFields() {
 function selfEmployedFields() {
   return `<div class="conditional-card">${input("occupation", "Profession / business type")}${pair(input("organization_name", "Business / organisation name", { required: false }), select("industry", "Industry / sector", ["Healthcare", "IT / Software", "Education", "Manufacturing", "Government", "Banking / Finance", "Transportation", "Retail", "Construction", "Hospitality", "Other"]))}<div data-other="industry" hidden>${input("industry_other", "Specify industry")}</div>${input("work_location", "Work location", { required: false })}</div>`;
 }
-function renderProfile() {
+function renderProfile(selectedEducationLevel = "") {
   const status = statusSelect.value;
   let html = "";
-  if (status === "Student") html = studentFields();
+  if (status === "Student") html = studentFields(selectedEducationLevel);
   else if (status === "Employed") html = employedFields();
   else if (status === "Self-employed / Business") html = selfEmployedFields();
   else if (status === "Unemployed") html = `<div class="conditional-card">${pair(input("previous_occupation", "Previous occupation", { required: false }), input("area_of_interest", "Area of interest", { required: false }))}</div>`;
   else if (status === "Other") html = `<div class="conditional-card">${input("status_description", "Please describe your current status")}</div>`;
   profileFields.innerHTML = html;
   profileFields.querySelectorAll("select").forEach((control) => control.addEventListener("change", (event) => {
-    if (event.target.name === "education_level") { renderProfile(); return; }
+    if (event.target.name === "education_level") { renderProfile(event.target.value); return; }
     const other = profileFields.querySelector(`[data-other="${event.target.name}"]`);
     if (other) other.hidden = event.target.value !== "Other";
   }));
