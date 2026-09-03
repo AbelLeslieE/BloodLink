@@ -10,8 +10,8 @@
     <main class="registration-shell">
         <section class="registration-intro">
             <p class="eyebrow">BloodLink</p><h1>Become a blood donor</h1>
-            <p>Register your details first. We will email a secure link so only you can create your password.</p>
-            <ul><li>Your profile helps BloodLink make relevant matches.</li><li>You decide whether you are available for each request.</li><li>Your password is never sent by email.</li></ul>
+            <p>Register your details, create a password, and sign in to your new donor account immediately.</p>
+            <ul><li>Your profile helps BloodLink make relevant matches.</li><li>You decide whether you are available for each request.</li><li>Your password is stored securely and never shown to BloodLink staff.</li></ul>
         </section>
         <section class="registration-card" aria-labelledby="registration-title">
             <a class="back" href="/login">Already registered? Sign in</a>
@@ -22,9 +22,11 @@
                 <div class="pair"><label>Blood group *<select name="blood_group" required><option value="">Select</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></label><label>Gender <select name="gender"><option value="">Prefer not to say</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Other</option></select></label></div>
                 <section class="profile-section" aria-labelledby="status-heading"><p class="profile-eyebrow">Profile</p><h3 id="status-heading">Current status *</h3><label><span class="sr-only">Current status</span><select name="current_status" id="currentStatus" required><option value="">Select your current status</option><option>Student</option><option>Employed</option><option>Self-employed / Business</option><option>Unemployed</option><option>Other</option></select></label><div id="profileFields" class="conditional-fields" aria-live="polite"></div></section>
                 <label>Choose a username *<input name="username" autocomplete="username" required minlength="3" maxlength="100" pattern="[A-Za-z0-9._\-]+" aria-describedby="usernameHint"><small id="usernameHint" class="field-hint">3–100 characters: letters, numbers, periods, underscores, or hyphens. No spaces.</small></label>
+                <div class="pair"><label>Create password *<input name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128" aria-describedby="passwordHint"><small id="passwordHint" class="field-hint">At least 8 characters, including a letter and a number.</small></label><label>Confirm password *<input name="confirm_password" type="password" autocomplete="new-password" required minlength="8" maxlength="128"></label></div>
                 <p id="formMessage" role="alert" aria-live="polite"></p>
-                <button id="submitRegistration" type="submit">Verify details</button>
+                <button id="submitRegistration" type="submit">Create donor account</button>
             </form>
+            <a id="loginAfterRegistration" class="login-after-registration" href="/login" hidden>Go to sign in</a>
         </section>
     </main>
     <datalist id="institutions"><option value="Other / not listed"><option value="Government College"><option value="University College"></datalist><datalist id="study-periods"><option value="Semester 1"><option value="Semester 2"><option value="Semester 3"><option value="Semester 4"><option value="Semester 5"><option value="Semester 6"><option value="Semester 7"><option value="Semester 8"><option value="Year 1"><option value="Year 2"><option value="Year 3"><option value="Year 4"><option value="Year 5"></datalist>
