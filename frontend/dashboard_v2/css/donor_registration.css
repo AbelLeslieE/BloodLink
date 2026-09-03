@@ -161,6 +161,9 @@ button[type="submit"] {
     cursor: pointer;
 }
 
+.login-after-registration { display:block; margin-top:14px; padding:12px; border:1px solid #b91c2c; border-radius:8px; color:#b91c2c; font-weight:800; text-align:center; text-decoration:none; }
+.login-after-registration:hover, .login-after-registration:focus-visible { background:#fff3f4; outline:none; }
+
 button:disabled { opacity: .65; cursor: wait; }
 
 #formMessage {

@@ -105,11 +105,15 @@ reports them invalid. New requests are created through `POST /api/blood-requests
 and server-side push targeting uses the current donor blood group and availability,
 leaving a policy hook for structured district/city and emergency-priority targeting.
 
-## Donor registration email setup
+## Donor registration
 
-Public QR registration verifies personal and structured student/employment
-details first, then sends a one-time password-setup email. Configure these
-Render environment variables for this flow:
+Public registration now creates an active donor account immediately after the
+donor completes the personal/profile fields and confirms a password. The normal
+registration flow does not require email delivery, and success shows a direct
+link to sign in. The legacy one-time email password-setup endpoints remain
+available for existing pending registrations.
+
+If you use those legacy email endpoints, configure these Render variables:
 
 ```text
 RESEND_API_KEY=<Resend server API key>

@@ -3,10 +3,9 @@ const message = document.querySelector("#formMessage");
 const submit = document.querySelector("#submitRegistration");
 const statusSelect = document.querySelector("#currentStatus");
 const profileFields = document.querySelector("#profileFields");
-let phase = "verify";
-let verifiedUsername = null;
+const loginAfterRegistration = document.querySelector("#loginAfterRegistration");
 
-const fieldLabels = { full_name: "Full name", phone: "Phone number", email: "Email address", blood_group: "Blood group", current_status: "Current status", username: "Username" };
+const fieldLabels = { full_name: "Full name", phone: "Phone number", email: "Email address", blood_group: "Blood group", current_status: "Current status", username: "Username", password: "Password", confirm_password: "Confirm password" };
 const select = (name, label, options, required = true, selectedValue = "") => `<label>${label}${required ? " *" : ""}<select name="${name}" ${required ? "required" : ""}><option value="">Select</option>${options.map((option) => `<option value="${option}"${option === selectedValue ? " selected" : ""}>${option}</option>`).join("")}</select></label>`;
 const input = (name, label, { required = true, list = "", type = "text", hint = "" } = {}) => `<label>${label}${required ? " *" : ""}<input name="${name}" type="${type}" ${list ? `list="${list}"` : ""} ${required ? "required" : ""} maxlength="${type === "number" ? "4" : "255"}">${hint ? `<small class="field-hint">${hint}</small>` : ""}</label>`;
 const pair = (...fields) => `<div class="pair">${fields.join("")}</div>`;
@@ -116,35 +115,29 @@ function showApiError(data) {
   return highlighted ? "Please correct the highlighted details and try again." : (details[0]?.msg || "Please correct the registration details and try again.").replace(/^Value error,\s*/i, "");
 }
 
-form.addEventListener("input", (event) => { clearFieldError(event.target.name); if (phase === "setup") { phase = "verify"; submit.textContent = "Verify details"; } });
+form.addEventListener("input", (event) => clearFieldError(event.target.name));
 form.addEventListener("change", (event) => clearFieldError(event.target.name));
 statusSelect.addEventListener("change", renderProfile);
 renderProfile();
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault(); setMessage("");
-  if (phase === "verify") {
-    const invalidControls = validateFormFields();
-    if (invalidControls.length) { setMessage("Please correct the highlighted details."); invalidControls[0].focus(); return; }
-    const values = payload();
-    if (!/^\+?\d{7,15}$/.test(normalisePhone(values.phone || ""))) { showFieldError("phone", "Enter a valid phone number with 7 to 15 digits."); setMessage("Please correct the highlighted details."); return; }
-    submit.disabled = true; submit.textContent = "Verifying details…";
-    try {
-      const response = await fetch("/api/donor-registration/verify-details", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(values) });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(showApiError(data));
-      verifiedUsername = data.username; phase = "setup"; submit.textContent = "Set up your password";
-      setMessage("Details verified. Click “Set up your password” to receive a secure email link.", true);
-    } catch (error) { setMessage(error instanceof TypeError ? "We could not reach BloodLink. Check your connection and try again." : error.message); }
-    finally { submit.disabled = false; if (phase === "verify") submit.textContent = "Verify details"; }
-    return;
-  }
-  submit.disabled = true; submit.textContent = "Sending email…";
+  const invalidControls = validateFormFields();
+  if (invalidControls.length) { setMessage("Please correct the highlighted details."); invalidControls[0].focus(); return; }
+  const values = payload();
+  if (!/^\+?\d{7,15}$/.test(normalisePhone(values.phone || ""))) { showFieldError("phone", "Enter a valid phone number with 7 to 15 digits."); setMessage("Please correct the highlighted details."); return; }
+  if (values.password !== values.confirm_password) { showFieldError("confirm_password", "Passwords do not match."); setMessage("Please correct the highlighted details."); form.elements.namedItem("confirm_password")?.focus(); return; }
+  if (!/[A-Za-z]/.test(values.password || "") || !/\d/.test(values.password || "")) { showFieldError("password", "Password must include at least one letter and one number."); setMessage("Please correct the highlighted details."); form.elements.namedItem("password")?.focus(); return; }
+  submit.disabled = true; submit.textContent = "Creating account…";
+  let accountCreated = false;
   try {
-    const response = await fetch("/api/donor-registration/password-setup/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: verifiedUsername }) });
+    const response = await fetch("/api/donor-registration/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(values) });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.detail || "Unable to send the setup email.");
-    setMessage(data.detail, true); submit.textContent = "Resend password setup email";
-  } catch (error) { setMessage(error instanceof TypeError ? "We could not reach BloodLink. Check your connection and try again." : error.message); submit.textContent = "Set up your password"; }
-  finally { submit.disabled = false; }
+    if (!response.ok) throw new Error(showApiError(data));
+    setMessage(data.message || "Your account has been created. You can now sign in.", true);
+    submit.textContent = "Account created";
+    loginAfterRegistration.hidden = false;
+    accountCreated = true;
+  } catch (error) { setMessage(error instanceof TypeError ? "We could not reach BloodLink. Check your connection and try again." : error.message); submit.textContent = "Create donor account"; }
+  finally { if (!accountCreated) submit.disabled = false; }
 });

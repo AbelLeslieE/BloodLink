@@ -22,7 +22,7 @@ from backend.database.models import User
 from backend.services.donor_account_service import create_donor_account
 from backend.services.email_service import send_email
 from backend.services.pending_registration_service import (
-    complete_password_setup, fail_password_setup_delivery, issue_password_setup_token,
+    complete_direct_registration, complete_password_setup, fail_password_setup_delivery, issue_password_setup_token,
     verify_registration_details,
 )
 
@@ -170,6 +170,21 @@ class SetupEmailRequest(BaseModel):
         return value.strip().lower()
 
 
+class DirectRegistration(RegistrationDetails):
+    """Public registration payload for deployments without email delivery."""
+
+    password: str = Field(min_length=8, max_length=128)
+    confirm_password: str = Field(min_length=8, max_length=128)
+
+    @model_validator(mode="after")
+    def validate_passwords(self) -> "DirectRegistration":
+        if self.password != self.confirm_password:
+            raise ValueError("Passwords do not match.")
+        if self.password != self.password.strip() or not any(character.isalpha() for character in self.password) or not any(character.isdigit() for character in self.password):
+            raise ValueError("Password must contain at least 8 characters, including a letter and a number.")
+        return self
+
+
 class PasswordSetupConfirmation(BaseModel):
     token: str = Field(min_length=20, max_length=4096)
     new_password: str = Field(max_length=128)
@@ -196,6 +211,18 @@ def _setup_email_html(setup_url: str, full_name: str) -> str:
 def verify_details(data: RegistrationDetails, db: Annotated[Session, Depends(get_db)]) -> dict:
     user = verify_registration_details(db, data)
     return {"success": True, "username": user.username, "registration_status": user.registration_status, "message": "Your details have been verified. Continue to send your password setup email."}
+
+
+@router.post("/complete", status_code=status.HTTP_201_CREATED)
+def complete_direct_donor_registration(data: DirectRegistration, db: Annotated[Session, Depends(get_db)]) -> dict:
+    """Create a donor account immediately using the password from registration."""
+    user = complete_direct_registration(db, data, data.password)
+    return {
+        "success": True,
+        "message": "Your donor account has been created. You can now sign in.",
+        "username": user.username,
+        "login_url": "/login",
+    }
 
 
 @router.post("/password-setup/send", status_code=status.HTTP_202_ACCEPTED)

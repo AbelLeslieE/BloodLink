@@ -164,3 +164,23 @@ def complete_password_setup(db: Session, token: str, password: str) -> User:
     user.auth_version += 1
     db.commit()
     return user
+
+
+def complete_direct_registration(db: Session, data, password: str) -> User:
+    """Create an active donor account without requiring email delivery.
+
+    This reuses the same conflict checks and structured donor-profile storage as
+    the email setup flow. It also lets a matching, previously pending account
+    be completed after a failed email delivery attempt.
+    """
+    user = verify_registration_details(db, data)
+    user.password_hash = hash_password(password)
+    user.active = True
+    user.registration_status = "ACTIVE"
+    user.password_setup_token_hash = None
+    user.password_setup_expires_at = None
+    user.password_setup_sent_at = None
+    user.auth_version += 1
+    db.commit()
+    db.refresh(user)
+    return user
