@@ -122,6 +122,25 @@ is redeemed. Existing users and administrator-created donor accounts remain
 active and continue to use their current passwords. Apply `alembic upgrade
 head` to add the pending-registration fields and `donor_profiles` table.
 
+### Gmail SMTP alternative for Render
+
+If you do not own a custom domain for Resend, BloodLink uses Gmail SMTP when
+all of these Render environment variables are configured. Create a **Google App
+Password** (not your normal Google password) after enabling two-step
+verification, and keep it only in Render:
+
+```text
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-gmail-address@gmail.com
+SMTP_PASSWORD=<16-character Google App Password>
+SMTP_FROM=BloodLink <your-gmail-address@gmail.com>
+```
+
+SMTP takes precedence over Resend, so registration and blood-request emails can
+be delivered to arbitrary recipients without a Resend domain. Never commit the
+App Password to source control.
+
 ### Render deployment commands
 
 This repository has no `render.yaml`, so keep the existing Render service and

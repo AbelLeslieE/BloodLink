@@ -39,11 +39,16 @@ class Settings:
     access_token_expire_minutes: int
 
     # ==========================================================
-    # Resend Email
+    # Email delivery
     # ==========================================================
 
     resend_api_key: str
     email_from: str
+    smtp_host: str
+    smtp_port: int
+    smtp_username: str
+    smtp_password: str
+    smtp_from: str
 
     # ==========================================================
     # Application URLs
@@ -118,9 +123,16 @@ def get_settings() -> Settings:
             60,
         ),
 
-        # Email (optional during development)
+        # Email (optional during development). SMTP takes precedence when
+        # configured, allowing the existing Gmail SMTP variables to work on
+        # Render without a separately verified Resend domain.
         resend_api_key=os.getenv("RESEND_API_KEY", ""),
         email_from=os.getenv("EMAIL_FROM", ""),
+        smtp_host=os.getenv("SMTP_HOST", "").strip(),
+        smtp_port=_positive_integer("SMTP_PORT", 587),
+        smtp_username=os.getenv("SMTP_USERNAME", "").strip(),
+        smtp_password=os.getenv("SMTP_PASSWORD", "").strip(),
+        smtp_from=os.getenv("SMTP_FROM", "").strip(),
 
         # Application URLs
         backend_url=_required_value("BACKEND_URL"),

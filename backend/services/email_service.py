@@ -15,6 +15,9 @@ from __future__ import annotations
 import secrets
 import resend
 import logging
+import smtplib
+import ssl
+from email.message import EmailMessage
 from html import escape
 from datetime import datetime, timedelta, timezone
 
@@ -24,7 +27,64 @@ from backend.config.settings import get_settings
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
-resend.api_key = settings.resend_api_key
+
+
+def _smtp_is_configured() -> bool:
+    """Return whether a complete authenticated SMTP configuration exists."""
+    return bool(
+        settings.smtp_host
+        and settings.smtp_username
+        and settings.smtp_password
+    )
+
+
+def _send_with_smtp(recipient_email: str, subject: str, html_body: str) -> bool:
+    """Send a transactional message through SMTP with STARTTLS.
+
+    Gmail uses smtp.gmail.com on port 587 with an App Password. The provider
+    password remains server-side in Render's encrypted environment settings.
+    """
+    message = EmailMessage()
+    message["From"] = settings.smtp_from or settings.smtp_username
+    message["To"] = recipient_email
+    message["Subject"] = subject
+    message.set_content("This message requires an HTML-capable email client.")
+    message.add_alternative(html_body, subtype="html")
+
+    try:
+        with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=20) as client:
+            client.ehlo()
+            client.starttls(context=ssl.create_default_context())
+            client.ehlo()
+            client.login(settings.smtp_username, settings.smtp_password)
+            client.send_message(message)
+        logger.info("Donation request email accepted by SMTP for %s", recipient_email)
+        return True
+    except Exception:
+        logger.exception("SMTP email delivery failed for %s", recipient_email)
+        return False
+
+
+def _send_with_resend(recipient_email: str, subject: str, html_body: str) -> bool:
+    """Send a transactional message through Resend when SMTP is unavailable."""
+    if not settings.resend_api_key or not settings.email_from:
+        return False
+
+    resend.api_key = settings.resend_api_key
+    try:
+        resend.Emails.send(
+            {
+                "from": settings.email_from,
+                "to": [recipient_email],
+                "subject": subject,
+                "html": html_body,
+            }
+        )
+        logger.info("Donation request email accepted by Resend for %s", recipient_email)
+        return True
+    except Exception:
+        logger.exception("Resend email delivery failed for %s", recipient_email)
+        return False
 # ==========================================================
 # TOKEN GENERATION
 # ==========================================================
@@ -61,28 +121,16 @@ def send_email(
     html_body: str,
 ) -> bool:
     """
-    Send an HTML email using Resend.
+    Send an HTML email using configured SMTP or, when SMTP is not configured,
+    Resend. SMTP is preferred so Render deployments can use Gmail App Passwords
+    without needing a custom sending domain.
     """
-
-    try:
-
-        response = resend.Emails.send(
-            {
-                "from": settings.email_from,
-                "to": [recipient_email],
-                "subject": subject,
-                "html": html_body,
-            }
-        )
-
-        logger.info("Donation request email accepted by provider for %s", recipient_email)
-
+    if _smtp_is_configured():
+        return _send_with_smtp(recipient_email, subject, html_body)
+    if _send_with_resend(recipient_email, subject, html_body):
         return True
-
-    except Exception:
-        logger.exception("Donation request email delivery failed for %s", recipient_email)
-
-        return False
+    logger.error("No working email provider is configured for %s", recipient_email)
+    return False
 # ==========================================================
 # EMAIL SUBJECT
 # ==========================================================
