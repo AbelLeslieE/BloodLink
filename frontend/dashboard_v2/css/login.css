@@ -876,3 +876,233 @@ label,
         animation-iteration-count: 1 !important;
     }
 }
+
+/* ==========================================================
+   FULL-CANVAS LOGIN + GLASS AUTHENTICATION PANEL
+========================================================== */
+
+.login-container {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: clamp(24px, 4vw, 64px) clamp(28px, 5vw, 88px);
+    overflow: hidden auto;
+    background:
+        linear-gradient(90deg, rgba(255, 255, 255, .02) 0 47%, rgba(12, 25, 48, .08) 100%),
+        url("/static/assets/login-background-glass.png") center center / cover no-repeat;
+}
+
+.login-container::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 78% 48%, rgba(255, 255, 255, .2), transparent 32%),
+        linear-gradient(90deg, transparent 0 52%, rgba(10, 27, 56, .09) 100%);
+}
+
+.left-section {
+    display: none !important;
+}
+
+.login-section {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 530px);
+    min-height: auto;
+    padding: 0;
+    background: transparent;
+}
+
+.login-card {
+    position: relative;
+    width: 100%;
+    padding: clamp(30px, 3.1vw, 46px);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .72);
+    border-radius: 30px;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, .68), rgba(255, 255, 255, .38));
+    box-shadow:
+        0 36px 90px rgba(24, 35, 58, .28),
+        0 10px 30px rgba(159, 18, 57, .11),
+        inset 0 1px 0 rgba(255, 255, 255, .92),
+        inset 0 -1px 0 rgba(255, 255, 255, .3);
+    backdrop-filter: blur(30px) saturate(1.45);
+    -webkit-backdrop-filter: blur(30px) saturate(1.45);
+}
+
+.login-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+    background:
+        linear-gradient(125deg, rgba(255, 255, 255, .58), transparent 34%),
+        radial-gradient(circle at 100% 0, rgba(255, 224, 231, .42), transparent 38%);
+}
+
+.login-card::after {
+    content: "";
+    position: absolute;
+    top: -110px;
+    right: -86px;
+    z-index: -1;
+    width: 240px;
+    height: 240px;
+    border: 34px solid rgba(255, 255, 255, .16);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.mobile-brand {
+    margin-bottom: clamp(28px, 4vh, 42px);
+}
+
+.brand-symbol {
+    border: 1px solid rgba(255, 255, 255, .72);
+    box-shadow:
+        0 12px 28px rgba(159, 18, 57, .24),
+        inset 0 1px 0 rgba(255, 255, 255, .34);
+}
+
+.input-group {
+    border-color: rgba(255, 255, 255, .78);
+    background: rgba(255, 255, 255, .46);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .72),
+        0 8px 24px rgba(25, 38, 64, .06);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.input-group:hover {
+    border-color: rgba(179, 19, 55, .28);
+    background: rgba(255, 255, 255, .58);
+}
+
+.input-group:focus-within {
+    border-color: rgba(179, 19, 55, .72);
+    background: rgba(255, 255, 255, .7);
+    box-shadow:
+        0 0 0 4px rgba(179, 19, 55, .1),
+        0 12px 26px rgba(25, 38, 64, .08);
+}
+
+.signup-prompt {
+    border-color: rgba(255, 255, 255, .7);
+    background: rgba(255, 248, 249, .48);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.login-btn {
+    box-shadow:
+        0 16px 30px rgba(159, 18, 57, .26),
+        inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+
+.password-reset-card {
+    width: 100%;
+}
+
+@media (max-width: 900px) {
+    .login-container {
+        justify-content: center;
+        padding: 24px;
+        background-position: 58% center;
+    }
+
+    .login-section {
+        width: min(100%, 520px);
+    }
+}
+
+@media (max-width: 560px) {
+    .login-container {
+        align-items: flex-start;
+        min-height: 100dvh;
+        padding: max(14px, env(safe-area-inset-top)) 12px max(14px, env(safe-area-inset-bottom));
+        background-position: 62% center;
+    }
+
+    .login-section {
+        display: flex;
+        min-height: calc(100dvh - 28px);
+        padding: 0;
+    }
+
+    .login-card {
+        min-height: auto;
+        margin: auto;
+        padding: 26px 22px 24px;
+        border: 1px solid rgba(255, 255, 255, .72);
+        border-radius: 24px;
+        background: linear-gradient(145deg, rgba(255, 255, 255, .78), rgba(255, 255, 255, .52));
+        box-shadow: 0 28px 60px rgba(24, 35, 58, .25);
+        backdrop-filter: blur(24px) saturate(1.35);
+        -webkit-backdrop-filter: blur(24px) saturate(1.35);
+    }
+
+    .mobile-brand {
+        margin-bottom: 28px;
+    }
+
+    .auth-header h2,
+    .login-card > h2 {
+        font-size: clamp(1.8rem, 8vw, 2.2rem);
+    }
+
+    #loginForm,
+    #passwordResetRequestForm,
+    #passwordResetConfirmForm {
+        margin-top: 24px;
+    }
+
+    .signup-prompt {
+        margin-top: 24px;
+    }
+
+    .footer {
+        margin-top: 20px;
+    }
+}
+
+@media (max-height: 760px) and (min-width: 561px) {
+    .login-container {
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+
+    .login-card {
+        padding-top: 23px;
+        padding-bottom: 21px;
+    }
+
+    .mobile-brand {
+        margin-bottom: 18px;
+    }
+
+    #loginForm,
+    #passwordResetRequestForm,
+    #passwordResetConfirmForm {
+        margin-top: 18px;
+    }
+
+    .signup-prompt {
+        margin-top: 18px;
+    }
+
+    .footer {
+        margin-top: 14px;
+    }
+}
