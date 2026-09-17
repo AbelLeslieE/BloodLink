@@ -29,11 +29,25 @@ button {
 }
 
 #moduleView,
+.application-view,
 .main-content,
 .donor-management-content,
 .find-match-container,
 .notifications-container {
+    width: 100%;
     min-width: 0;
+}
+
+/* Dynamic modules contain deeply nested flex and grid layouts. Let their
+   children shrink instead of forcing the application wider than the screen. */
+#moduleView :is(div, section, article, aside, header, footer, form, fieldset),
+.application-view :is(div, section, article, aside, header, footer, form, fieldset) {
+    min-width: 0;
+}
+
+#moduleView :is(h1, h2, h3, h4, p, span, strong, a),
+.application-view :is(h1, h2, h3, h4, p, span, strong, a) {
+    overflow-wrap: anywhere;
 }
 
 .donor-table-scroll,
@@ -61,6 +75,15 @@ button {
         min-width: 0;
     }
 
+    .dashboard-main,
+    .dashboard-view,
+    .dashboard-grid,
+    .analytics-grid,
+    .content-grid {
+        width: 100%;
+        min-width: 0;
+    }
+
     .users-layout,
     .dh-layout,
     .fm-main-grid,
@@ -77,6 +100,14 @@ button {
     .topbar {
         padding-left: max(var(--page-padding), env(safe-area-inset-left));
         padding-right: max(var(--page-padding), env(safe-area-inset-right));
+    }
+
+    .qr-modal-overlay,
+    .qr-scanner-overlay,
+    .donor-modal-backdrop,
+    .complete-donation-backdrop,
+    .modal-overlay {
+        padding: 16px;
     }
 }
 
@@ -101,11 +132,40 @@ button {
         flex-direction: column !important;
     }
 
+    .dashboard-hero,
+    .request-status-actions-card,
+    .request-details-overview,
+    .notification-card-header,
+    .request-header,
+    .section-header {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+    }
+
+    .dashboard-hero,
+    .request-form-section,
+    .request-detail-card,
+    .request-status-actions-card,
+    .request-details-overview,
+    .notification-card,
+    .recipient-section {
+        padding: clamp(16px, 4vw, 22px) !important;
+    }
+
     .donor-actions,
     .module-header-actions,
     .hero-actions,
     .notifications-actions {
         width: 100%;
+    }
+
+    .request-actions,
+    .request-form-actions,
+    .form-actions,
+    .backup-buttons,
+    .qr-modal-actions {
+        width: 100%;
+        flex-wrap: wrap;
     }
 
     .donor-actions > *,
@@ -143,6 +203,28 @@ button {
         flex-wrap: wrap;
     }
 
+    .notifications-toolbar,
+    .toolbar-left,
+    .toolbar-right {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .notifications-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+        flex-wrap: wrap;
+    }
+
+    #notificationSearch {
+        width: 100%;
+        min-width: 0 !important;
+    }
+
     .donor-search,
     .users-search,
     .dh-search,
@@ -163,6 +245,12 @@ button {
     .request-modal-content,
     .qr-modal,
     .qr-scanner-modal {
+        width: min(100% - 24px, 680px) !important;
+        max-height: calc(100dvh - 24px) !important;
+        overflow-y: auto;
+    }
+
+    .complete-donation-modal {
         width: min(100% - 24px, 680px) !important;
         max-height: calc(100dvh - 24px) !important;
         overflow-y: auto;
@@ -200,6 +288,17 @@ button {
     .qr-modal-header p { font-size: .95rem; }
     .qr-search-wrapper, .qr-total-assets-card { width: 100%; max-width: none; }
     .qr-footer, .equipment-info { grid-template-columns: minmax(0, 1fr); }
+
+    .qr-modal-body,
+    .qr-scanner-body {
+        padding: 18px;
+    }
+
+    .generated-qr-image {
+        width: min(220px, 72vw);
+        height: auto;
+        aspect-ratio: 1;
+    }
 }
 
 @media (max-width: 560px) {
@@ -225,11 +324,29 @@ button {
         grid-template-columns: minmax(0, 1fr) !important;
     }
 
+    .request-actions,
+    .request-form-actions,
+    .form-actions,
+    .backup-buttons,
+    .qr-modal-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
     .donor-actions > *,
     .module-header-actions > *,
     .hero-actions > *,
     .notifications-actions > * {
         width: 100%;
+    }
+
+    .request-actions > *,
+    .request-form-actions > *,
+    .form-actions > *,
+    .backup-buttons > *,
+    .qr-modal-actions > * {
+        width: 100% !important;
+        min-width: 0 !important;
     }
 
     .donor-heading h1,
@@ -272,6 +389,34 @@ button {
         left: 12px;
     }
 
+    .request-info-grid,
+    .recipient-overview,
+    .notification-summary,
+    .donation-request-summary,
+    .donor-form-grid,
+    .request-form-grid,
+    .about-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .notification-item,
+    .settings-item,
+    .security-item,
+    .preference-item,
+    .detail-row {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+    }
+
+    .pagination,
+    .table-pagination,
+    .request-table-footer,
+    .donor-table-footer {
+        width: 100%;
+        min-width: 0;
+        flex-wrap: wrap;
+    }
+
     .toast,
     .settings-toast {
         width: 100%;
@@ -286,6 +431,14 @@ button {
     }
 
     .topbar { min-height: 64px; }
+
+    .topbar-profile {
+        flex: 0 0 auto;
+    }
+
+    .page-title p {
+        display: none;
+    }
 
     .page-title h1,
     .page-title p { max-width: 100%; }
