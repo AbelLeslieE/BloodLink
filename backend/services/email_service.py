@@ -121,12 +121,23 @@ def send_email(
     html_body: str,
 ) -> bool:
     """
-    Send an HTML email using configured SMTP or, when SMTP is not configured,
-    Resend. SMTP is preferred so Render deployments can use Gmail App Passwords
-    without needing a custom sending domain.
+    Send an HTML email through the provider supported by the environment.
+
+    Render blocks outbound SMTP on common mail ports, so production services use
+    its HTTPS-based Resend integration and never wait on a doomed SMTP attempt.
+    Local installations can use SMTP with Resend as a fallback.
     """
-    if _smtp_is_configured():
-        return _send_with_smtp(recipient_email, subject, html_body)
+    if settings.on_render:
+        if _send_with_resend(recipient_email, subject, html_body):
+            return True
+        logger.error("Resend is not configured or could not deliver the email")
+        return False
+    if _smtp_is_configured() and _send_with_smtp(
+        recipient_email,
+        subject,
+        html_body,
+    ):
+        return True
     if _send_with_resend(recipient_email, subject, html_body):
         return True
     logger.error("No working email provider is configured")

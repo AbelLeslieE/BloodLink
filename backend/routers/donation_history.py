@@ -120,13 +120,17 @@ def _summary(donations: list[DonationHistory]) -> dict:
 
 
 def _filters(database_session: Session) -> dict:
+    blood_group = func.coalesce(
+        Donor.blood_group,
+        BloodRequest.blood_group,
+    ).label("blood_group")
     blood_groups = database_session.scalars(
-        select(func.coalesce(Donor.blood_group, BloodRequest.blood_group))
+        select(blood_group)
         .select_from(DonationHistory)
         .outerjoin(Donor, DonationHistory.donor_id == Donor.id)
         .join(BloodRequest, DonationHistory.blood_request_id == BloodRequest.id)
         .distinct()
-        .order_by(Donor.blood_group)
+        .order_by(blood_group)
     ).all()
     districts = database_session.scalars(
         select(Donor.district)

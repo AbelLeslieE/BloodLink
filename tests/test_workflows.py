@@ -47,6 +47,16 @@ def test_request_match_response_confirmation_rewards_and_certificate(system):
         assert client.get(f"/api/donation-history/export/{kind}", headers=tokens["admin"]).status_code == 200
 
 
+def test_donation_history_filters_are_available(system):
+    client, _, tokens = system
+    response = client.get("/api/donation-history", headers=tokens["admin"])
+    assert response.status_code == 200, response.text
+    assert response.json()["filters"] == {
+        "blood_groups": [],
+        "districts": [],
+    }
+
+
 def test_excel_import_export(system):
     client, _, tokens = system
     workbook = Workbook()

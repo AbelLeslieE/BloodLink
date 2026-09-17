@@ -120,6 +120,38 @@ def test_render_refuses_ephemeral_database(config_env):
         normalize_database_url("sqlite:///./bloodlink.db", production=True, on_render=True)
 
 
+def test_render_email_uses_resend_without_attempting_smtp(monkeypatch):
+    from backend.services import email_service
+
+    monkeypatch.setattr(
+        email_service,
+        "settings",
+        replace(
+            email_service.settings,
+            on_render=True,
+            smtp_host="smtp.example.org",
+            smtp_username="configured",
+            smtp_password="configured",
+            resend_api_key="configured",
+            email_from="BloodLink <notifications@example.org>",
+        ),
+    )
+    calls = []
+    monkeypatch.setattr(
+        email_service,
+        "_send_with_resend",
+        lambda *args: calls.append("resend") or True,
+    )
+    monkeypatch.setattr(
+        email_service,
+        "_send_with_smtp",
+        lambda *args: calls.append("smtp") or True,
+    )
+
+    assert email_service.send_email("donor@example.org", "Subject", "<p>Body</p>")
+    assert calls == ["resend"]
+
+
 def test_health_does_not_disclose_errors(monkeypatch):
     import backend.main as main
     from fastapi.testclient import TestClient
