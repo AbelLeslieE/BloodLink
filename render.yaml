@@ -1,0 +1,25 @@
+# Optional new-service blueprint. Existing services: use DEPLOYMENT.md instead.
+# Applying this blueprint can create billable resources. No DB is created here.
+services:
+  - type: web
+    name: bloodlink
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python start.py
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.15
+      - key: APP_ENV
+        value: production
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_TLS_MODE
+        sync: false
+      - key: DEFAULT_VOLUNTEER_PASSWORD
+        sync: false

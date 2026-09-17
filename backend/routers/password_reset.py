@@ -8,9 +8,9 @@ from typing import Annotated
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from jose import JWTError
+from jwt import InvalidTokenError as JWTError
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from backend.auth.security import (
@@ -131,7 +131,7 @@ def confirm_password_reset(
             detail="This password reset link is invalid or has expired. Request a new one.",
         ) from error
 
-    user = database_session.scalar(select(User).where(User.username == username))
+    user = database_session.scalar(select(User).where(User.username == username).with_for_update())
     if (
         user is None
         or not user.active
@@ -143,7 +143,11 @@ def confirm_password_reset(
             detail="This password reset link is invalid or has expired. Request a new one.",
         )
 
-    user.password_hash = hash_password(data.new_password)
-    user.auth_version += 1
+    changed = database_session.execute(update(User).where(
+        User.id == user.id, User.auth_version == token_auth_version, User.active.is_(True)
+    ).values(password_hash=hash_password(data.new_password), auth_version=User.auth_version + 1))
+    if changed.rowcount != 1:
+        database_session.rollback()
+        raise HTTPException(status_code=400, detail="This password reset link has already been used.")
     database_session.commit()
     return {"detail": "Password updated. You can now sign in with your new password."}

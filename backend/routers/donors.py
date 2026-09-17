@@ -298,6 +298,8 @@ def export_donors(
 
     stream = BytesIO()
 
+    from backend.security.exports import protect_workbook
+    protect_workbook(workbook)
     workbook.save(stream)
 
     stream.seek(0)
@@ -333,7 +335,7 @@ async def import_donors(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail="Upload an .xlsx workbook.",
         )
-    contents = await file.read()
+    contents = await file.read(10 * 1024 * 1024 + 1)
     if not contents or len(contents) > 10 * 1024 * 1024:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Workbook must be between 1 byte and 10 MB.")
 

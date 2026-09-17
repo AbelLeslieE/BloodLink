@@ -441,9 +441,8 @@ function renderSettings() {
 
                 <p>
 
-                    Add an extra layer
-                    of security to
-                    your BloodLink account.
+                    Not configured. This requires a real second-factor service;
+                    a browser setting does not enable MFA.
 
                 </p>
 
@@ -453,7 +452,7 @@ function renderSettings() {
 
                 <input
                     type="checkbox"
-                    id="twoFactor">
+                    id="twoFactor" disabled>
 
                 <span class="slider"></span>
 

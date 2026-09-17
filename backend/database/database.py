@@ -9,6 +9,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from backend.config.settings import get_settings
+from backend.security.database import create_database_engine
 
 
 # Stable names keep Alembic-generated constraints consistent across environments.
@@ -29,20 +30,7 @@ class Base(DeclarativeBase):
 
 settings = get_settings()
 
-# Configure the SQLAlchemy engine for SQLite or PostgreSQL.
-# SQLite requires check_same_thread=False
-if settings.database_url.startswith("sqlite"):
-    engine: Engine = create_engine(
-        settings.database_url,
-        connect_args={"check_same_thread": False},
-    )
-else:
-    engine: Engine = create_engine(
-        settings.database_url,
-        pool_pre_ping=True,
-        pool_size=settings.database_pool_size,
-        max_overflow=settings.database_max_overflow,
-    )
+engine: Engine = create_database_engine(settings)
 
 # Each request receives its own session from this factory through get_db().
 SessionLocal = sessionmaker(

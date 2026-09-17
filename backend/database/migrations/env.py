@@ -9,6 +9,8 @@ from sqlalchemy import engine_from_config, pool
 
 from backend.config.settings import get_settings
 from backend.database.database import Base
+from backend.security.database import create_database_engine
+from backend.security.rate_limit import RateLimitBucket  # noqa: F401
 from backend.database import models  # noqa: F401
 
 
@@ -18,7 +20,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Use the environment-provided URL instead of storing credentials in alembic.ini.
-config.set_main_option("sqlalchemy.url", get_settings().database_url)
+config.set_main_option("sqlalchemy.url", get_settings().database_url.replace("%", "%%"))
 target_metadata = Base.metadata
 
 
@@ -38,11 +40,7 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations with a database connection from Alembic's engine."""
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = create_database_engine(get_settings())
 
     with connectable.connect() as connection:
         context.configure(

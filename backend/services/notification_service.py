@@ -40,8 +40,8 @@ def _send_to_recipient(
         expires_at=email_service.generate_expiry_time(),
     )
     settings = email_service.settings
-    accept_url = f"{settings.backend_url}/email/accept/{email_token.token}"
-    decline_url = f"{settings.backend_url}/email/decline/{email_token.token}"
+    accept_url = f"{settings.backend_url}/email/accept/{token}"
+    decline_url = f"{settings.backend_url}/email/decline/{token}"
     success = email_service.send_email(
         recipient_email=recipient.email,
         subject=email_service.build_email_subject(blood_request),

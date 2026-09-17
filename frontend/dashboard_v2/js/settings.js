@@ -1,3 +1,7 @@
+function escapeSettingsHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[char]));
+}
+
 /* ==========================================================
    BloodLink Settings Module
    File: settings.js
@@ -841,7 +845,7 @@ function initializeSecurity(){
 
                 "Active Sessions",
 
-                "Loading active sessions...",
+                "Session listing is not implemented. Signing out revokes this account's active sessions.",
 
                 "fa-laptop"
 
@@ -852,47 +856,10 @@ function initializeSecurity(){
     }
 
     if(twoFactor){
-
-        const saved =
-            localStorage.getItem("twoFactor");
-
-        if(saved!==null){
-
-            twoFactor.checked =
-                saved==="true";
-
-        }
-
-        twoFactor.addEventListener("change",()=>{
-
-            localStorage.setItem(
-
-                "twoFactor",
-
-                twoFactor.checked
-
-            );
-
-            showToast(
-
-                "Two Factor Authentication",
-
-                twoFactor.checked
-
-                    ? "Enabled."
-
-                    : "Disabled.",
-
-                twoFactor.checked
-
-                    ? "fa-lock"
-
-                    : "fa-lock-open"
-
-            );
-
-        });
-
+        // A local preference is not MFA. Never display a false protection claim.
+        twoFactor.checked = false;
+        twoFactor.disabled = true;
+        twoFactor.title = "MFA is not configured. A real second-factor service is required.";
     }
 
 }
@@ -1371,9 +1338,9 @@ function showToast(
 
         <div>
 
-            <h4>${title}</h4>
+            <h4>${escapeSettingsHtml(title)}</h4>
 
-            <p>${message}</p>
+            <p>${escapeSettingsHtml(message)}</p>
 
         </div>
 

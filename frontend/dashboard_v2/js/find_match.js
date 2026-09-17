@@ -1,3 +1,7 @@
+function escapeMatchHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[char]));
+}
+
 /* ===================================================================
    BloodLink - Find Match Module
    -------------------------------------------------------------------
@@ -729,7 +733,7 @@ function createRequestCard(request) {
 
                 <div class="request-avatar">
 
-                    ${request.patient.charAt(0).toUpperCase()}
+                    ${escapeMatchHtml(request.patient.charAt(0).toUpperCase())}
 
                 </div>
 
@@ -737,21 +741,21 @@ function createRequestCard(request) {
 
                     <h3>
 
-                        ${request.patient}
+                        ${escapeMatchHtml(request.patient)}
 
                     </h3>
 
                     <p>
 
-                        ${request.hospital}
+                        ${escapeMatchHtml(request.hospital)}
 
                     </p>
 
                 </div>
 
-                <span class="priority-badge priority-${request.priority.toLowerCase()}">
+                <span class="priority-badge priority-${escapeMatchHtml(request.priority.toLowerCase())}">
 
-                    ${request.priority}
+                    ${escapeMatchHtml(request.priority)}
 
                 </span>
 
@@ -769,7 +773,7 @@ function createRequestCard(request) {
 
                     <span class="blood-group">
 
-                        ${request.bloodGroup}
+                        ${escapeMatchHtml(request.bloodGroup)}
 
                     </span>
 
@@ -801,7 +805,7 @@ function createRequestCard(request) {
 
                     <strong>
 
-                        ${request.district}
+                        ${escapeMatchHtml(request.district)}
 
                     </strong>
 
@@ -817,7 +821,7 @@ function createRequestCard(request) {
 
                     <strong>
 
-                        ${request.requiredDate}
+                        ${escapeMatchHtml(request.requiredDate)}
 
                     </strong>
 
@@ -862,7 +866,7 @@ function createDonorCard(donor) {
 
                 <div class="donor-avatar">
 
-                    ${donor.name.charAt(0).toUpperCase()}
+                    ${escapeMatchHtml(donor.name.charAt(0).toUpperCase())}
 
                 </div>
 
@@ -870,13 +874,13 @@ function createDonorCard(donor) {
 
                     <h3>
 
-                        ${donor.name}
+                        ${escapeMatchHtml(donor.name)}
 
                     </h3>
 
                     <p>
 
-                        ${donor.phone}
+                        ${escapeMatchHtml(donor.phone)}
 
                     </p>
 
@@ -896,7 +900,7 @@ function createDonorCard(donor) {
 
                     <span class="blood-group">
 
-                        ${donor.bloodGroup}
+                        ${escapeMatchHtml(donor.bloodGroup)}
 
                     </span>
 
@@ -912,7 +916,7 @@ function createDonorCard(donor) {
 
                     <strong>
 
-                        ${donor.distance}
+                        ${escapeMatchHtml(donor.distance)}
 
                     </strong>
 
@@ -928,7 +932,7 @@ function createDonorCard(donor) {
 
                     <strong class="available">
 
-                        ${donor.availability}
+                        ${escapeMatchHtml(donor.availability)}
 
                     </strong>
 
@@ -944,7 +948,7 @@ function createDonorCard(donor) {
 
                     <strong>
 
-                        ${donor.lastDonation}
+                        ${escapeMatchHtml(donor.lastDonation)}
 
                     </strong>
 
@@ -1489,7 +1493,7 @@ function exportMatches() {
         ["Donor", "Blood Group", "Phone", "Email", "District", "Availability", "Compatibility Score", "Last Donation"],
         ...donors.map(donor => [donor.name, donor.bloodGroup, donor.phone || "", donor.email || "", donor.district || "", donor.availability, donor.compatibility, donor.lastDonation])
     ];
-    const csv = rows.map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\r\n");
+    const csv = rows.map(row => row.map(value => `"${String(typeof value === "string" && /^[\s]*[=+\-@]/.test(value) ? "'" + value : value).replaceAll('"', '""')}"`).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const link = Object.assign(document.createElement("a"), {
         href: url,
@@ -2133,7 +2137,7 @@ function renderEmptyState(
 
         <div class="empty-state">
 
-            ${message}
+            ${escapeMatchHtml(message)}
 
         </div>
 

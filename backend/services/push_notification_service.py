@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from backend.config.settings import get_settings
+from backend.security.push import validate_push_endpoint, PushSession
 from backend.database.models import BloodRequest, Donor, User
 from backend.database.push_subscription import PushSubscription
 
@@ -21,6 +22,11 @@ except ImportError:  # pragma: no cover - exercised only without dependencies
 
 logger = logging.getLogger(__name__)
 _PRIORITY_RANK = {"Normal": 1, "Urgent": 2, "Emergency": 3}
+
+
+def _send_webpush(**kwargs):
+    with PushSession() as session:
+        return webpush(requests_session=session, **kwargs)
 
 
 def is_configured() -> bool:
@@ -88,12 +94,14 @@ def notify_matching_donors(session: Session, blood_request: BloodRequest) -> dic
             skipped += 1
             continue
         try:
-            webpush(
+            validate_push_endpoint(subscription.endpoint)
+            _send_webpush(
                 subscription_info={"endpoint": subscription.endpoint, "keys": {"p256dh": subscription.p256dh, "auth": subscription.auth}},
                 data=payload,
                 vapid_private_key=settings.vapid_private_key,
                 vapid_claims={"sub": settings.vapid_subject},
                 ttl=300,
+                timeout=10,
             )
             sent += 1
         except WebPushException as error:
@@ -102,7 +110,7 @@ def notify_matching_donors(session: Session, blood_request: BloodRequest) -> dic
                 _remove_invalid_subscription(session, subscription)
                 invalid += 1
             else:
-                logger.warning("Push delivery failed for request %s: %s", blood_request.id, error)
+                logger.warning("Push delivery failed for request %s (status %s)", blood_request.id, status_code)
         except Exception:  # Delivery must not affect a saved blood request.
-            logger.exception("Unexpected Web Push failure for request %s", blood_request.id)
+            logger.warning("Unexpected Web Push failure for request %s", blood_request.id)
     return {"sent": sent, "invalid": invalid, "skipped": skipped}

@@ -445,7 +445,7 @@ function displayUsers(data) {
 
                 <button
                     class="edit-btn"
-                    onclick="editUser(${user.id})">
+                    data-user-action="edit" data-user-id="${user.id}">
 
                     <i class="fa-solid fa-pen"></i>
 
@@ -453,7 +453,7 @@ function displayUsers(data) {
 
                 <button
                     class="delete-btn"
-                    onclick="deleteUser(${user.id})">
+                    data-user-action="delete" data-user-id="${user.id}">
 
                     <i class="fa-solid fa-trash"></i>
 
@@ -638,7 +638,7 @@ function showRegisterUser() {
 
         <div class="form-actions">
 
-            <button onclick="registerUser()">
+            <button data-user-action="save">
 
                 Save User
 
@@ -646,7 +646,7 @@ function showRegisterUser() {
 
             <button
                 class="cancel-btn"
-                onclick="closeUserModal()"
+                data-user-action="cancel"
             >
 
                 Cancel
@@ -784,6 +784,16 @@ function closeUserModal(){
 /* ==========================================================
    Global Functions for Inline HTML
 ========================================================== */
+
+document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-user-action]");
+    if (!button) return;
+    const id = Number(button.dataset.userId);
+    if (button.dataset.userAction === "edit" && Number.isSafeInteger(id) && id > 0) editUser(id);
+    if (button.dataset.userAction === "delete" && Number.isSafeInteger(id) && id > 0) deleteUser(id);
+    if (button.dataset.userAction === "save") registerUser();
+    if (button.dataset.userAction === "cancel") closeUserModal();
+});
 
 window.editUser = editUser;
 

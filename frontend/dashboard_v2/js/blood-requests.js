@@ -1,3 +1,7 @@
+function escapeRequestHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[char]));
+}
+
 // ==========================================================
 // BLOODLINK - BLOOD REQUESTS MODULE
 // File: blood-requests.js
@@ -322,7 +326,7 @@ function buildRequestRows(requests = bloodRequests) {
                         <div class="request-patient">
 
                             <strong>
-                                ${request.patient_name}
+                                ${escapeRequestHtml(request.patient_name)}
                             </strong>
 
                             <span>
@@ -338,7 +342,7 @@ function buildRequestRows(requests = bloodRequests) {
 
                         <span class="blood-group-badge">
 
-                            ${request.blood_group}
+                            ${escapeRequestHtml(request.blood_group)}
 
                         </span>
 
@@ -354,7 +358,7 @@ function buildRequestRows(requests = bloodRequests) {
 
                     <td>
 
-                        ${request.hospital_name}
+                        ${escapeRequestHtml(request.hospital_name)}
 
                     </td>
 
@@ -368,7 +372,7 @@ function buildRequestRows(requests = bloodRequests) {
                             "
                         >
 
-                            ${request.priority}
+                            ${escapeRequestHtml(request.priority)}
 
                         </span>
 
@@ -384,7 +388,7 @@ function buildRequestRows(requests = bloodRequests) {
                             "
                         >
 
-                            ${request.status}
+                            ${escapeRequestHtml(request.status)}
 
                         </span>
 
@@ -618,16 +622,16 @@ function renderBloodRequestDetails(request) {
 
                     <span class="blood-group-badge">
 
-                        ${request.blood_group}
+                        ${escapeRequestHtml(request.blood_group)}
 
                     </span>
 
                     <h2>
-                        ${request.patient_name}
+                        ${escapeRequestHtml(request.patient_name)}
                     </h2>
 
                     <p>
-                        ${request.case_details}
+                        ${escapeRequestHtml(request.case_details)}
                     </p>
 
                 </div>
@@ -642,7 +646,7 @@ function renderBloodRequestDetails(request) {
                         "
                     >
 
-                        ${request.priority}
+                        ${escapeRequestHtml(request.priority)}
 
                     </span>
 
@@ -654,7 +658,7 @@ function renderBloodRequestDetails(request) {
                         "
                     >
 
-                        ${request.status}
+                        ${escapeRequestHtml(request.status)}
 
                     </span>
 
@@ -706,7 +710,7 @@ function renderBloodRequestDetails(request) {
                             </span>
 
                             <strong>
-                                ${request.blood_group}
+                                ${escapeRequestHtml(request.blood_group)}
                             </strong>
 
                         </div>
@@ -745,7 +749,7 @@ function renderBloodRequestDetails(request) {
                             </span>
 
                             <strong>
-                                ${request.priority}
+                                ${escapeRequestHtml(request.priority)}
                             </strong>
 
                         </div>
@@ -791,7 +795,7 @@ function renderBloodRequestDetails(request) {
                             </span>
 
                             <strong>
-                                ${request.hospital_name}
+                                ${escapeRequestHtml(request.hospital_name)}
                             </strong>
 
                         </div>
@@ -804,7 +808,7 @@ function renderBloodRequestDetails(request) {
                             </span>
 
                             <strong>
-                                ${request.hospital_location}
+                                ${escapeRequestHtml(request.hospital_location)}
                             </strong>
 
                         </div>
@@ -850,7 +854,7 @@ function renderBloodRequestDetails(request) {
                             </span>
 
                             <strong>
-                                ${request.contact_person}
+                                ${escapeRequestHtml(request.contact_person)}
                             </strong>
 
                         </div>
@@ -863,7 +867,7 @@ function renderBloodRequestDetails(request) {
                             </span>
 
                             <strong>
-                                ${request.contact_phone}
+                                ${escapeRequestHtml(request.contact_phone)}
                             </strong>
 
                         </div>
@@ -922,7 +926,7 @@ function renderBloodRequestDetails(request) {
                             </span>
 
                             <strong>
-                                ${request.status}
+                                ${escapeRequestHtml(request.status)}
                             </strong>
 
                         </div>
@@ -978,10 +982,8 @@ function renderBloodRequestDetails(request) {
 
                 <p class="request-notes-content">
 
-                    ${
-                        request.additional_notes ||
-                        "No additional notes were provided."
-                    }
+                    ${escapeRequestHtml(request.additional_notes ||
+                        "No additional notes were provided.")}
 
                 </p>
 
@@ -999,7 +1001,7 @@ function renderBloodRequestDetails(request) {
                                 </span>
 
                                 <h2>
-                                    ${request.status}
+                                    ${escapeRequestHtml(request.status)}
                                 </h2>
 
                                 <p>
@@ -1409,12 +1411,12 @@ async function openCompleteDonationModal(request) {
                     <div class="donation-summary-item">
                         <i data-lucide="building-2" aria-hidden="true"></i>
                         <span>Hospital</span>
-                        <strong>${request.hospital_name}</strong>
+                        <strong>${escapeRequestHtml(request.hospital_name)}</strong>
                     </div>
                     <div class="donation-summary-item">
                         <i data-lucide="droplet" aria-hidden="true"></i>
                         <span>Blood group</span>
-                        <strong>${request.blood_group}</strong>
+                        <strong>${escapeRequestHtml(request.blood_group)}</strong>
                     </div>
                 </section>
 
@@ -1801,15 +1803,15 @@ async function openCompleteDonationModal(request) {
 
                             <strong>
 
-                                ${donor.full_name}
+                                ${escapeRequestHtml(donor.full_name)}
 
                             </strong>
 
                             <span>
 
-                                ${donor.donor_code}
+                                ${escapeRequestHtml(donor.donor_code)}
                                 •
-                                ${donor.blood_group}
+                                ${escapeRequestHtml(donor.blood_group)}
 
                             </span>
 

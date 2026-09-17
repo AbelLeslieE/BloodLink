@@ -6,7 +6,8 @@ from collections.abc import Mapping
 from datetime import datetime, timezone
 from typing import Any, TypeVar
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_, and_
+from backend.security.tokens import email_token_digest
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -344,7 +345,7 @@ def create_email_token(
     """
 
     email_token = EmailToken(
-        token=token,
+        token=email_token_digest(token),
         expires_at=expires_at,
     )
 
@@ -372,10 +373,13 @@ def get_email_token(
     Return an email token using the token string.
     """
 
+    if token.startswith("sha256:") or len(token) > 512:
+        return None
     statement = (
         select(EmailToken)
         .where(
-            EmailToken.token == token
+            or_(EmailToken.token == email_token_digest(token),
+                and_(~EmailToken.token.like("sha256:%"), EmailToken.token == token))
         )
     )
 
@@ -942,6 +946,8 @@ def create_donation_history(
     units: int,
     donation_type: str,
     remarks: str | None = None,
+    *,
+    recorded_by: int,
 ) -> DonationHistory:
     """
     Create and save a donation history record.
@@ -963,7 +969,7 @@ def create_donation_history(
         units=units,
         donation_type=donation_type,
         remarks=remarks,
-        recorded_by=1,
+        recorded_by=recorded_by,
     )
 
     database_session.add(donation)

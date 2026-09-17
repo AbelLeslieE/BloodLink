@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from jose import JWTError, jwt
+import jwt
+from jwt import InvalidTokenError as JWTError
 from passlib.context import CryptContext
 
 from backend.config.settings import get_settings
 
 
-password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+password_context = CryptContext(schemes=["bcrypt_sha256", "bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
@@ -32,7 +33,7 @@ def create_access_token(subject: str, auth_version: int) -> str:
     expires_at = datetime.now(timezone.utc) + timedelta(
         minutes=settings.access_token_expire_minutes
     )
-    payload = {"sub": subject, "ver": auth_version, "exp": expires_at}
+    payload = {"sub": subject, "ver": auth_version, "exp": expires_at, "purpose": "access"}
     return jwt.encode(
         payload,
         settings.secret_key,
@@ -64,7 +65,10 @@ def get_token_subject(token: str) -> str:
         token,
         settings.secret_key,
         algorithms=[settings.jwt_algorithm],
+        options={"require": ["exp"]},
     )
+    if payload.get("purpose") != "access":
+        raise JWTError("Token is not an access token.")
     subject = payload.get("sub")
     if not isinstance(subject, str) or not subject:
         raise JWTError("Token subject is missing.")
@@ -78,9 +82,12 @@ def get_token_auth_version(token: str) -> int:
         token,
         settings.secret_key,
         algorithms=[settings.jwt_algorithm],
+        options={"require": ["exp"]},
     )
+    if payload.get("purpose") != "access":
+        raise JWTError("Token is not an access token.")
     auth_version = payload.get("ver")
-    if not isinstance(auth_version, int) or auth_version < 0:
+    if type(auth_version) is not int or auth_version < 0:
         raise JWTError("Token session version is missing.")
     return auth_version
 
@@ -92,6 +99,7 @@ def get_password_reset_data(token: str) -> tuple[str, int]:
         token,
         settings.secret_key,
         algorithms=[settings.jwt_algorithm],
+        options={"require": ["exp"]},
     )
     if payload.get("purpose") != "password-reset":
         raise JWTError("Token is not a password reset token.")
@@ -100,6 +108,6 @@ def get_password_reset_data(token: str) -> tuple[str, int]:
     auth_version = payload.get("ver")
     if not isinstance(subject, str) or not subject:
         raise JWTError("Password reset token subject is missing.")
-    if not isinstance(auth_version, int) or auth_version < 0:
+    if type(auth_version) is not int or auth_version < 0:
         raise JWTError("Password reset token version is missing.")
     return subject, auth_version

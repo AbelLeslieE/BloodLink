@@ -5,7 +5,10 @@ from backend.database.database import get_db
 from backend.database import crud
 from backend.database.schemas import DonationRecordCreate
 
-router = APIRouter()
+from backend.auth.dependencies import require_administrator
+from backend.database.models import User
+
+router = APIRouter(dependencies=[Depends(require_administrator)])
 
 
 # ==========================================================
@@ -116,6 +119,7 @@ def recent_donations(
 )
 def create_donation(
     donation: DonationRecordCreate,
+    current_user: User = Depends(require_administrator),
     database_session: Session = Depends(get_db),
 ):
     """
@@ -152,6 +156,7 @@ def create_donation(
         units=donation.units,
         donation_type=donation.donation_type,
         remarks=donation.remarks,
+        recorded_by=current_user.id,
     )
 
     crud.update_blood_request_status(

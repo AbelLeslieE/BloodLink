@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
+from backend.config.settings import get_settings
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
+from jwt import InvalidTokenError as JWTError
 from sqlalchemy.orm import Session
 
 from backend.auth.security import get_token_auth_version, get_token_subject
@@ -15,7 +16,7 @@ from backend.database.database import get_db
 from backend.database.models import User
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
 def _authentication_exception() -> HTTPException:
@@ -28,10 +29,21 @@ def _authentication_exception() -> HTTPException:
 
 
 def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
+    request: Request,
+    token: Annotated[str | None, Depends(oauth2_scheme)],
     database_session: Annotated[Session, Depends(get_db)],
 ) -> User:
     """Resolve the active volunteer represented by a valid JWT."""
+    if token is None or token == "cookie-session":
+        token = request.cookies.get("bloodlink_session")
+        if token and request.method not in {"GET", "HEAD", "OPTIONS"}:
+            settings = get_settings()
+            origin = request.base_url.replace(scheme="https") if settings.production else request.base_url
+            allowed = {str(origin).rstrip("/"), settings.frontend_url.rstrip("/")}
+            if request.headers.get("origin") not in allowed:
+                raise HTTPException(status_code=403, detail="A same-origin request is required.")
+    if not token:
+        raise _authentication_exception()
     try:
         username = get_token_subject(token)
         token_auth_version = get_token_auth_version(token)
@@ -68,9 +80,9 @@ def require_donor(
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
     """Require an account intended for the donor-facing portal."""
-    if current_user.role.strip().lower() in {"administrator", "admin"}:
+    if current_user.role.strip().lower() not in {"donor", "nss volunteer"}:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Administrator accounts cannot use the donor portal.",
+            detail="A donor account is required.",
         )
     return current_user

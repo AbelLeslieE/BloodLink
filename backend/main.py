@@ -8,6 +8,12 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+from backend.config.settings import get_settings
+from backend.security.middleware import SecurityMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -20,6 +26,8 @@ from backend.routers.password_reset import router as password_reset_router
 from backend.routers.blood_requests import router as blood_requests_router
 from backend.routers.donors import router as donors_router
 logger = logging.getLogger(__name__)
+from backend.security.logging import RedactAccessLog
+logging.getLogger("uvicorn.access").addFilter(RedactAccessLog())
 from backend.routers.donor_matching import (
     router as donor_matching_router,
 )
@@ -87,11 +95,39 @@ app = FastAPI(
     description="Blood donor management system for NSS volunteers.",
     version="0.1.0",
     lifespan=lifespan,
+    docs_url=None if get_settings().production else "/docs",
+    redoc_url=None if get_settings().production else "/redoc",
+    openapi_url=None if get_settings().production else "/openapi.json",
 )
+app.add_middleware(SecurityMiddleware, production=get_settings().production)
+if get_settings().production:
+    # Render redirects at its TLS edge and forwards HTTP internally.
+    # Redirecting again here would loop unless arbitrary proxy headers were trusted.
+    if not get_settings().on_render:
+        app.add_middleware(HTTPSRedirectMiddleware)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(get_settings().allowed_hosts))
+
+
+@app.exception_handler(RequestValidationError)
+async def safe_validation_error(request, error):
+    # Pydantic errors normally echo submitted passwords and medical data.
+    details = [{"loc": e["loc"], "msg": e["msg"], "type": e["type"]} for e in error.errors()]
+    return JSONResponse(status_code=422, content={"detail": details}, headers={"Cache-Control": "no-store"})
+
 
 # ==========================================================
 # Routers
 # ==========================================================
+
+@app.get("/healthz", include_in_schema=False)
+def health():
+    try:
+        verify_database_connection()
+    except Exception:
+        # Never disclose connection URLs, SQL, or credentials in health output.
+        return JSONResponse({"status": "unavailable"}, status_code=503)
+    return {"status": "ok"}
+
 
 app.include_router(auth_router)
 app.include_router(password_reset_router)

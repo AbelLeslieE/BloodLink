@@ -58,10 +58,10 @@ def _send_with_smtp(recipient_email: str, subject: str, html_body: str) -> bool:
             client.ehlo()
             client.login(settings.smtp_username, settings.smtp_password)
             client.send_message(message)
-        logger.info("Donation request email accepted by SMTP for %s", recipient_email)
+        logger.info("Donation request email accepted by SMTP")
         return True
     except Exception:
-        logger.exception("SMTP email delivery failed for %s", recipient_email)
+        logger.warning("SMTP email delivery failed")
         return False
 
 
@@ -80,10 +80,10 @@ def _send_with_resend(recipient_email: str, subject: str, html_body: str) -> boo
                 "html": html_body,
             }
         )
-        logger.info("Donation request email accepted by Resend for %s", recipient_email)
+        logger.info("Donation request email accepted by Resend")
         return True
     except Exception:
-        logger.exception("Resend email delivery failed for %s", recipient_email)
+        logger.warning("Resend email delivery failed")
         return False
 # ==========================================================
 # TOKEN GENERATION
@@ -129,7 +129,7 @@ def send_email(
         return _send_with_smtp(recipient_email, subject, html_body)
     if _send_with_resend(recipient_email, subject, html_body):
         return True
-    logger.error("No working email provider is configured for %s", recipient_email)
+    logger.error("No working email provider is configured")
     return False
 # ==========================================================
 # EMAIL SUBJECT

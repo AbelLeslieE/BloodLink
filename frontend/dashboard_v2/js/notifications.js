@@ -1765,13 +1765,13 @@ function renderNotificationDetails() {
 
                     <h2>
 
-                        ${request.patient}
+                        ${escapeHtml(request.patient)}
 
                     </h2>
 
                     <p>
 
-                        ${request.hospital}
+                        ${escapeHtml(request.hospital)}
 
                     </p>
 
@@ -1785,7 +1785,7 @@ function renderNotificationDetails() {
 
                 <span class="priority-badge">
 
-                    ${request.priority}
+                    ${escapeHtml(request.priority)}
 
                 </span>
 
@@ -1805,7 +1805,7 @@ function renderNotificationDetails() {
 
                     <strong>
 
-                        ${request.bloodGroup}
+                        ${escapeHtml(request.bloodGroup)}
 
                     </strong>
 
@@ -1831,7 +1831,7 @@ function renderNotificationDetails() {
 
                     <strong>
 
-                        ${request.district}
+                        ${escapeHtml(request.district)}
 
                     </strong>
 
@@ -1844,7 +1844,7 @@ function renderNotificationDetails() {
 
                     <strong>
 
-                        ${request.requiredDate}
+                        ${escapeHtml(request.requiredDate)}
 
                     </strong>
 
@@ -2297,13 +2297,13 @@ function renderTimeline() {
 
                 <strong>
 
-                    ${event.title}
+                    ${escapeHtml(event.title)}
 
                 </strong>
 
                 <span>
 
-                    ${event.time}
+                    ${escapeHtml(event.time)}
 
                 </span>
 

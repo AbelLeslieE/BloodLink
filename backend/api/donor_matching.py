@@ -7,7 +7,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from backend.auth.dependencies import require_authentication
+from backend.auth.dependencies import require_administrator
 from backend.database.database import get_db
 from backend.database.models import User
 from backend.database import crud
@@ -31,7 +31,7 @@ router = APIRouter(
 def find_matching_donors(
     request: FindMatchRequest,
     database_session: Session = Depends(get_db),
-    _: User = Depends(require_authentication),
+    _: User = Depends(require_administrator),
 ):
     """
     Return ranked compatible donors for a blood request.
@@ -94,7 +94,7 @@ def find_matching_donors(
 def send_notification_campaign(
     request: SendNotificationRequest,
     database_session: Session = Depends(get_db),
-    _: User = Depends(require_authentication),
+    _: User = Depends(require_administrator),
 ):
     """
     Send notification emails to the selected donors.

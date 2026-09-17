@@ -198,8 +198,9 @@ def export_notification_report(
         "Request Status", "Campaign Sent At", "Donor", "Donor Email",
         "Recipient Status", "Recipient Sent At", "Responded At", "Distance",
     ])
+    from backend.security.exports import safe_spreadsheet_cell
     for recipient in recipients:
-        writer.writerow([
+        writer.writerow([safe_spreadsheet_cell(value) for value in [
             notification.id,
             request.id,
             request.patient_name,
@@ -213,7 +214,7 @@ def export_notification_report(
             recipient.sent_at.isoformat() if recipient.sent_at else "",
             recipient.responded_at.isoformat() if recipient.responded_at else "",
             recipient.distance if recipient.distance is not None else "",
-        ])
+        ]])
 
     filename = f"blood-request-{request.id}-report.csv"
     return StreamingResponse(

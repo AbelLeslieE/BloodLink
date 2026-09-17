@@ -83,7 +83,8 @@ form.addEventListener("submit", async (event) => {
 
             headers: {
 
-                "Content-Type": "application/x-www-form-urlencoded"
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-Session-Mode": "cookie"
 
             },
 
@@ -105,7 +106,7 @@ form.addEventListener("submit", async (event) => {
 
         }
 
-        // Save JWT
+        // Store only the non-secret cookie-session marker, never the browser JWT
         localStorage.setItem("access_token", data.access_token);
 
         // Save volunteer information

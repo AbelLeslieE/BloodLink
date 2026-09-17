@@ -112,6 +112,9 @@ def update_user(
     if duplicate_email:
         raise HTTPException(status_code=409, detail="Email already exists.")
     _validate_donor(db, data.donor_id)
+    if (user.role != _normalise_role(data.role) or user.username != username
+            or user.donor_id != data.donor_id or user.email != data.email.strip().lower()):
+        user.auth_version += 1
     user.full_name, user.department, user.role = data.full_name.strip(), data.department.strip(), _normalise_role(data.role)
     user.email, user.phone, user.username, user.donor_id = data.email.strip().lower(), data.phone.strip(), username, data.donor_id
     if data.password:

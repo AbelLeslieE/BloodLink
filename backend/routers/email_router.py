@@ -6,7 +6,8 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import select
+from sqlalchemy import select, update
+from backend.database.email_token import EmailToken
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -17,7 +18,9 @@ from backend.database.notification_recipient import NotificationRecipient
 
 
 router = APIRouter(prefix="/email", tags=["Email"])
-templates = Jinja2Templates(directory="backend/templates")
+from backend.config.settings import BASE_DIR
+
+templates = Jinja2Templates(directory=str(BASE_DIR / "backend" / "templates"))
 
 
 def _token_page(request: Request, token: str, decision: str, db: Session):
@@ -50,6 +53,11 @@ def _record_decision(db: Session, token: str, response: str) -> str:
     if recipient is None:
         return "invalid"
 
+    claimed = db.execute(update(EmailToken).where(EmailToken.id == email_token.id, EmailToken.used.is_(False))
+                         .values(used=True).execution_options(synchronize_session=False))
+    if claimed.rowcount != 1:
+        db.rollback()
+        return "used"
     existing = db.scalar(select(DonorResponse).where(
         DonorResponse.donor_id == recipient.donor_id,
         DonorResponse.blood_request_id == recipient.notification.blood_request_id,

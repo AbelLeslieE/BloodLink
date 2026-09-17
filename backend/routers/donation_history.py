@@ -198,6 +198,8 @@ def _excel_export(rows: list[list[str | int]]) -> bytes:
         sheet.column_dimensions[column].width = width
     sheet.freeze_panes = "A2"
     buffer = BytesIO()
+    from backend.security.exports import protect_workbook
+    protect_workbook(workbook)
     workbook.save(buffer)
     return buffer.getvalue()
 

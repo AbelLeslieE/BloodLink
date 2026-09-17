@@ -7,7 +7,7 @@ import hashlib
 import secrets
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -27,7 +27,8 @@ def token_hash(token: str) -> str:
 
 
 def _pending_status(user: User) -> bool:
-    return user.registration_status != "ACTIVE" or not user.active
+    return (user.role.strip().lower() == "donor" and not user.active
+            and user.registration_status in {"DETAILS_VERIFIED", "PASSWORD_SETUP_SENT"})
 
 
 def _profile_summary(data) -> str:
@@ -71,11 +72,9 @@ def verify_registration_details(db: Session, data) -> User:
 
     existing_username = db.scalar(select(User).where(func.lower(User.username) == clean_username))
     if existing_username is not None:
-        if not _pending_status(existing_username):
-            raise HTTPException(status_code=409, detail="This username is already in use. Please choose another username.")
-        if existing_username.email != clean_email or _phone_key(existing_username.phone) != _phone_key(clean_phone):
-            raise HTTPException(status_code=409, detail="This username is already in use. Please choose another username.")
-        user = existing_username
+        # Contact details are not proof of ownership. Existing pending users
+        # must use their emailed setup link; disabled accounts stay disabled.
+        raise HTTPException(status_code=409, detail="This username is already in use. Use your setup link or contact support.")
     else:
         email_user = db.scalar(select(User).where(func.lower(User.email) == clean_email))
         email_donor = db.scalar(select(Donor).where(func.lower(Donor.email) == clean_email))
@@ -150,19 +149,24 @@ def fail_password_setup_delivery(db: Session, user: User) -> None:
 
 
 def complete_password_setup(db: Session, token: str, password: str) -> User:
-    user = db.scalar(select(User).where(User.password_setup_token_hash == token_hash(token)))
+    user = db.scalar(select(User).where(User.password_setup_token_hash == token_hash(token)).with_for_update())
     now = datetime.now(timezone.utc)
     expires_at = user.password_setup_expires_at if user else None
     if expires_at is not None and expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
-    if user is None or expires_at is None or expires_at <= now or user.registration_status != "PASSWORD_SETUP_SENT":
+    if user is None or not _pending_status(user) or expires_at is None or expires_at <= now or user.registration_status != "PASSWORD_SETUP_SENT":
         raise HTTPException(status_code=400, detail="This password setup link is invalid, expired, or has already been used.")
-    user.password_hash = hash_password(password)
-    user.active, user.registration_status = True, "ACTIVE"
-    user.email_verified_at = now
-    user.password_setup_token_hash = user.password_setup_expires_at = user.password_setup_sent_at = None
-    user.auth_version += 1
+    changed = db.execute(update(User).where(User.id == user.id,
+        User.password_setup_token_hash == token_hash(token), User.active.is_(False),
+        User.registration_status == "PASSWORD_SETUP_SENT"
+    ).values(password_hash=hash_password(password), active=True, registration_status="ACTIVE",
+        email_verified_at=now, password_setup_token_hash=None, password_setup_expires_at=None,
+        password_setup_sent_at=None, auth_version=User.auth_version + 1))
+    if changed.rowcount != 1:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="This password setup link has already been used.")
     db.commit()
+    db.refresh(user)
     return user
 
 

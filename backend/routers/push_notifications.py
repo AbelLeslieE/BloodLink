@@ -5,7 +5,8 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+from backend.security.push import validate_push_endpoint, validate_push_keys
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -23,6 +24,9 @@ router = APIRouter(prefix="/api/push", tags=["web push"])
 class PushSubscriptionPayload(BaseModel):
     endpoint: str = Field(min_length=1, max_length=4096)
     keys: dict[str, str]
+
+    _endpoint_validation = field_validator("endpoint")(validate_push_endpoint)
+    _key_validation = field_validator("keys")(validate_push_keys)
 
 
 @router.get("/vapid-public-key")
@@ -59,6 +63,8 @@ def save_subscription(
     else:
         # Endpoints are unique: reassignment lets a user safely move a browser
         # subscription after account recovery without duplicating delivery.
+        if subscription.user_id != user.id:
+            raise HTTPException(status_code=409, detail="This subscription belongs to another account. Unsubscribe in the browser first.")
         subscription.user_id = user.id
         subscription.p256dh = p256dh
         subscription.auth = auth

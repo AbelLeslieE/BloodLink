@@ -1,5 +1,17 @@
 # BloodLink
 
+## Security and deployment status
+
+Read [SECURITY.md](SECURITY.md) before deployment. Security hardening and SQLCipher
+support are implemented and regression-tested, but the existing local database is
+**not yet encrypted**. Production encryption/key recovery, administrator MFA and an
+independent deployed-system penetration test are still required before sensitive use.
+Install `requirements-security.txt` for SQLCipher, apply `python -m alembic upgrade head`,
+and follow the production configuration in that document. Existing sessions must sign
+in again after this update; original passwords and donor/patient records are retained.
+
+## Project overview
+
 BloodLink is a blood donor management system developed exclusively for National Service Scheme (NSS) volunteers. It replaces the existing Excel-based workflow for finding and contacting donors. Administrators manage campaigns, while donors have a separate, privacy-safe portal.
 
 ## Technology Stack
@@ -82,7 +94,7 @@ including `DEFAULT_VOLUNTEER_PASSWORD`, then apply the schema with:
 
 ```powershell
 alembic upgrade head
-uvicorn backend.main:app --reload
+python start.py
 ```
 
 ## PWA and secure push notifications
@@ -126,9 +138,10 @@ is redeemed. Existing users and administrator-created donor accounts remain
 active and continue to use their current passwords. Apply `alembic upgrade
 head` to add the pending-registration fields and `donor_profiles` table.
 
-### Gmail SMTP alternative for Render
+### Gmail SMTP alternative (local or SMTP-enabled hosting)
 
-If you do not own a custom domain for Resend, BloodLink uses Gmail SMTP when
+Render free web services block SMTP ports. Use the Resend HTTPS API there and leave
+SMTP variables blank. On an SMTP-enabled host, BloodLink uses Gmail SMTP when
 all of these Render environment variables are configured. Create a **Google App
 Password** (not your normal Google password) after enabling two-step
 verification, and keep it only in Render:
@@ -147,13 +160,18 @@ App Password to source control.
 
 ### Render deployment commands
 
-This repository has no `render.yaml`, so keep the existing Render service and
-set its commands in the Render dashboard:
+For full local/Render configuration, encryption, and verification instructions see
+[DEPLOYMENT.md](DEPLOYMENT.md). Keep the existing Render service and set:
 
 ```text
 Build Command: pip install -r requirements.txt
-Start Command: alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+Start Command: python start.py
+Health Check Path: /healthz
+Python Version: 3.11.15
 ```
+
+The optional `render.yaml` is for creating a new service, not replacing an existing one.
+Render requires PostgreSQL; configure the database TLS mode as documented.
 
 The start command applies all current migrations before the application starts,
 including Web Push subscriptions and pending donor registration profiles.

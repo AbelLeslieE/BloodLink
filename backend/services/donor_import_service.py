@@ -7,6 +7,7 @@ from datetime import date
 from io import BytesIO
 
 from openpyxl import load_workbook
+from backend.security.uploads import validate_workbook_archive
 from openpyxl.worksheet.worksheet import Worksheet
 from sqlalchemy.orm import Session
 
@@ -110,13 +111,18 @@ def load_excel_workbook(
     Load the uploaded Excel workbook.
     """
 
+    validate_workbook_archive(file_bytes)
     workbook = load_workbook(
         BytesIO(file_bytes),
         data_only=True,
         read_only=True,
     )
 
-    return workbook.active
+    sheet = workbook.active
+    if sheet is None or (sheet.max_row or 0) > 10000 or (sheet.max_column or 0) > 100:
+        workbook.close()
+        raise ValueError("Workbook is limited to 10,000 rows and 100 columns.")
+    return sheet
 
 
 # ==========================================================

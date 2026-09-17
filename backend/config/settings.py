@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from urllib.parse import urlsplit
 from dataclasses import dataclass
 from functools import lru_cache
 
@@ -11,7 +12,8 @@ from dotenv import load_dotenv
 
 # Load the .env file from the project root
 BASE_DIR = Path(__file__).resolve().parents[2]
-load_dotenv(BASE_DIR / ".env")
+if os.getenv("RENDER", "").lower() != "true":
+    load_dotenv(BASE_DIR / ".env")
 
 
 class ConfigurationError(RuntimeError):
@@ -63,6 +65,9 @@ class Settings:
     vapid_public_key: str
     vapid_private_key: str
     vapid_subject: str
+    on_render: bool = False
+    production: bool = False
+    allowed_hosts: tuple[str, ...] = ("localhost", "127.0.0.1", "testserver")
 
 
 @dataclass(frozen=True)
@@ -108,10 +113,47 @@ def _positive_integer(name: str, default: int) -> int:
 def get_settings() -> Settings:
     """Build and cache the application settings."""
 
+    on_render = os.getenv("RENDER", "").lower() == "true"
+    environment = os.getenv("APP_ENV", "production" if on_render else "development").strip().lower()
+    if environment not in {"development", "production", "test"}:
+        raise ConfigurationError("APP_ENV must be development, test, or production.")
+    if on_render and environment != "production":
+        raise ConfigurationError("Render must run with APP_ENV=production.")
+    production = environment == "production"
+    if _required_value("JWT_ALGORITHM") != "HS256":
+        raise ConfigurationError("JWT_ALGORITHM must be HS256 for this symmetric-key application.")
+    if (len(_required_value("SECRET_KEY").encode("utf-8")) < 32
+            or _required_value("SECRET_KEY").startswith("REPLACE_")):
+        raise ConfigurationError("SECRET_KEY must contain at least 32 bytes; use a random secret.")
+    default_url = os.getenv("RENDER_EXTERNAL_URL", "") if on_render else "http://localhost:" + str(_positive_integer("PORT", 8000))
+    backend_url = os.getenv("BACKEND_URL", "").strip() or default_url
+    frontend_url = os.getenv("FRONTEND_URL", "").strip() or backend_url
+    for name, value in (("BACKEND_URL", backend_url), ("FRONTEND_URL", frontend_url)):
+        parsed = urlsplit(value)
+        if (parsed.scheme not in ({"https"} if production else {"http", "https"})
+                or not parsed.hostname or parsed.username or parsed.password
+                or parsed.query or parsed.fragment or parsed.path not in {"", "/"}):
+            raise ConfigurationError(f"{name} must be an absolute {'HTTPS' if production else 'HTTP(S)'} origin.")
+    hosts = tuple(h.strip() for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h.strip())
+    if not hosts:
+        hosts = tuple(dict.fromkeys(filter(None, [
+            urlsplit(backend_url).hostname, urlsplit(frontend_url).hostname,
+            os.getenv("RENDER_EXTERNAL_HOSTNAME", "") if on_render else "127.0.0.1",
+        ])))
+    if production and any("*" in h for h in hosts):
+        raise ConfigurationError("Production ALLOWED_HOSTS cannot contain wildcards.")
+    from backend.config.database_url import normalize_database_url
+    database_url = normalize_database_url(
+        _required_value("DATABASE_URL") if production else os.getenv("DATABASE_URL", "") or "sqlite:///./bloodlink.db",
+        production=production, on_render=on_render,
+    )
     return Settings(
+        on_render=on_render,
+        production=production,
+        allowed_hosts=hosts or ("localhost", "127.0.0.1", "testserver"),
 
         # Database
-        database_url=_required_value("DATABASE_URL"),
+        database_url=database_url,
         database_pool_size=_positive_integer("DATABASE_POOL_SIZE", 5),
         database_max_overflow=_positive_integer("DATABASE_MAX_OVERFLOW", 10),
 
@@ -124,8 +166,7 @@ def get_settings() -> Settings:
         ),
 
         # Email (optional during development). SMTP takes precedence when
-        # configured, allowing the existing Gmail SMTP variables to work on
-        # Render without a separately verified Resend domain.
+        # configured. Render free services block SMTP; use Resend there.
         resend_api_key=os.getenv("RESEND_API_KEY", ""),
         email_from=os.getenv("EMAIL_FROM", ""),
         smtp_host=os.getenv("SMTP_HOST", "").strip(),
@@ -135,8 +176,8 @@ def get_settings() -> Settings:
         smtp_from=os.getenv("SMTP_FROM", "").strip(),
 
         # Application URLs
-        backend_url=_required_value("BACKEND_URL"),
-        frontend_url=_required_value("FRONTEND_URL"),
+        backend_url=backend_url.rstrip("/"),
+        frontend_url=frontend_url.rstrip("/"),
 
         vapid_public_key=os.getenv("VAPID_PUBLIC_KEY", "").strip(),
         vapid_private_key=os.getenv("VAPID_PRIVATE_KEY", "").strip(),

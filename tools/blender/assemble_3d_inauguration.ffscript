@@ -1,0 +1,11 @@
+[0:v]zoompan=z='1.0+0.00042*on':x='iw/2-(iw/zoom/2)-18+sin(on/34)*6':y='ih/2-(ih/zoom/2)':d=1:s=1920x1080:fps=30,trim=duration=2.666667,setpts=PTS-STARTPTS,fade=t=in:st=0:d=0.20:color=black,fade=t=out:st=2.466667:d=0.20:color=black[v0];
+[1:v]zoompan=z='1.055-0.00034*on':x='iw/2-(iw/zoom/2)+16-sin(on/38)*7':y='ih/2-(ih/zoom/2)':d=1:s=1920x1080:fps=30,trim=duration=2.666667,setpts=PTS-STARTPTS,fade=t=in:st=0:d=0.20:color=black,fade=t=out:st=2.466667:d=0.20:color=black[v1];
+[2:v]zoompan=z='1.015+0.00030*on':x='iw/2-(iw/zoom/2)-10+sin(on/31)*8':y='ih/2-(ih/zoom/2)':d=1:s=1920x1080:fps=30,trim=duration=2.666667,setpts=PTS-STARTPTS,fade=t=in:st=0:d=0.20:color=black,fade=t=out:st=2.466667:d=0.20:color=black[v2];
+[3:v]zoompan=z='1.045-0.00028*on':x='iw/2-(iw/zoom/2)+12-sin(on/35)*6':y='ih/2-(ih/zoom/2)':d=1:s=1920x1080:fps=30,trim=duration=2.666667,setpts=PTS-STARTPTS,fade=t=in:st=0:d=0.20:color=black,fade=t=out:st=2.466667:d=0.20:color=black[v3];
+[4:v]zoompan=z='1.0+0.00030*on':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)-8':d=1:s=1920x1080:fps=30,trim=duration=2.666667,setpts=PTS-STARTPTS,fade=t=in:st=0:d=0.20:color=black,fade=t=out:st=2.466667:d=0.20:color=black[v4];
+[5:v]zoompan=z='1.045-0.00025*on':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1920x1080:fps=30,trim=duration=2.666667,setpts=PTS-STARTPTS,fade=t=in:st=0:d=0.20:color=black[v5];
+[v0][v1][v2][v3][v4][v5]concat=n=6:v=1:a=0[seq];
+[seq]drawtext=fontfile='C\:/Windows/Fonts/segoeuib.ttf':text='ONE PULSE. ONE PURPOSE.':fontcolor=white:fontsize=66:x=(w-text_w)/2:y=88:shadowcolor=red@0.55:shadowx=0:shadowy=0:enable='between(t,5.45,7.78)',drawtext=fontfile='C\:/Windows/Fonts/segoeuib.ttf':text='BLOODLINK BLOOD BANK SYSTEM':fontcolor=white:fontsize=58:x=(w-text_w)/2:y=82:bordercolor=0xD7193F@0.9:borderw=2:enable='between(t,8.12,10.40)',drawtext=fontfile='C\:/Windows/Fonts/segoeui.ttf':text='INITIALIZING LIFE-SAVING NETWORK...':fontcolor=0x9DDCFF:fontsize=34:x=(w-text_w)/2:y=158:enable='between(t,8.30,10.40)'[titles];
+[titles]split=2[base][light];
+[light]gblur=sigma=9:steps=2[glow];
+[base][glow]blend=all_mode=screen:all_opacity=0.13,eq=contrast=1.06:saturation=1.10,vignette=PI/6:eval=frame,noise=alls=1.2:allf=t,scale=3840:2160:flags=lanczos,fade=t=out:st=15.35:d=0.65:color=white,trim=duration=16,format=yuv420p[vout]

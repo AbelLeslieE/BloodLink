@@ -1,0 +1,3 @@
+-r requirements.txt
+# Cross-platform SQLCipher 4 binding. Review/pin this binary in deployment CI.
+sqlcipher3-wheels==0.5.7

@@ -39,9 +39,21 @@ env/
 # Environment
 # ===========================
 .env
+.env.*
+!.env.example
+.secrets/
+*.key
+*.pem
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
 
 # ===========================
 # OS
 # ===========================
 Thumbs.db
 .DS_Store
+
+# Local generated media and inauguration assets (not committed)
+/local_artifacts/
