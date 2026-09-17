@@ -51,6 +51,12 @@ def _send_to_recipient(
             accept_url=accept_url,
             decline_url=decline_url,
         ),
+        text_body=email_service.build_text_email(
+            donor=donor,
+            blood_request=blood_request,
+            accept_url=accept_url,
+            decline_url=decline_url,
+        ),
     )
 
     recipient.sent_at = datetime.now(timezone.utc)
