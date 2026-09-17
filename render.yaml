@@ -19,7 +19,5 @@ services:
         generateValue: true
       - key: DATABASE_URL
         sync: false
-      - key: DATABASE_TLS_MODE
-        sync: false
       - key: DEFAULT_VOLUNTEER_PASSWORD
         sync: false

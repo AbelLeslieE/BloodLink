@@ -69,6 +69,9 @@ Render SQLite is deliberately rejected because its filesystem is ephemeral.
   automatically when DATABASE_TLS_MODE is unset. The client enforces
   sslmode=require, matching Render's supported TLS configuration. You can set
   DATABASE_TLS_MODE=render-internal or render-managed explicitly when needed.
+- On Render, a third-party provider URL that explicitly includes
+  sslmode=require is preserved. Plaintext-capable modes such as disable and
+  prefer remain rejected in production.
 - For public PostgreSQL URLs, use DATABASE_TLS_MODE=verify-full (default).
   Certificate and hostname verification are required. The CA defaults to certifi;
   set DATABASE_CA_FILE or the URL's sslrootcert to the provider's trusted PEM bundle

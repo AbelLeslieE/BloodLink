@@ -24,15 +24,24 @@ def normalize_database_url(value: str, *, production: bool, on_render: bool) -> 
     if url.drivername in {"postgres", "postgresql", "postgresql+psycopg"}:
         url = url.set(drivername="postgresql+psycopg")
         render_database_kind = _render_database_kind(url.host)
+        requested_sslmode = dict(url.query).get("sslmode")
         configured_mode = os.getenv("DATABASE_TLS_MODE", "").strip()
         mode = configured_mode or (
             "render-managed"
             if on_render and render_database_kind
+            else "require"
+            if on_render and production and requested_sslmode == "require"
             else "verify-full"
         )
-        if mode not in {"verify-full", "render-internal", "render-managed"}:
+        if mode not in {
+            "verify-full",
+            "require",
+            "render-internal",
+            "render-managed",
+        }:
             raise ConfigurationError(
-                "DATABASE_TLS_MODE must be verify-full, render-internal, or render-managed."
+                "DATABASE_TLS_MODE must be verify-full, require, "
+                "render-internal, or render-managed."
             )
         query = dict(url.query)
         if mode == "render-internal":
@@ -49,6 +58,16 @@ def normalize_database_url(value: str, *, production: bool, on_render: bool) -> 
                 )
             if query.get("sslmode", "require") != "require":
                 raise ConfigurationError("Render-managed PostgreSQL requires sslmode=require.")
+            query["sslmode"] = "require"
+        elif mode == "require":
+            if not on_render or not production:
+                raise ConfigurationError(
+                    "DATABASE_TLS_MODE=require is limited to production on Render."
+                )
+            if query.get("sslmode", "require") != "require":
+                raise ConfigurationError(
+                    "Provider-managed PostgreSQL requires sslmode=require."
+                )
             query["sslmode"] = "require"
         elif production:
             if query.get("sslmode", "verify-full") != "verify-full":

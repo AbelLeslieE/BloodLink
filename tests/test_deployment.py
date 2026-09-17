@@ -17,6 +17,10 @@ from backend.security.database import create_database_engine
 from start import server_options
 
 
+def test_python_runtime_is_pinned_for_render():
+    assert (BASE_DIR / ".python-version").read_text(encoding="utf-8").strip() == "3.11.15"
+
+
 @pytest.fixture
 def config_env(monkeypatch):
     for name in ("RENDER", "APP_ENV", "BACKEND_URL", "FRONTEND_URL",
@@ -78,7 +82,19 @@ def test_render_managed_mode_rejects_non_render_host(config_env):
         )
 
 
-@pytest.mark.parametrize("mode", ["disable", "prefer", "require"])
+def test_render_preserves_provider_required_tls(config_env):
+    url = make_url(
+        normalize_database_url(
+            "postgres://u:p@provider.example.org/app?sslmode=require",
+            production=True,
+            on_render=True,
+        )
+    )
+    assert url.query["sslmode"] == "require"
+    assert url.query["connect_timeout"] == "5"
+
+
+@pytest.mark.parametrize("mode", ["disable", "prefer"])
 def test_public_tls_cannot_downgrade(config_env, mode):
     with pytest.raises(ConfigurationError):
         normalize_database_url("postgres://u:p@db.example.org/app?sslmode=" + mode, production=True, on_render=True)
