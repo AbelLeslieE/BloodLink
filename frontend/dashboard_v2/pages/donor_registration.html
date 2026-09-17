@@ -1,36 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BloodLink | Donor registration</title>
-    <link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#b31337"><link rel="apple-touch-icon" href="/static/pwa/icon-192.png">
-    <link rel="stylesheet" href="/static/dashboard_v2/css/donor_registration.css"><link rel="stylesheet" href="/static/dashboard_v2/css/pwa.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create a BloodLink donor account and join the Pranadan donor network.">
+    <title>BloodLink | Donor Registration</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#be1232">
+    <link rel="apple-touch-icon" href="/static/pwa/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/dashboard_v2/css/donor_registration.css">
+    <link rel="stylesheet" href="/static/dashboard_v2/css/pwa.css">
 </head>
 <body>
+    <div class="page-glow page-glow-left" aria-hidden="true"></div>
+    <div class="page-glow page-glow-right" aria-hidden="true"></div>
+
     <main class="registration-shell">
-        <section class="registration-intro">
-            <p class="eyebrow">BloodLink</p><h1>Become a blood donor</h1>
-            <p>Register your details, create a password, and sign in to your new donor account immediately.</p>
-            <ul><li>Your profile helps BloodLink make relevant matches.</li><li>You decide whether you are available for each request.</li><li>Your password is stored securely and never shown to BloodLink staff.</li></ul>
-        </section>
+        <aside class="registration-intro" aria-label="Why donate with BloodLink">
+            <a class="brand" href="/login" aria-label="BloodLink sign in">
+                <span class="brand-drop"><i class="fa-solid fa-droplet" aria-hidden="true"></i></span>
+                <span><strong><b>Blood</b>Link</strong><small>People &nbsp;|&nbsp; Blood &nbsp;|&nbsp; Better tomorrows</small></span>
+            </a>
+
+            <div class="intro-copy">
+                <span class="short-rule" aria-hidden="true"></span>
+                <h1>Donate <em>Blood</em><br>Save <em>Lives</em></h1>
+                <p>A healthier tomorrow<br>begins with you</p>
+            </div>
+
+            <ul class="benefit-list">
+                <li><span><i class="fa-solid fa-people-group" aria-hidden="true"></i></span><div><strong>Make a Difference</strong><p>Your donation can save up to three lives.</p></div></li>
+                <li><span><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span><div><strong>Safe &amp; Secure</strong><p>Your information is protected and kept confidential.</p></div></li>
+                <li><span><i class="fa-solid fa-heart" aria-hidden="true"></i></span><div><strong>A Stronger Community</strong><p>Together we build a healthier tomorrow.</p></div></li>
+            </ul>
+
+            <p class="intro-signoff"><span></span>Give blood.<br>Give hope.</p>
+        </aside>
+
         <section class="registration-card" aria-labelledby="registration-title">
-            <a class="back" href="/login">Already registered? Sign in</a>
-            <h2 id="registration-title">Donor registration</h2><p class="help">Fields marked with * are required.</p>
+            <header class="card-header">
+                <p class="card-kicker">Join the Pranadan network</p>
+                <h2 id="registration-title">Donor Registration</h2>
+                <p>Create your account and be a part of a healthier tomorrow.</p>
+            </header>
+
             <form id="donorRegistrationForm" novalidate>
-                <label>Full name *<input name="full_name" autocomplete="name" required minlength="2" maxlength="200"></label>
-                <div class="pair"><label>Phone number *<input name="phone" autocomplete="tel" inputmode="tel" required maxlength="30"></label><label>Email address *<input name="email" autocomplete="email" type="email" required></label></div>
-                <div class="pair"><label>Blood group *<select name="blood_group" required><option value="">Select</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></label><label>Gender <select name="gender"><option value="">Prefer not to say</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Other</option></select></label></div>
-                <section class="profile-section" aria-labelledby="status-heading"><p class="profile-eyebrow">Profile</p><h3 id="status-heading">Current status *</h3><label><span class="sr-only">Current status</span><select name="current_status" id="currentStatus" required><option value="">Select your current status</option><option>Student</option><option>Employed</option><option>Self-employed / Business</option><option>Unemployed</option><option>Other</option></select></label><div id="profileFields" class="conditional-fields" aria-live="polite"></div></section>
-                <label>Choose a username *<input name="username" autocomplete="username" required minlength="3" maxlength="100" pattern="[A-Za-z0-9._\-]+" aria-describedby="usernameHint"><small id="usernameHint" class="field-hint">3–100 characters: letters, numbers, periods, underscores, or hyphens. No spaces.</small></label>
-                <div class="pair"><label>Create password *<input name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128" aria-describedby="passwordHint"><small id="passwordHint" class="field-hint">At least 8 characters, including a letter and a number.</small></label><label>Confirm password *<input name="confirm_password" type="password" autocomplete="new-password" required minlength="8" maxlength="128"></label></div>
+                <section class="form-section" aria-labelledby="personal-heading">
+                    <h3 id="personal-heading"><i class="fa-solid fa-user" aria-hidden="true"></i> Personal Information</h3>
+                    <div class="section-fields">
+                        <label class="full-field">Full Name *<input name="full_name" autocomplete="name" placeholder="Enter your full name" required minlength="2" maxlength="200"></label>
+                        <div class="pair">
+                            <label>Phone Number *<input name="phone" autocomplete="tel" inputmode="tel" placeholder="Enter phone number" required maxlength="30"></label>
+                            <label>Email Address *<input name="email" autocomplete="email" type="email" placeholder="Enter your email address" required></label>
+                        </div>
+                        <div class="pair">
+                            <label>Date of Birth *<input name="date_of_birth" autocomplete="bday" type="date" required></label>
+                            <label>Gender *<select name="gender" required><option value="">Select gender</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Other</option><option value="Not Specified">Prefer not to say</option></select></label>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-section" aria-labelledby="donation-heading">
+                    <h3 id="donation-heading"><i class="fa-solid fa-droplet" aria-hidden="true"></i> Donation Information</h3>
+                    <div class="section-fields">
+                        <div class="pair">
+                            <label>Blood Group *<select name="blood_group" required><option value="">Select blood group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></label>
+                            <label>Current Status *<select name="current_status" id="currentStatus" required><option value="">Select your current status</option><option>Student</option><option>Employed</option><option>Self-employed / Business</option><option>Unemployed</option><option>Other</option></select></label>
+                        </div>
+                        <div id="profileFields" class="conditional-fields" aria-live="polite"></div>
+                    </div>
+                </section>
+
+                <section class="form-section" aria-labelledby="security-heading">
+                    <h3 id="security-heading"><i class="fa-solid fa-lock" aria-hidden="true"></i> Account Security</h3>
+                    <div class="section-fields">
+                        <label class="full-field">Choose a Username *<input name="username" autocomplete="username" placeholder="Enter a username" required minlength="3" maxlength="100" pattern="[A-Za-z0-9._\-]+" aria-describedby="usernameHint"><small id="usernameHint" class="field-hint">3–100 characters. Letters, numbers, periods, underscores, or hyphens. No spaces.</small></label>
+                        <div class="pair password-pair">
+                            <label>Create Password *<input name="password" type="password" placeholder="Enter password" autocomplete="new-password" required minlength="8" maxlength="128" aria-describedby="passwordHint"><small id="passwordHint" class="field-hint">At least 8 characters, including a letter and a number.</small></label>
+                            <label>Confirm Password *<input name="confirm_password" type="password" placeholder="Confirm password" autocomplete="new-password" required minlength="8" maxlength="128"></label>
+                        </div>
+                    </div>
+                </section>
+
                 <p id="formMessage" role="alert" aria-live="polite"></p>
-                <button id="submitRegistration" type="submit">Create donor account</button>
+                <button id="submitRegistration" type="submit">Create Donor Account</button>
             </form>
-            <a id="loginAfterRegistration" class="login-after-registration" href="/login" hidden>Go to sign in</a>
+
+            <div class="account-divider"><span>or</span></div>
+            <a id="loginAfterRegistration" class="login-after-registration" href="/login">Sign in to your account</a>
+            <p class="legal-note">By creating an account, you agree to protect donor privacy and use BloodLink responsibly.</p>
         </section>
+
+        <aside class="blood-visual" aria-label="Blood connects us all">
+            <div class="world-grid" aria-hidden="true"></div>
+            <div class="blood-drop-art" aria-hidden="true"><span>AB<sup>+</sup></span></div>
+            <p><span>Blood</span><span>connects</span><span>us all</span></p>
+            <i class="visual-cross visual-cross-top" aria-hidden="true"></i>
+            <i class="visual-cross visual-cross-bottom" aria-hidden="true"></i>
+        </aside>
     </main>
-    <datalist id="institutions"><option value="Other / not listed"><option value="Government College"><option value="University College"></datalist><datalist id="study-periods"><option value="Semester 1"><option value="Semester 2"><option value="Semester 3"><option value="Semester 4"><option value="Semester 5"><option value="Semester 6"><option value="Semester 7"><option value="Semester 8"><option value="Year 1"><option value="Year 2"><option value="Year 3"><option value="Year 4"><option value="Year 5"></datalist>
+
+    <div class="red-waves" aria-hidden="true"><span></span><span></span><span></span></div>
+
+    <datalist id="institutions"><option value="Other / not listed"><option value="Government College"><option value="University College"></datalist>
+    <datalist id="study-periods"><option value="Semester 1"><option value="Semester 2"><option value="Semester 3"><option value="Semester 4"><option value="Semester 5"><option value="Semester 6"><option value="Semester 7"><option value="Semester 8"><option value="Year 1"><option value="Year 2"><option value="Year 3"><option value="Year 4"><option value="Year 5"></datalist>
     <datalist id="courses"><option value="Biomedical Engineering"><option value="Computer Science Engineering"><option value="Mechanical Engineering"><option value="Electronics"><option value="Nursing"></datalist>
-    <script type="module" src="/static/dashboard_v2/js/donor_registration.js"></script><script src="/static/dashboard_v2/js/pwa.js"></script>
+
+    <script type="module" src="/static/dashboard_v2/js/donor_registration.js"></script>
+    <script src="/static/dashboard_v2/js/pwa.js"></script>
 </body>
 </html>

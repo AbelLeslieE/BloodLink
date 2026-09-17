@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from html import escape
 from io import BytesIO
 import re
@@ -41,6 +42,7 @@ class RegistrationDetails(BaseModel):
     username: str = Field(max_length=100)
     blood_group: str = Field(max_length=5)
     gender: str | None = Field(default=None, max_length=20)
+    date_of_birth: date | None = None
     current_status: str = Field(max_length=40)
 
     education_level: str | None = Field(default=None, max_length=40)

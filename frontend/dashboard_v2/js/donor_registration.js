@@ -5,7 +5,7 @@ const statusSelect = document.querySelector("#currentStatus");
 const profileFields = document.querySelector("#profileFields");
 const loginAfterRegistration = document.querySelector("#loginAfterRegistration");
 
-const fieldLabels = { full_name: "Full name", phone: "Phone number", email: "Email address", blood_group: "Blood group", current_status: "Current status", username: "Username", password: "Password", confirm_password: "Confirm password" };
+const fieldLabels = { full_name: "Full name", phone: "Phone number", email: "Email address", date_of_birth: "Date of birth", gender: "Gender", blood_group: "Blood group", current_status: "Current status", username: "Username", password: "Password", confirm_password: "Confirm password" };
 const select = (name, label, options, required = true, selectedValue = "") => `<label>${label}${required ? " *" : ""}<select name="${name}" ${required ? "required" : ""}><option value="">Select</option>${options.map((option) => `<option value="${option}"${option === selectedValue ? " selected" : ""}>${option}</option>`).join("")}</select></label>`;
 const input = (name, label, { required = true, list = "", type = "text", hint = "" } = {}) => `<label>${label}${required ? " *" : ""}<input name="${name}" type="${type}" ${list ? `list="${list}"` : ""} ${required ? "required" : ""} maxlength="${type === "number" ? "4" : "255"}">${hint ? `<small class="field-hint">${hint}</small>` : ""}</label>`;
 const pair = (...fields) => `<div class="pair">${fields.join("")}</div>`;
@@ -14,6 +14,28 @@ function setMessage(text, success = false) { message.className = success ? "succ
 function clearFieldError(name) { const input = form.elements.namedItem(name); input?.removeAttribute("aria-invalid"); document.querySelector(`#registration-${CSS.escape(name)}-error`)?.remove(); }
 function showFieldError(name, text) { const input = form.elements.namedItem(name); if (!input) return; clearFieldError(name); input.setAttribute("aria-invalid", "true"); const error = document.createElement("small"); error.id = `registration-${name}-error`; error.className = "field-error"; error.textContent = text; input.closest("label")?.append(error); }
 function normalisePhone(value) { return value.replace(/[\s()-]/g, "").replace(/^00/, "+"); }
+
+function addPasswordToggles() {
+  form.querySelectorAll('input[type="password"]').forEach((passwordInput) => {
+    if (passwordInput.parentElement?.classList.contains("password-field")) return;
+    const wrapper = document.createElement("span");
+    wrapper.className = "password-field";
+    passwordInput.before(wrapper);
+    wrapper.append(passwordInput);
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "password-toggle";
+    toggle.setAttribute("aria-label", "Show password");
+    toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>';
+    toggle.addEventListener("click", () => {
+      const showing = passwordInput.type === "text";
+      passwordInput.type = showing ? "password" : "text";
+      toggle.classList.toggle("is-visible", !showing);
+      toggle.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+    });
+    wrapper.append(toggle);
+  });
+}
 
 function fieldLabel(control) {
   if (fieldLabels[control.name]) return fieldLabels[control.name];
@@ -119,6 +141,7 @@ form.addEventListener("input", (event) => clearFieldError(event.target.name));
 form.addEventListener("change", (event) => clearFieldError(event.target.name));
 statusSelect.addEventListener("change", renderProfile);
 renderProfile();
+addPasswordToggles();
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault(); setMessage("");

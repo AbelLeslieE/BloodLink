@@ -15,7 +15,7 @@ from sqlalchemy import select
 from backend.auth.security import (create_access_token, create_password_reset_token,
     get_token_subject, get_password_reset_data, hash_password, verify_password)
 from backend.config.settings import get_settings, ConfigurationError
-from backend.database.models import User, BloodRequest
+from backend.database.models import Donor, User, BloodRequest
 from backend.security.database import configure_sqlcipher, create_database_engine
 from backend.security.encrypt_database import encrypted_copy
 from backend.security.exports import protect_workbook, safe_spreadsheet_cell
@@ -174,13 +174,18 @@ def test_production_plaintext_sqlite_refused():
 
 def registration(username="newdonor", email="new@example.org", phone="9999900010"):
     return {"full_name": "New Donor", "email": email, "phone": phone, "username": username,
-            "blood_group": "A+", "current_status": "Unemployed", "password": "StrongPassword123", "confirm_password": "StrongPassword123"}
+            "blood_group": "A+", "gender": "Female", "date_of_birth": "1995-01-20",
+            "current_status": "Unemployed", "password": "StrongPassword123", "confirm_password": "StrongPassword123"}
 
 
 def test_registration_preserved_but_disabled_account_takeover_blocked(system):
     client, sessions, _ = system
     assert client.post("/api/donor-registration/complete", json=registration()).status_code == 201
     assert client.post("/api/auth/login", data={"username": "newdonor", "password": "StrongPassword123"}).status_code == 200
+    with sessions() as db:
+        donor = db.scalar(select(Donor).where(Donor.email == "new@example.org"))
+        assert donor.gender == "Female"
+        assert donor.date_of_birth.isoformat() == "1995-01-20"
     with sessions.begin() as db:
         admin = db.scalar(select(User).where(User.username == "admin"))
         admin.active = False

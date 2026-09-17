@@ -85,6 +85,7 @@ def verify_registration_details(db: Session, data) -> User:
         donor = Donor(
             donor_code=crud.generate_donor_code(db), full_name=data.full_name,
             blood_group=data.blood_group, gender=data.gender or "Not Specified",
+            date_of_birth=data.date_of_birth,
             phone=clean_phone, email=clean_email, class_department=_profile_summary(data),
             status="Available", hb_above_12_5="Not Recorded", regular_medication="Not Recorded", bp_normal="Not Recorded",
         )
@@ -105,6 +106,7 @@ def verify_registration_details(db: Session, data) -> User:
     if _find_phone_conflict(db, clean_phone, user.id, donor.id):
         raise HTTPException(status_code=409, detail="That phone number is already registered.")
     donor.full_name, donor.blood_group, donor.gender = data.full_name, data.blood_group, data.gender or "Not Specified"
+    donor.date_of_birth = data.date_of_birth
     donor.phone, donor.email, donor.class_department = clean_phone, clean_email, _profile_summary(data)
     user.full_name, user.email, user.phone, user.department = data.full_name, clean_email, clean_phone, donor.class_department[:100]
     user.active, user.registration_status = False, "DETAILS_VERIFIED"
