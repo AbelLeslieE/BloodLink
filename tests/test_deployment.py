@@ -50,6 +50,34 @@ def test_render_internal_tls_explicit(config_env):
             normalize_database_url(f"postgres://u:p@{host}/app", production=True, on_render=on_render)
 
 
+@pytest.mark.parametrize(
+    "host",
+    [
+        "dpg-example-a",
+        "dpg-example-a.oregon-postgres.render.com",
+    ],
+)
+def test_render_managed_database_tls_is_detected(config_env, host):
+    url = make_url(
+        normalize_database_url(
+            f"postgres://u:p@{host}/app?sslmode=require",
+            production=True,
+            on_render=True,
+        )
+    )
+    assert url.query["sslmode"] == "require"
+
+
+def test_render_managed_mode_rejects_non_render_host(config_env):
+    config_env.setenv("DATABASE_TLS_MODE", "render-managed")
+    with pytest.raises(ConfigurationError):
+        normalize_database_url(
+            "postgres://u:p@dpg-example-a.attacker.example/app?sslmode=require",
+            production=True,
+            on_render=True,
+        )
+
+
 @pytest.mark.parametrize("mode", ["disable", "prefer", "require"])
 def test_public_tls_cannot_downgrade(config_env, mode):
     with pytest.raises(ConfigurationError):

@@ -6,6 +6,16 @@ from sqlalchemy.engine import make_url
 from backend.config.settings import BASE_DIR, ConfigurationError
 
 
+def _render_database_kind(host: str | None) -> str | None:
+    """Classify Render-managed PostgreSQL hosts without accepting lookalikes."""
+    normalized = (host or "").lower()
+    if re.fullmatch(r"dpg-[a-z0-9-]+", normalized):
+        return "internal"
+    if re.fullmatch(r"dpg-[a-z0-9-]+(?:\.[a-z0-9-]+)*\.render\.com", normalized):
+        return "external"
+    return None
+
+
 def normalize_database_url(value: str, *, production: bool, on_render: bool) -> str:
     try:
         url = make_url(value)
@@ -13,16 +23,32 @@ def normalize_database_url(value: str, *, production: bool, on_render: bool) -> 
         raise ConfigurationError("DATABASE_URL is not a valid SQLAlchemy URL.") from None
     if url.drivername in {"postgres", "postgresql", "postgresql+psycopg"}:
         url = url.set(drivername="postgresql+psycopg")
-        mode = os.getenv("DATABASE_TLS_MODE", "verify-full").strip()
-        if mode not in {"verify-full", "render-internal"}:
-            raise ConfigurationError("DATABASE_TLS_MODE must be verify-full or render-internal.")
+        render_database_kind = _render_database_kind(url.host)
+        configured_mode = os.getenv("DATABASE_TLS_MODE", "").strip()
+        mode = configured_mode or (
+            "render-managed"
+            if on_render and render_database_kind
+            else "verify-full"
+        )
+        if mode not in {"verify-full", "render-internal", "render-managed"}:
+            raise ConfigurationError(
+                "DATABASE_TLS_MODE must be verify-full, render-internal, or render-managed."
+            )
         query = dict(url.query)
         if mode == "render-internal":
             # Explicit exception only for Render's private, single-label DB host.
-            if not on_render or not re.fullmatch(r"dpg-[a-z0-9-]+", url.host or ""):
+            if not on_render or render_database_kind != "internal":
                 raise ConfigurationError("render-internal TLS requires Render and an internal dpg-* hostname.")
             if query.get("sslmode", "require") != "require":
                 raise ConfigurationError("Internal Render database requires sslmode=require.")
+            query["sslmode"] = "require"
+        elif mode == "render-managed":
+            if not on_render or render_database_kind is None:
+                raise ConfigurationError(
+                    "render-managed TLS requires Render and a Render-managed dpg-* hostname."
+                )
+            if query.get("sslmode", "require") != "require":
+                raise ConfigurationError("Render-managed PostgreSQL requires sslmode=require.")
             query["sslmode"] = "require"
         elif production:
             if query.get("sslmode", "verify-full") != "verify-full":

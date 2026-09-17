@@ -50,6 +50,7 @@ deploy (that logs everyone out).
 | JWT_ALGORITHM | HS256 |
 | SECRET_KEY | Existing strong random production secret |
 | DATABASE_URL | Existing PostgreSQL connection URL |
+| DATABASE_TLS_MODE | Leave unset for automatic Render database detection |
 | DEFAULT_VOLUNTEER_PASSWORD | Strong initial admin password, needed only on a fresh DB |
 
 Render supplies PORT and RENDER_EXTERNAL_URL. With blank BACKEND_URL/FRONTEND_URL,
@@ -64,10 +65,10 @@ Render SQLite is deliberately rejected because its filesystem is ephemeral.
 
 ### PostgreSQL encryption
 
-- For the same-account/same-region Render internal URL (single-label dpg-* host),
-  explicitly set DATABASE_TLS_MODE=render-internal. This enforces sslmode=require:
-  traffic is encrypted but the self-signed server certificate is NOT authenticated.
-  This is a documented, limited private-network exception, not public-host policy.
+- Render-managed internal and external dpg-* database hosts are detected
+  automatically when DATABASE_TLS_MODE is unset. The client enforces
+  sslmode=require, matching Render's supported TLS configuration. You can set
+  DATABASE_TLS_MODE=render-internal or render-managed explicitly when needed.
 - For public PostgreSQL URLs, use DATABASE_TLS_MODE=verify-full (default).
   Certificate and hostname verification are required. The CA defaults to certifi;
   set DATABASE_CA_FILE or the URL's sslrootcert to the provider's trusted PEM bundle
