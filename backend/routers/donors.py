@@ -29,7 +29,7 @@ from openpyxl import load_workbook
 # ==========================================================
 
 from backend.auth.dependencies import require_administrator
-from backend.database.models import DonationHistory, User
+from backend.database.models import User
 from backend.database.donor_profile import DonorProfile
 
 # ==========================================================
@@ -431,22 +431,14 @@ def delete_donor(
             detail="Donor not found.",
         )
 
-    if (
-        database_session.query(User).filter(User.donor_id == donor.id).first()
-        or database_session.query(DonationHistory).filter(DonationHistory.donor_id == donor.id).first()
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="This donor has a linked account or donation history and cannot be deleted.",
-        )
-
-    crud.delete_donor(
+    deletion = crud.delete_donor(
         database_session,
         donor,
     )
 
     return {
-        "message": "Donor deleted successfully."
+        "message": "Donor deleted successfully.",
+        **deletion,
     }
 # ==========================================================
 # UPDATE DONOR

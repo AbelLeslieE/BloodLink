@@ -34,6 +34,11 @@ togglePassword.addEventListener("click", () => {
         ? '<i class="fa-regular fa-eye-slash"></i>'
         : '<i class="fa-regular fa-eye"></i>';
 
+    togglePassword.setAttribute(
+        "aria-label",
+        hidden ? "Hide password" : "Show password"
+    );
+
 });
 
 // ======================================================
@@ -46,14 +51,23 @@ form.addEventListener("submit", async (event) => {
 
     message.textContent = "";
 
+    document.querySelectorAll(".input-group.is-invalid").forEach((group) => {
+        group.classList.remove("is-invalid");
+    });
+
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
     const username = usernameInput.value.trim();
     const password = passwordInput.value;
 
     loginButton.disabled = true;
     loginButton.setAttribute("aria-busy", "true");
-    loginButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> LOGGING IN…';
-    message.style.color = "#2F67F6";
-    message.textContent = "Logging in…";
+    loginButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i><span>Signing in…</span>';
+    message.style.color = "#9f1239";
+    message.textContent = "Securely signing you in…";
 
     // OAuth2PasswordRequestForm requires form data
     const formData = new URLSearchParams();
@@ -84,6 +98,8 @@ form.addEventListener("submit", async (event) => {
             message.style.color = "#dc2626";
             message.textContent =
                 data.detail || "Invalid username or password.";
+            passwordInput.closest(".input-group").classList.add("is-invalid");
+            passwordInput.focus();
 
             return;
 

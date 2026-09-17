@@ -1,212 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>BloodLink | Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sign in to the BloodLink blood bank management portal.">
+    <title>BloodLink | Sign in</title>
     <link rel="manifest" href="/manifest.webmanifest">
-    <meta name="theme-color" content="#b31337">
+    <meta name="theme-color" content="#9f1239">
     <link rel="apple-touch-icon" href="/static/pwa/icon-192.png">
 
-    <!-- Google Font -->
-
-    <link rel="preconnect"
-          href="https://fonts.googleapis.com">
-
-    <link rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-          rel="stylesheet">
-
-    <!-- Font Awesome -->
-
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-
-    <!-- Login CSS -->
-
-    <link rel="stylesheet"
-        href="/static/dashboard_v2/css/login.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/dashboard_v2/css/login.css">
     <link rel="stylesheet" href="/static/dashboard_v2/css/pwa.css">
 </head>
 
 <body>
-
-    <!-- ==========================================
-         MAIN CONTAINER
-    =========================================== -->
-
     <main class="login-container">
-
-        <!-- ======================================
-             LEFT SECTION
-        ======================================= -->
-
-        <section class="left-section">
-            <!-- Background image only -->
-        </section>
-
-        <!-- ======================================
-             LOGIN CARD
-        ======================================= -->
-
-        <section class="login-section">
-
-            <div class="login-card">
-
-                <!-- Avatar -->
-
-                <div class="avatar">
-
-                    <i class="fa-regular fa-user"></i>
-
-                </div>
-
-                <!-- Title -->
-
-                <h2>
-
-                    Welcome Back
-
-                </h2>
-
-                <p class="subtitle">
-
-                    Sign in to access the Blood Bank Management System
-
-                </p>
-
-                <!-- Login Form -->
-
-                <form id="loginForm">
-
-                <h3 class="sr-only">
-                    Login Form
-                </h3>
-
-                    <!-- Username -->
-
-                    <label for="username">
-
-                        Username
-
-                    </label>
-
-                    <div class="input-group">
-
-                        <i class="fa-regular fa-user"></i>
-
-                        <input
-
-                            id="username"
-
-                            type="text"
-
-                            placeholder="Enter your username"
-
-                            required>
-
-                    </div>
-
-                    <!-- Password -->
-
-                    <label for="password">
-
-                        Password
-
-                    </label>
-
-                    <div class="input-group">
-
-                        <i class="fa-solid fa-lock"></i>
-
-                        <input
-
-                            id="password"
-
-                            type="password"
-
-                            placeholder="Enter your password"
-
-                            required>
-
-                        <button
-
-                            type="button"
-
-                            id="togglePassword"
-
-                            class="toggle-password">
-
-                            <i class="fa-regular fa-eye"></i>
-
-                        </button>
-
-                    </div>
-
-                    <p class="forgot-password-link">
-                        <a href="/reset-password">Forgot your donor password?</a>
-                    </p>
-
-                    <!-- Message -->
-
-                    <div
-
-                        id="message"
-
-                        class="message">
-
-                    </div>
-
-                    <!-- Login Button -->
-
-                    <button
-
-                        class="login-btn"
-
-                        type="submit">
-
-                        <i class="fa-solid fa-arrow-right-to-bracket"></i>
-
-                        LOGIN
-
-                    </button>
-
-                </form>
-
-                <p class="signup-prompt">
-                    New to BloodLink?
-                    <a href="/donor-register">Sign up as a donor</a>
-                </p>
-
-                <!-- Footer -->
-
-                <footer class="footer">
-
-                <p>© 2026 BloodLink</p>
-
-                <p>Developed for NSS Volunteers</p>
-
-                <span>Version 2.0</span>
-
-            </footer>
-
+        <section class="left-section" aria-label="About Pranadan">
+            <div class="visual-shade" aria-hidden="true"></div>
+
+            <div class="visual-brand">
+                <span class="brand-symbol" aria-hidden="true">
+                    <i class="fa-solid fa-droplet"></i>
+                </span>
+                <span>
+                    <strong>BloodLink</strong>
+                    <small>Pranadan donor network</small>
+                </span>
             </div>
 
+            <div class="visual-copy">
+                <p class="eyebrow">NSS VOLUNTEER INITIATIVE</p>
+                <h1>One network.<br><em>Countless lives.</em></h1>
+                <p>Connecting volunteers and donors when every second matters.</p>
+
+                <div class="impact-row" aria-label="BloodLink benefits">
+                    <span><i class="fa-solid fa-bolt" aria-hidden="true"></i> Faster matching</span>
+                    <span><i class="fa-solid fa-shield-heart" aria-hidden="true"></i> Secure access</span>
+                </div>
+            </div>
+
+            <p class="visual-footer">Sahrdaya College of Engineering &amp; Technology</p>
         </section>
 
+        <section class="login-section">
+            <div class="login-card">
+                <div class="mobile-brand" aria-label="BloodLink">
+                    <span class="brand-symbol" aria-hidden="true">
+                        <i class="fa-solid fa-droplet"></i>
+                    </span>
+                    <span>
+                        <strong>BloodLink</strong>
+                        <small>Pranadan donor network</small>
+                    </span>
+                </div>
+
+                <header class="auth-header">
+                    <p class="eyebrow">WELCOME BACK</p>
+                    <h2>Sign in to BloodLink</h2>
+                    <p class="subtitle">Access the secure volunteer and donor management portal.</p>
+                </header>
+
+                <form id="loginForm" novalidate>
+                    <h3 class="sr-only">Login form</h3>
+
+                    <label for="username">Username</label>
+                    <div class="input-group">
+                        <i class="fa-regular fa-user" aria-hidden="true"></i>
+                        <input
+                            id="username"
+                            name="username"
+                            type="text"
+                            autocomplete="username"
+                            autocapitalize="none"
+                            spellcheck="false"
+                            placeholder="Enter your username"
+                            aria-describedby="message"
+                            required>
+                    </div>
+
+                    <div class="label-row">
+                        <label for="password">Password</label>
+                        <a href="/reset-password">Forgot password?</a>
+                    </div>
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            placeholder="Enter your password"
+                            aria-describedby="message"
+                            required>
+                        <button
+                            type="button"
+                            id="togglePassword"
+                            class="toggle-password"
+                            aria-controls="password"
+                            aria-label="Show password">
+                            <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <div id="message" class="message" role="status" aria-live="polite"></div>
+
+                    <button class="login-btn" type="submit">
+                        <span>Sign in securely</span>
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </button>
+                </form>
+
+                <p class="security-note">
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                    Your account is protected with secure authentication.
+                </p>
+
+                <div class="signup-prompt">
+                    <span>New donor?</span>
+                    <a href="/donor-register">Create your account <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                </div>
+
+                <footer class="footer">
+                    <p>&copy; 2026 BloodLink &middot; Built for NSS volunteers</p>
+                    <span>Version 2.0</span>
+                </footer>
+            </div>
+        </section>
     </main>
 
     <script src="/static/dashboard_v2/js/login.js"></script>
     <script src="/static/dashboard_v2/js/pwa.js"></script>
-
 </body>
-
 </html>

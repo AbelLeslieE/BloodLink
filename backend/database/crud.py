@@ -15,6 +15,7 @@ from backend.database.models import (
     BloodRequest,
     DonationHistory,
     Donor,
+    SavedMatch,
     User,
 )
 from backend.database.notification import Notification
@@ -720,16 +721,49 @@ def update_donor(
 def delete_donor(
     database_session: Session,
     donor: Donor,
-) -> None:
+) -> dict[str, int | bool]:
     """
-    Permanently delete a donor record.
+    Permanently delete a donor without destroying historical records.
+
+    Accounts are deactivated and detached, while confirmed donations are
+    retained under the donor's name so reports and certificates remain valid.
+    Donor-specific delivery and response records are removed by ORM cascades.
     """
 
     try:
 
+        linked_account = donor.user_account
+        history_entries = list(donor.donation_history_entries)
+
+        if linked_account is not None:
+
+            linked_account.donor_id = None
+            linked_account.active = False
+            linked_account.auth_version += 1
+
+        for donation in history_entries:
+
+            donation.external_donor_name = (
+                donation.external_donor_name
+                or donor.full_name
+            )
+            donation.donor_id = None
+
+        saved_matches_removed = (
+            database_session.query(SavedMatch)
+            .filter(SavedMatch.donor_id == donor.id)
+            .delete(synchronize_session=False)
+        )
+
         database_session.delete(donor)
 
         database_session.commit()
+
+        return {
+            "account_deactivated": linked_account is not None,
+            "history_entries_preserved": len(history_entries),
+            "saved_matches_removed": saved_matches_removed,
+        }
 
     except SQLAlchemyError:
 

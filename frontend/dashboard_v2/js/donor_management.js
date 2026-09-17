@@ -1930,15 +1930,31 @@ function validateAddDonorPayload(
 // DELETE DONOR
 // ==========================================================
 
-async function deleteDonor(donorId) {
+async function deleteDonor(donorId, triggerButton = null) {
+
+    const donor = donorRecords.find(
+        record => Number(record.id) === donorId
+    );
+
+    const donorLabel = donor?.full_name
+        ? ` “${donor.full_name}”`
+        : " this donor";
 
     const confirmed = confirm(
-        "Are you sure you want to delete this donor?"
+        `Permanently delete${donorLabel}?\n\n` +
+        "Any linked login will be deactivated. Confirmed donation " +
+        "history will be retained for reports and certificates."
     );
 
     if (!confirmed) {
         return;
     }
+
+    setDonorActionPending(
+        triggerButton,
+        true,
+        "Deleting…"
+    );
 
     try {
 
@@ -1957,15 +1973,34 @@ async function deleteDonor(donorId) {
         if (!response.ok) {
 
             throw new Error(
-                "Unable to delete donor."
+                await getApiErrorMessage(
+                    response,
+                    "Unable to delete donor."
+                )
             );
 
         }
 
+        const result = await response.json();
+
         await loadDonors();
 
+        const deletionNotes = [];
+
+        if (result.account_deactivated) {
+            deletionNotes.push("The linked login was deactivated.");
+        }
+
+        if (result.history_entries_preserved > 0) {
+            deletionNotes.push(
+                `${result.history_entries_preserved} donation history ` +
+                `${result.history_entries_preserved === 1 ? "entry was" : "entries were"} preserved.`
+            );
+        }
+
         alert(
-            "Donor deleted successfully."
+            (result.message || "Donor deleted successfully.") +
+            (deletionNotes.length ? `\n\n${deletionNotes.join(" ")}` : "")
         );
 
     }
@@ -1974,7 +2009,15 @@ async function deleteDonor(donorId) {
         console.error(error);
 
         alert(
-            "Unable to delete donor."
+            error.message || "Unable to delete donor."
+        );
+
+    }
+    finally {
+
+        setDonorActionPending(
+            triggerButton,
+            false
         );
 
     }
@@ -2664,22 +2707,31 @@ function createDonorRow(donor) {
                 <div class="donor-action-group">
 
                     <button
+                        type="button"
                         class="donor-icon-btn"
                         data-donor-view="${donor.id}"
+                        aria-label="View ${escapeHtml(donor.full_name)}"
+                        title="View donor"
                     >
                         <i data-lucide="eye"></i>
                     </button>
 
                     <button
+                        type="button"
                         class="donor-icon-btn"
                         data-donor-edit="${donor.id}"
+                        aria-label="Edit ${escapeHtml(donor.full_name)}"
+                        title="Edit donor"
                     >
                         <i data-lucide="pencil"></i>
                     </button>
 
                     <button
+                        type="button"
                         class="donor-icon-btn donor-delete-btn"
                         data-donor-delete="${donor.id}"
+                        aria-label="Delete ${escapeHtml(donor.full_name)}"
+                        title="Delete donor"
                     >
                         <i data-lucide="trash-2"></i>
                     </button>
@@ -3995,7 +4047,8 @@ function bindDonorEvents() {
                     ) {
 
                         deleteDonor(
-                            donorId
+                            donorId,
+                            deleteButton
                         );
 
                     }
@@ -4391,7 +4444,7 @@ async function handleImportDonors(
         console.error(error);
 
         alert(
-            "Unable to import donors."
+            error.message || "Unable to import donors."
         );
 
     }
