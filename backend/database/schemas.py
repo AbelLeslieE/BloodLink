@@ -695,12 +695,20 @@ class DonationRecordCreate(BaseModel):
     Request schema for recording a completed donation.
     """
 
-    donor_id: int
-    blood_request_id: int
+    donor_id: int = Field(gt=0)
+    blood_request_id: int = Field(gt=0)
     donation_date: date
-    units: int = 1
-    donation_type: str = "Voluntary"
-    remarks: str | None = None    
+    units: int = Field(default=1, ge=1, le=10)
+    donation_type: str = Field(default="Voluntary", max_length=30)
+    remarks: str | None = Field(default=None, max_length=500)
+
+    @model_validator(mode="after")
+    def validate_record(self) -> "DonationRecordCreate":
+        if self.donation_type not in {"Voluntary", "Replacement"}:
+            raise ValueError("Donation type must be Voluntary or Replacement.")
+        if self.donation_date > date.today():
+            raise ValueError("Donation date cannot be in the future.")
+        return self
 # ==========================================================
 # DONATION HISTORY SCHEMAS
 # ==========================================================

@@ -11,6 +11,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import DataError, OperationalError
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from backend.config.settings import forwarded_allow_ips, get_settings
@@ -115,6 +116,28 @@ if get_settings().production:
     if not get_settings().on_render:
         app.add_middleware(HTTPSRedirectMiddleware)
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(get_settings().allowed_hosts))
+
+
+_NOT_FOUND = JSONResponse(status_code=404, content={"detail": "Resource not found."}, headers={"Cache-Control": "no-store"})
+
+
+@app.exception_handler(OverflowError)
+async def oversized_identifier(request, error):
+    # SQLite binds an id wider than 64 bits by raising OverflowError directly;
+    # such an id cannot match any row, so report a clean 404, never a 500.
+    return _NOT_FOUND
+
+
+@app.exception_handler(OperationalError)
+@app.exception_handler(DataError)
+async def out_of_range_identifier(request, error):
+    # PostgreSQL surfaces an out-of-range integer id as a wrapped driver error.
+    original = getattr(error, "orig", None)
+    text = str(original).lower()
+    if isinstance(original, OverflowError) or "out of range" in text or "too large" in text:
+        return _NOT_FOUND
+    logger.exception("Unhandled database error")
+    return JSONResponse(status_code=500, content={"detail": "A database error occurred."}, headers={"Cache-Control": "no-store"})
 
 
 @app.exception_handler(RequestValidationError)

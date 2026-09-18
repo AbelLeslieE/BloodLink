@@ -7,6 +7,9 @@ from backend.database.schemas import DonationRecordCreate
 
 from backend.auth.dependencies import require_administrator
 from backend.database.models import User
+from backend.services.donor_matching_service import is_compatible_donor
+
+TERMINAL_REQUEST_STATUSES = {"Fulfilled", "Closed", "Cancelled"}
 
 router = APIRouter(dependencies=[Depends(require_administrator)])
 
@@ -148,6 +151,18 @@ def create_donation(
             detail="Blood request not found.",
         )
 
+    if blood_request.status in TERMINAL_REQUEST_STATUSES:
+        raise HTTPException(
+            status_code=409,
+            detail="This blood request is no longer open for donation recording.",
+        )
+
+    if not is_compatible_donor(blood_request.blood_group, donor.blood_group):
+        raise HTTPException(
+            status_code=422,
+            detail="Donor blood group is not compatible with this blood request.",
+        )
+
     donation_record = crud.create_donation_history(
         database_session=database_session,
         donor_id=donation.donor_id,
@@ -162,7 +177,7 @@ def create_donation(
     crud.update_blood_request_status(
         database_session,
         blood_request,
-        "Completed",
+        "Fulfilled",
     )
 
     return {

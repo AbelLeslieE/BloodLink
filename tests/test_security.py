@@ -484,3 +484,58 @@ def test_dashboard_summary_counts_current_month_on_any_database(system):
         summary = crud.get_donation_dashboard_summary(db)
     assert summary["total_donations"] == 2 and summary["this_month"] == 1
     assert client.get("/api/donations/summary", headers=tokens["admin"]).status_code == 200
+
+
+def _make_request(sessions, blood_group="A+", status="Pending"):
+    with sessions.begin() as db:
+        request = BloodRequest(patient_name="P", case_details="c", blood_group=blood_group, units_required=1,
+            required_date=date.today(), priority="Normal", hospital_name="H", hospital_location="L",
+            contact_person="C", contact_phone="9000000001", created_by=1, status=status)
+        db.add(request); db.flush()
+        return request.id
+
+
+def test_legacy_donation_route_rejects_invalid_and_incompatible(system):
+    client, sessions, tokens = system
+    req = _make_request(sessions, "A+")
+    base = {"donor_id": 1, "blood_request_id": req, "donation_date": date.today().isoformat()}
+    # donor1 is A+; A+ donor into A+ request is valid, but bad units/date/type are rejected before that.
+    assert client.post("/api/donations/", json={**base, "units": -5}, headers=tokens["admin"]).status_code == 422
+    assert client.post("/api/donations/", json={**base, "units": 1000000}, headers=tokens["admin"]).status_code == 422
+    assert client.post("/api/donations/", json={**base, "donation_date": "2099-01-01"}, headers=tokens["admin"]).status_code == 422
+    assert client.post("/api/donations/", json={**base, "donation_type": "Nonsense"}, headers=tokens["admin"]).status_code == 422
+    # A+ donor cannot supply an O- patient (directional compatibility).
+    incompatible = _make_request(sessions, "O-")
+    resp = client.post("/api/donations/", json={"donor_id": 1, "blood_request_id": incompatible, "donation_date": date.today().isoformat()}, headers=tokens["admin"])
+    assert resp.status_code == 422 and "compatible" in resp.json()["detail"].lower()
+
+
+def test_legacy_donation_route_records_and_closes_request(system):
+    client, sessions, tokens = system
+    req = _make_request(sessions, "A+")
+    payload = {"donor_id": 1, "blood_request_id": req, "donation_date": date.today().isoformat(), "units": 1}
+    created = client.post("/api/donations/", json=payload, headers=tokens["admin"])
+    assert created.status_code == 201
+    with sessions() as db:
+        request = db.get(BloodRequest, req)
+        assert request.status == "Fulfilled"
+        assert db.scalar(select(DonationHistory).where(DonationHistory.blood_request_id == req)).units == 1
+    # A Fulfilled request is terminal: recording again is refused, not silently duplicated.
+    again = client.post("/api/donations/", json=payload, headers=tokens["admin"])
+    assert again.status_code == 409
+    with sessions() as db:
+        assert len(db.scalars(select(DonationHistory).where(DonationHistory.blood_request_id == req)).all()) == 1
+
+
+def test_out_of_range_identifier_returns_404_not_500(system):
+    client, _, tokens = system
+    huge = 99999999999999999999
+    # GET-by-id endpoints resolve an oversized id to a clean 404, never a 500.
+    for path in (f"/api/donors/{huge}/profile", f"/api/donors/{huge}", f"/api/notifications/{huge}"):
+        response = client.get(path, headers=tokens["admin"])
+        assert response.status_code == 404, f"{path} -> {response.status_code}"
+    # Mutations with an oversized path id must not 500 either.
+    assert client.delete(f"/api/users/{huge}", headers=tokens["admin"]).status_code != 500
+    # Ordinary invalid ids stay clean too.
+    assert client.get(f"/api/donors/{huge}", headers=tokens["admin"]).status_code == 404
+    assert client.get("/api/donors/notanumber/profile", headers=tokens["admin"]).status_code == 422
