@@ -962,7 +962,7 @@ function createDonorCard(donor) {
 
                     <span>
 
-                        Compatibility Score
+                        ${escapeMatchHtml(donor.compatibilityType)}
 
                     </span>
 
@@ -1717,7 +1717,11 @@ async function loadMatchingDonorsFromAPI(requestId) {
 
             availability: match.donor.status,
 
-            compatibility: match.score,
+            compatibility: match.compatibility_percent,
+
+            compatibilityType: match.compatibility_type,
+
+            rankingScore: match.score,
 
             rank: match.rank,
 
@@ -2055,13 +2059,7 @@ function sortDonors() {
         if (b.compatibility !== a.compatibility)
             return b.compatibility - a.compatibility;
 
-        const distanceA =
-            parseFloat(a.distance);
-
-        const distanceB =
-            parseFloat(b.distance);
-
-        return distanceA - distanceB;
+        return a.rank - b.rank;
 
     });
 

@@ -43,7 +43,9 @@ def _compatible_donors(database_session: Session, blood_request_id: int) -> tupl
             status_code=409,
             detail="This blood request is no longer open for donor matching.",
         )
-    compatible_groups = [blood_request.blood_group.strip().upper()]
+    compatible_groups = donor_matching_service.get_compatible_blood_groups(
+        blood_request.blood_group
+    )
     donors = crud.get_eligible_donors(database_session, compatible_groups)
     return blood_request, donor_matching_service.rank_matching_donors(
         patient_blood_group=blood_request.blood_group,
@@ -78,6 +80,12 @@ def find_matching_donors(
             {
                 "rank": item.rank,
                 "score": item.score.total_score,
+                "compatibility_percent": item.score.blood_group_score,
+                "compatibility_type": (
+                    "Exact match"
+                    if item.score.blood_group_score == donor_matching_service.EXACT_BLOOD_MATCH_SCORE
+                    else "Compatible match"
+                ),
                 "donor": {
                     "id": item.donor.id,
                     "name": item.donor.full_name,
@@ -127,8 +135,6 @@ def send_notifications(
 
     selected_donors = []
     selected_donor_ids: set[int] = set()
-    compatible_groups = [blood_request.blood_group.strip().upper()]
-
     for donor_id in request.donor_ids:
 
         if donor_id in selected_donor_ids:
@@ -142,7 +148,12 @@ def send_notifications(
 
         if donor is None:
             raise HTTPException(status_code=404, detail=f"Donor {donor_id} was not found.")
-        if donor.blood_group not in compatible_groups or donor.status != "Available":
+        if (
+            not donor_matching_service.is_compatible_donor(
+                blood_request.blood_group, donor.blood_group
+            )
+            or donor.status.strip().lower() != "available"
+        ):
             raise HTTPException(status_code=409, detail=f"Donor {donor_id} is not eligible for this request.")
         if not donor.email:
             raise HTTPException(status_code=422, detail=f"Donor {donor_id} does not have an email address.")

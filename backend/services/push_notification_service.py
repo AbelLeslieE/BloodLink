@@ -12,6 +12,7 @@ from backend.config.settings import get_settings
 from backend.security.push import validate_push_endpoint, PushSession
 from backend.database.models import BloodRequest, Donor, User
 from backend.database.push_subscription import PushSubscription
+from backend.services.donor_matching_service import is_compatible_donor
 
 try:  # Keep local development usable until the Render dependency is installed.
     from pywebpush import WebPushException, webpush
@@ -49,9 +50,9 @@ def _donor_for_subscription(session: Session, subscription: PushSubscription) ->
 
 def _matches_request(session: Session, subscription: PushSubscription, blood_request: BloodRequest) -> bool:
     donor = _donor_for_subscription(session, subscription)
-    if donor is None or donor.status != "Available":
+    if donor is None or donor.status.strip().lower() != "available":
         return False
-    if donor.blood_group.strip().upper() != blood_request.blood_group.strip().upper():
+    if not is_compatible_donor(blood_request.blood_group, donor.blood_group):
         return False
     # The current request schema has free-form hospital_location, not a
     # structured district. Keep this policy point isolated so structured

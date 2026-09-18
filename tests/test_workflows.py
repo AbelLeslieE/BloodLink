@@ -7,9 +7,13 @@ from alembic.config import Config
 from openpyxl import Workbook, load_workbook
 from sqlalchemy import select, text
 from backend.config.settings import get_settings
-from backend.database.models import User, DonationHistory
+from backend.database.models import BloodRequest, Donor, User, DonationHistory
 from backend.security.database import create_database_engine
 from backend.auth.security import create_password_reset_token
+from backend.services.donor_matching_service import (
+    COMPATIBILITY_MATRIX,
+    is_compatible_donor,
+)
 
 
 def blood_request():
@@ -17,6 +21,118 @@ def blood_request():
         "units_required": 1, "required_date": str(date.today()+timedelta(days=1)), "priority": "Normal",
         "hospital_name": "Regression Hospital", "hospital_location": "Test City",
         "contact_person": "Test Contact", "contact_phone": "9999900020"}
+
+
+def test_red_cell_compatibility_matrix_is_directional():
+    assert COMPATIBILITY_MATRIX == {
+        "A+": ["A+", "A-", "O+", "O-"],
+        "A-": ["A-", "O-"],
+        "B+": ["B+", "B-", "O+", "O-"],
+        "B-": ["B-", "O-"],
+        "AB+": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+        "AB-": ["A-", "B-", "AB-", "O-"],
+        "O+": ["O+", "O-"],
+        "O-": ["O-"],
+    }
+    assert is_compatible_donor("A+", "O-")
+    assert is_compatible_donor(" ab+ ", " b- ")
+    assert not is_compatible_donor("O-", "O+")
+    assert not is_compatible_donor("A-", "B-")
+
+
+def test_find_save_and_send_use_real_blood_compatibility(system):
+    client, sessions, tokens = system
+    with sessions.begin() as db:
+        compatible = [
+            Donor(donor_code="COMP-A-", full_name="A Negative", blood_group="A-",
+                  phone="9999900051", email="a-negative@example.org", status="Available"),
+            Donor(donor_code="COMP-O-", full_name="O Negative", blood_group="O-",
+                  phone="9999900052", email="o-negative@example.org", status="Available"),
+        ]
+        incompatible = Donor(
+            donor_code="COMP-B+", full_name="B Positive", blood_group="B+",
+            phone="9999900053", email="b-positive@example.org", status="Available",
+        )
+        db.add_all([*compatible, incompatible])
+        db.flush()
+        compatible_ids = [donor.id for donor in compatible]
+        incompatible_id = incompatible.id
+        request = BloodRequest(
+            patient_name="Compatibility Patient", case_details="Compatibility regression",
+            blood_group="A-", units_required=1, required_date=date.today() + timedelta(days=1),
+            priority="Urgent", hospital_name="Compatibility Hospital",
+            hospital_location="Test City", contact_person="Test Contact",
+            contact_phone="9999900054", created_by=1,
+        )
+        db.add(request)
+        db.flush()
+        request_id = request.id
+
+    matched = client.post(
+        "/api/match/find", json={"blood_request_id": request_id}, headers=tokens["admin"]
+    )
+    assert matched.status_code == 200, matched.text
+    matches = matched.json()["matches"]
+    assert {item["donor"]["blood_group"] for item in matches} == {"A-", "O-"}
+    assert {item["compatibility_percent"] for item in matches} == {80, 100}
+    assert all(0 <= item["compatibility_percent"] <= 100 for item in matches)
+
+    saved = client.post(
+        "/api/match/save",
+        json={"blood_request_id": request_id, "donor_ids": compatible_ids},
+        headers=tokens["admin"],
+    )
+    assert saved.status_code == 200 and saved.json()["saved_count"] == 2
+    rejected = client.post(
+        "/api/match/save",
+        json={"blood_request_id": request_id, "donor_ids": [incompatible_id]},
+        headers=tokens["admin"],
+    )
+    assert rejected.status_code == 409
+
+    rejected_send = client.post(
+        "/api/match/send",
+        json={"blood_request_id": request_id, "donor_ids": [incompatible_id]},
+        headers=tokens["admin"],
+    )
+    assert rejected_send.status_code == 409
+
+    sent = client.post(
+        "/api/match/send",
+        json={"blood_request_id": request_id, "donor_ids": compatible_ids},
+        headers=tokens["admin"],
+    )
+    assert sent.status_code == 200, sent.text
+
+
+def test_compatible_request_reaches_donor_portal_and_confirmation(system):
+    client, sessions, tokens = system
+    with sessions.begin() as db:
+        donor_id = db.scalar(select(Donor.id).where(Donor.email == "donor1@example.org"))
+        request = BloodRequest(
+            patient_name="AB Positive Patient", case_details="Compatibility regression",
+            blood_group="AB+", units_required=1, required_date=date.today() + timedelta(days=1),
+            priority="Urgent", hospital_name="Compatibility Hospital",
+            hospital_location="Test City", contact_person="Test Contact",
+            contact_phone="9999900055", created_by=1,
+        )
+        db.add(request)
+        db.flush()
+        request_id = request.id
+
+    visible = client.get("/api/donor-dashboard/requests", headers=tokens["donor1"])
+    assert visible.status_code == 200
+    assert request_id in {item["id"] for item in visible.json()}
+    response = client.post(
+        f"/api/donor-dashboard/requests/{request_id}/response",
+        json={"response": "Yes"}, headers=tokens["donor1"],
+    )
+    assert response.status_code == 200, response.text
+    confirmed = client.post(
+        f"/api/admin/donations/requests/{request_id}/donors/{donor_id}/confirm",
+        headers=tokens["admin"],
+    )
+    assert confirmed.status_code == 200, confirmed.text
 
 
 def test_request_match_response_confirmation_rewards_and_certificate(system):

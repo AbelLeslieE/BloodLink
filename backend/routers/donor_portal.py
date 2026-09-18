@@ -21,6 +21,7 @@ from backend.database.models import BloodRequest, DonationCertificate, DonationH
 from backend.database.notification import Notification
 from backend.database.notification_recipient import NotificationRecipient
 from backend.services.certificate_service import ensure_certificate, render_certificate
+from backend.services.donor_matching_service import is_compatible_donor
 
 
 donor_router = APIRouter(prefix="/api/donor-dashboard", tags=["donor dashboard"])
@@ -54,9 +55,9 @@ def _response_label(response: DonorResponse | None, donation: DonationHistory | 
     return "Responded No"
 
 
-def _same_blood_group(donor_group: str, request_group: str) -> bool:
-    """Keep the donor portal limited to requests for the donor's exact group."""
-    return donor_group.strip().upper() == request_group.strip().upper()
+def _compatible_blood_group(donor_group: str, request_group: str) -> bool:
+    """Use the same directional red-cell compatibility as Find Match."""
+    return is_compatible_donor(request_group, donor_group)
 
 
 def _sync_portal_response_to_notifications(
@@ -185,7 +186,7 @@ def donor_requests(
     ).order_by(BloodRequest.required_date, BloodRequest.id.desc())))
     requests = [
         item for item in open_requests
-        if _same_blood_group(donor.blood_group, item.blood_group)
+        if _compatible_blood_group(donor.blood_group, item.blood_group)
     ]
     responses = {item.blood_request_id: item for item in db.scalars(select(DonorResponse).where(DonorResponse.donor_id == donor.id))}
     donations = {item.blood_request_id: item for item in db.scalars(select(DonationHistory).where(DonationHistory.donor_id == donor.id))}
@@ -202,8 +203,8 @@ def submit_response(
     request = db.get(BloodRequest, request_id)
     if request is None or request.status not in DONOR_RESPONSE_OPEN_STATUSES:
         raise HTTPException(status_code=404, detail="This blood request is no longer available.")
-    if not _same_blood_group(donor.blood_group, request.blood_group):
-        raise HTTPException(status_code=403, detail="This request is not for your donor blood group.")
+    if not _compatible_blood_group(donor.blood_group, request.blood_group):
+        raise HTTPException(status_code=403, detail="Your blood group is not compatible with this request.")
     if db.scalar(select(DonationHistory).where(DonationHistory.donor_id == donor.id, DonationHistory.blood_request_id == request_id)):
         raise HTTPException(status_code=409, detail="Donation has already been confirmed for this request.")
     response = db.scalar(select(DonorResponse).where(DonorResponse.donor_id == donor.id, DonorResponse.blood_request_id == request_id))

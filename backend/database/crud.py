@@ -1079,8 +1079,9 @@ def confirm_donation_for_request(
     and campaign state in one transaction prevents one UI from recording a
     donation without updating the donor portal.
     """
-    if donor.blood_group.strip().upper() != blood_request.blood_group.strip().upper():
-        raise ValueError("The selected donor's blood group does not match this request.")
+    from backend.services.donor_matching_service import is_compatible_donor
+    if not is_compatible_donor(blood_request.blood_group, donor.blood_group):
+        raise ValueError("The selected donor's blood group is not compatible with this request.")
 
     existing = database_session.scalar(
         select(DonationHistory).where(

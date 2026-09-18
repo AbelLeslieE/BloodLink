@@ -96,6 +96,20 @@ def get_compatible_blood_groups(
         normalized,
         [],
     )
+
+
+def is_compatible_donor(
+    patient_blood_group: str,
+    donor_blood_group: str,
+) -> bool:
+    """Return whether donor red cells are compatible with the patient.
+
+    Blood requests in BloodLink represent red-cell/whole-blood requirements,
+    so compatibility is directional: an O- donor can support an A+ patient,
+    while an A+ donor cannot support an O- patient.
+    """
+    donor_group = donor_blood_group.strip().upper()
+    return donor_group in get_compatible_blood_groups(patient_blood_group)
 # ==========================================================
 # MATCH SCORING
 # ==========================================================
@@ -340,13 +354,9 @@ def rank_matching_donors(
 
     ranked: list[RankedDonor] = []
 
-    compatible_groups = get_compatible_blood_groups(
-        patient_blood_group
-    )
-
     for donor in donors:
 
-        if donor.blood_group not in compatible_groups:
+        if not is_compatible_donor(patient_blood_group, donor.blood_group):
             continue
 
         score = calculate_match_score(
@@ -389,5 +399,3 @@ def rank_matching_donors(
         donor.rank = index
 
     return ranked
-        
-        

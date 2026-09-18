@@ -73,6 +73,12 @@ def find_matching_donors(
             {
                 "rank": donor.rank,
                 "score": donor.score.total_score,
+                "compatibility_percent": donor.score.blood_group_score,
+                "compatibility_type": (
+                    "Exact match"
+                    if donor.score.blood_group_score == donor_matching_service.EXACT_BLOOD_MATCH_SCORE
+                    else "Compatible match"
+                ),
                 "donor": {
                     "id": donor.donor.id,
                     "name": donor.donor.full_name,
@@ -122,6 +128,17 @@ def send_notification_campaign(
 
         if donor is None:
             continue
+
+        if (
+            donor.status.strip().lower() != "available"
+            or not donor_matching_service.is_compatible_donor(
+                blood_request.blood_group, donor.blood_group
+            )
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail=f"Donor {donor_id} is not eligible for this request.",
+            )
 
         compatible_donors.append(
             (
