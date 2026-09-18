@@ -71,15 +71,21 @@ def register(
     db: Annotated[Session, Depends(get_db)],
     _: Annotated[User, Depends(require_administrator)],
 ) -> dict:
+    role = _normalise_role(data.role)
     username = data.username.lower().strip()
     if db.scalar(select(User).where(User.username == username)):
         raise HTTPException(status_code=409, detail="Username already exists.")
     if db.scalar(select(User).where(User.email == data.email.strip().lower())):
         raise HTTPException(status_code=409, detail="Email already exists.")
     _validate_donor(db, data.donor_id)
+    if role == "Donor" and data.donor_id is None:
+        raise HTTPException(
+            status_code=422,
+            detail="Donor accounts must be created through donor registration so their donor record is linked.",
+        )
     user = User(
         full_name=data.full_name.strip(), department=data.department.strip(),
-        role=_normalise_role(data.role), email=data.email.strip().lower(),
+        role=role, email=data.email.strip().lower(),
         phone=data.phone.strip(), username=username, password_hash=hash_password(data.password),
         donor_id=data.donor_id, active=True,
     )
@@ -111,12 +117,23 @@ def update_user(
     ))
     if duplicate_email:
         raise HTTPException(status_code=409, detail="Email already exists.")
-    _validate_donor(db, data.donor_id)
-    if (user.role != _normalise_role(data.role) or user.username != username
-            or user.donor_id != data.donor_id or user.email != data.email.strip().lower()):
+    role = _normalise_role(data.role)
+    # The user editor does not resend the existing donor id. Preserve that
+    # relationship instead of silently detaching a donor account on every edit.
+    donor_id = data.donor_id if data.donor_id is not None else user.donor_id
+    if role == "Donor" and donor_id is None:
+        raise HTTPException(
+            status_code=422,
+            detail="This donor account is missing its donor record. Create the donor record before updating the account.",
+        )
+    if role != "Donor":
+        donor_id = None
+    _validate_donor(db, donor_id)
+    if (user.role != role or user.username != username
+            or user.donor_id != donor_id or user.email != data.email.strip().lower()):
         user.auth_version += 1
-    user.full_name, user.department, user.role = data.full_name.strip(), data.department.strip(), _normalise_role(data.role)
-    user.email, user.phone, user.username, user.donor_id = data.email.strip().lower(), data.phone.strip(), username, data.donor_id
+    user.full_name, user.department, user.role = data.full_name.strip(), data.department.strip(), role
+    user.email, user.phone, user.username, user.donor_id = data.email.strip().lower(), data.phone.strip(), username, donor_id
     if data.password:
         user.password_hash = hash_password(data.password)
         user.auth_version += 1

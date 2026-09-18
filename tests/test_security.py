@@ -179,11 +179,16 @@ def registration(username="newdonor", email="new@example.org", phone="9999900010
 
 
 def test_registration_preserved_but_disabled_account_takeover_blocked(system):
-    client, sessions, _ = system
+    client, sessions, tokens = system
     assert client.post("/api/donor-registration/complete", json=registration()).status_code == 201
     assert client.post("/api/auth/login", data={"username": "newdonor", "password": "StrongPassword123"}).status_code == 200
+    visible_donors = client.get("/api/donors", headers=tokens["admin"])
+    assert visible_donors.status_code == 200
+    assert any(item["email"] == "new@example.org" for item in visible_donors.json())
     with sessions() as db:
         donor = db.scalar(select(Donor).where(Donor.email == "new@example.org"))
+        user = db.scalar(select(User).where(User.username == "newdonor"))
+        assert user.donor_id == donor.id
         assert donor.gender == "Female"
         assert donor.date_of_birth.isoformat() == "1995-01-20"
     with sessions.begin() as db:
@@ -195,6 +200,28 @@ def test_registration_preserved_but_disabled_account_takeover_blocked(system):
     with sessions() as db:
         admin = db.scalar(select(User).where(User.username == "admin"))
         assert not admin.active and admin.password_hash == old_hash
+
+
+def test_user_editor_preserves_donor_link_and_rejects_orphans(system):
+    client, sessions, tokens = system
+    with sessions() as db:
+        donor_user_id = db.scalar(select(User.id).where(User.username == "donor1"))
+    update_payload = {
+        "full_name": "Test Donor 1 Updated", "department": "NSS", "role": "Donor",
+        "email": "donor1@example.org", "phone": "9999900001", "username": "donor1",
+    }
+    response = client.put(f"/api/users/{donor_user_id}", json=update_payload, headers=tokens["admin"])
+    assert response.status_code == 200, response.text
+    assert response.json()["user"]["donor_id"] == 1
+    with sessions() as db:
+        assert db.get(User, donor_user_id).donor_id == 1
+
+    orphan_payload = {
+        **update_payload, "full_name": "Orphan Donor", "email": "orphan@example.org",
+        "phone": "9999900098", "username": "orphan", "password": "StrongPassword123",
+    }
+    rejected = client.post("/api/users/register", json=orphan_payload, headers=tokens["admin"])
+    assert rejected.status_code == 422
 
 
 def test_donor_portal_patient_privacy(system):
