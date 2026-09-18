@@ -21,7 +21,7 @@ from backend.database.donor_response import DonorResponse
 from backend.database.notification import Notification
 from backend.database.notification_recipient import NotificationRecipient
 from backend.database import crud
-from backend.services import notification_service
+from backend.services import email_service, notification_service
 
 router = APIRouter(
     prefix="/api/notifications",
@@ -153,13 +153,27 @@ def resend_pending_recipients(
     if notification.status == "COMPLETED" or notification.blood_request.status in {"Fulfilled", "Closed", "Cancelled"}:
         raise HTTPException(status_code=409, detail="This request is no longer open for donor responses.")
 
+    configuration_error = email_service.delivery_configuration_error()
+    if configuration_error:
+        raise HTTPException(status_code=503, detail=configuration_error)
+
     pending_count, sent_count = notification_service.resend_pending_recipients(
         database_session,
         notification,
     )
     if pending_count == 0:
         raise HTTPException(status_code=409, detail="There are no pending recipients to resend.")
-    return {"success": True, "pending_recipients": pending_count, "emails_sent": sent_count}
+    if sent_count == 0:
+        raise HTTPException(
+            status_code=502,
+            detail="The email provider rejected every retry. Check the Resend configuration and delivery logs.",
+        )
+    return {
+        "success": sent_count == pending_count,
+        "pending_recipients": pending_count,
+        "emails_sent": sent_count,
+        "failed_count": pending_count - sent_count,
+    }
 
 
 @router.post("/{notification_id:int}/complete")

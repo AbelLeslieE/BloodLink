@@ -21,6 +21,12 @@ def test_python_runtime_is_pinned_for_render():
     assert (BASE_DIR / ".python-version").read_text(encoding="utf-8").strip() == "3.11.15"
 
 
+def test_render_blueprint_declares_email_delivery_configuration():
+    blueprint = (BASE_DIR / "render.yaml").read_text(encoding="utf-8")
+    assert "- key: RESEND_API_KEY\n        sync: false" in blueprint
+    assert "- key: EMAIL_FROM\n        sync: false" in blueprint
+
+
 @pytest.fixture
 def config_env(monkeypatch):
     for name in ("RENDER", "APP_ENV", "BACKEND_URL", "FRONTEND_URL",
@@ -166,6 +172,60 @@ def test_render_email_uses_resend_without_attempting_smtp(monkeypatch):
 
     assert email_service.send_email("donor@example.org", "Subject", "<p>Body</p>")
     assert calls == ["resend"]
+
+
+def test_render_email_configuration_reports_missing_values(monkeypatch):
+    from backend.services import email_service
+
+    monkeypatch.setattr(
+        email_service,
+        "settings",
+        replace(
+            email_service.settings,
+            on_render=True,
+            resend_api_key="",
+            email_from="",
+        ),
+    )
+    error = email_service.delivery_configuration_error()
+    assert "RESEND_API_KEY" in error and "EMAIL_FROM" in error
+
+    monkeypatch.setattr(
+        email_service,
+        "settings",
+        replace(
+            email_service.settings,
+            resend_api_key="configured",
+            email_from="BloodLink <notifications@example.org>",
+        ),
+    )
+    assert email_service.delivery_configuration_error() is None
+
+
+def test_resend_requires_provider_message_id(monkeypatch):
+    from backend.services import email_service
+
+    monkeypatch.setattr(
+        email_service,
+        "settings",
+        replace(
+            email_service.settings,
+            resend_api_key="configured",
+            email_from="BloodLink <notifications@example.org>",
+        ),
+    )
+    monkeypatch.setattr(email_service.resend.Emails, "send", lambda _: {})
+    assert not email_service._send_with_resend(
+        "donor@example.org", "Subject", "<p>Body</p>"
+    )
+    monkeypatch.setattr(
+        email_service.resend.Emails,
+        "send",
+        lambda _: {"id": "email_123"},
+    )
+    assert email_service._send_with_resend(
+        "donor@example.org", "Subject", "<p>Body</p>"
+    )
 
 
 def test_health_does_not_disclose_errors(monkeypatch):

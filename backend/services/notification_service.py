@@ -209,7 +209,7 @@ def resend_pending_recipients(
     pending_recipients = [
         recipient
         for recipient in crud.get_notification_recipients(database_session, notification.id)
-        if recipient.status == "PENDING"
+        if recipient.status in {"PENDING", "DELIVERY_FAILED"}
     ]
     successful_deliveries = sum(
         _send_to_recipient(database_session, notification.blood_request, recipient)

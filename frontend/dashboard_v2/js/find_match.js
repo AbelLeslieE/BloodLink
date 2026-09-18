@@ -1881,12 +1881,12 @@ async function sendEmailsToSelectedDonors() {
         await loadDashboardStatistics();
         await loadBloodRequests();
 
+        const failedCount = Number(result.failed_count || 0);
         showToast(
-
-            `${result.emails_sent} notification emails sent successfully.`,
-
-            "success"
-
+            failedCount
+                ? `${result.emails_sent} email(s) sent; ${failedCount} failed. You can retry them from Notifications.`
+                : `${result.emails_sent} notification emails sent successfully.`,
+            failedCount ? "warning" : "success"
         );
 
     }

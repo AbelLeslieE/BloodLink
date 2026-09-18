@@ -40,7 +40,11 @@ def test_red_cell_compatibility_matrix_is_directional():
     assert not is_compatible_donor("A-", "B-")
 
 
-def test_find_save_and_send_use_real_blood_compatibility(system):
+def test_find_save_and_send_use_real_blood_compatibility(system, monkeypatch):
+    from backend.services import email_service
+
+    monkeypatch.setattr(email_service, "delivery_configuration_error", lambda: None)
+    monkeypatch.setattr(email_service, "send_email", lambda *args, **kwargs: True)
     client, sessions, tokens = system
     with sessions.begin() as db:
         compatible = [
@@ -103,6 +107,72 @@ def test_find_save_and_send_use_real_blood_compatibility(system):
         headers=tokens["admin"],
     )
     assert sent.status_code == 200, sent.text
+    assert sent.json()["emails_sent"] == 2
+    assert sent.json()["failed_count"] == 0
+
+
+def test_match_send_rejects_missing_email_configuration(system):
+    client, sessions, tokens = system
+    with sessions.begin() as db:
+        request = BloodRequest(
+            patient_name="Email Configuration Patient", case_details="Delivery regression",
+            blood_group="A+", units_required=1, required_date=date.today() + timedelta(days=1),
+            priority="Urgent", hospital_name="Email Test Hospital",
+            hospital_location="Test City", contact_person="Test Contact",
+            contact_phone="9999900056", created_by=1,
+        )
+        db.add(request)
+        db.flush()
+        request_id = request.id
+        donor_id = db.scalar(select(Donor.id).where(Donor.email == "donor1@example.org"))
+
+    response = client.post(
+        "/api/match/send",
+        json={"blood_request_id": request_id, "donor_ids": [donor_id]},
+        headers=tokens["admin"],
+    )
+    assert response.status_code == 503
+    assert "Email delivery is not configured" in response.json()["detail"]
+
+
+def test_failed_campaign_can_be_retried_after_provider_recovery(system, monkeypatch):
+    from backend.services import email_service
+
+    client, sessions, tokens = system
+    monkeypatch.setattr(email_service, "delivery_configuration_error", lambda: None)
+    monkeypatch.setattr(email_service, "send_email", lambda *args, **kwargs: False)
+    with sessions.begin() as db:
+        request = BloodRequest(
+            patient_name="Retry Patient", case_details="Delivery retry regression",
+            blood_group="A+", units_required=1, required_date=date.today() + timedelta(days=1),
+            priority="Urgent", hospital_name="Retry Hospital", hospital_location="Test City",
+            contact_person="Test Contact", contact_phone="9999900057", created_by=1,
+        )
+        db.add(request)
+        db.flush()
+        request_id = request.id
+        donor_id = db.scalar(select(Donor.id).where(Donor.email == "donor1@example.org"))
+
+    failed = client.post(
+        "/api/match/send",
+        json={"blood_request_id": request_id, "donor_ids": [donor_id]},
+        headers=tokens["admin"],
+    )
+    assert failed.status_code == 502
+    campaigns = client.get("/api/notifications", headers=tokens["admin"])
+    assert campaigns.status_code == 200
+    campaign_id = next(
+        item["id"] for item in campaigns.json() if item["blood_request"]["id"] == request_id
+    )
+
+    monkeypatch.setattr(email_service, "send_email", lambda *args, **kwargs: True)
+    retried = client.post(
+        f"/api/notifications/{campaign_id}/resend-pending",
+        headers=tokens["admin"],
+    )
+    assert retried.status_code == 200, retried.text
+    assert retried.json()["emails_sent"] == 1
+    assert retried.json()["failed_count"] == 0
 
 
 def test_compatible_request_reaches_donor_portal_and_confirmation(system):

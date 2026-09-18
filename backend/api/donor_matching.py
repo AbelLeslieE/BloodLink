@@ -11,14 +11,12 @@ from backend.auth.dependencies import require_administrator
 from backend.database.database import get_db
 from backend.database.models import User
 from backend.database import crud
-from backend.database.schemas import FindMatchRequest
-from backend.services import donor_matching_service
 from backend.database.schemas import (
     FindMatchRequest,
     SendNotificationRequest,
 )
 
-from backend.services import notification_service
+from backend.services import donor_matching_service, email_service, notification_service
 router = APIRouter(
     prefix="/api/match",
     tags=["Donor Matching"],
@@ -153,15 +151,28 @@ def send_notification_campaign(
             detail="No valid donors selected.",
         )
 
-    campaign = notification_service.send_notification_campaign(
+    configuration_error = email_service.delivery_configuration_error()
+    if configuration_error:
+        raise HTTPException(status_code=503, detail=configuration_error)
+
+    campaign, emails_sent = notification_service.send_notification_campaign(
         database_session=database_session,
         blood_request=blood_request,
         compatible_donors=compatible_donors,
     )
 
+    attempted = len(compatible_donors)
+    failed_count = attempted - emails_sent
+    if emails_sent == 0:
+        raise HTTPException(
+            status_code=502,
+            detail="The email provider rejected every delivery. Check the Resend configuration and retry.",
+        )
+
     return {
-        "success": True,
+        "success": failed_count == 0,
         "campaign_id": campaign.id,
-        "emails_sent": len(compatible_donors),
-        "message": "Notification campaign created successfully.",
+        "emails_attempted": attempted,
+        "emails_sent": emails_sent,
+        "failed_count": failed_count,
     }

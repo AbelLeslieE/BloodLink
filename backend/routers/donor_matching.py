@@ -20,6 +20,7 @@ from backend.database.schemas import (
 
 from backend.services import (
     donor_matching_service,
+    email_service,
     notification_service,
 )
 
@@ -171,16 +172,33 @@ def send_notifications(
             detail="No donors selected.",
         )
 
+    configuration_error = email_service.delivery_configuration_error()
+    if configuration_error:
+        raise HTTPException(status_code=503, detail=configuration_error)
+
     campaign, emails_sent = notification_service.send_notification_campaign(
         database_session=database_session,
         blood_request=blood_request,
         compatible_donors=selected_donors,
     )
 
+    attempted = len(selected_donors)
+    failed_count = attempted - emails_sent
+    if emails_sent == 0:
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "The email provider rejected every delivery. Check the Resend API key, "
+                "verified EMAIL_FROM sender, and Resend delivery logs, then retry the campaign."
+            ),
+        )
+
     return {
-        "success": True,
+        "success": failed_count == 0,
         "campaign_id": campaign.id,
+        "emails_attempted": attempted,
         "emails_sent": emails_sent,
+        "failed_count": failed_count,
     }
 
 

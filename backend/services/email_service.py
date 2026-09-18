@@ -17,6 +17,7 @@ import resend
 import logging
 import smtplib
 import ssl
+from resend.exceptions import ResendError
 from email.message import EmailMessage
 from html import escape
 from datetime import datetime, timedelta, timezone
@@ -26,6 +27,30 @@ from backend.config.settings import get_settings
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
+
+
+def delivery_configuration_error() -> str | None:
+    """Return an operator-facing configuration error, if delivery is disabled."""
+    if settings.on_render:
+        missing = [
+            name
+            for name, value in (
+                ("RESEND_API_KEY", settings.resend_api_key),
+                ("EMAIL_FROM", settings.email_from),
+            )
+            if not value.strip()
+        ]
+        if missing:
+            return (
+                "Email delivery is not configured. Add "
+                + " and ".join(missing)
+                + " to the Render service environment, then redeploy."
+            )
+        return None
+
+    if _smtp_is_configured() or (settings.resend_api_key and settings.email_from):
+        return None
+    return "Email delivery is not configured. Configure SMTP or RESEND_API_KEY and EMAIL_FROM."
 
 
 
@@ -93,11 +118,21 @@ def _send_with_resend(
         }
         if text_body:
             payload["text"] = text_body
-        resend.Emails.send(payload)
+        response = resend.Emails.send(payload)
+        if not response or not response.get("id"):
+            logger.warning("Resend returned no email id")
+            return False
         logger.info("Donation request email accepted by Resend")
         return True
-    except Exception:
-        logger.warning("Resend email delivery failed")
+    except ResendError as error:
+        logger.warning(
+            "Resend email delivery failed (code=%s, type=%s)",
+            error.code,
+            error.error_type,
+        )
+        return False
+    except Exception as error:
+        logger.warning("Resend email delivery failed (type=%s)", type(error).__name__)
         return False
 # ==========================================================
 # TOKEN GENERATION
