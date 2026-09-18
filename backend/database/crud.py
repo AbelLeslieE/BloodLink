@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, TypeVar
 
 from sqlalchemy import select, func, or_, and_
@@ -1356,20 +1356,17 @@ def get_donation_dashboard_summary(
         or 0
     )
 
+    # Month bounds computed in Python keep the query portable across SQLite
+    # and PostgreSQL and let the date column use its index.
+    month_start = date.today().replace(day=1)
+    next_month_start = (month_start + timedelta(days=32)).replace(day=1)
     this_month = (
         database_session.query(
             func.count(DonationHistory.id)
         )
         .filter(
-            func.strftime(
-                "%Y-%m",
-                DonationHistory.donation_date,
-            )
-            ==
-            func.strftime(
-                "%Y-%m",
-                func.current_date(),
-            )
+            DonationHistory.donation_date >= month_start,
+            DonationHistory.donation_date < next_month_start,
         )
         .scalar()
         or 0

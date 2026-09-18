@@ -11,7 +11,8 @@ from dataclasses import replace
 import httpx
 import pytest
 from sqlalchemy.engine import make_url
-from backend.config.settings import BASE_DIR, ConfigurationError, get_settings
+from backend.config.settings import (BASE_DIR, ConfigurationError, RENDER_PROXY_NETWORKS,
+    get_default_volunteer_credentials, get_settings)
 from backend.config.database_url import normalize_database_url
 from backend.security.database import create_database_engine
 from start import server_options
@@ -328,3 +329,75 @@ def test_secure_origin_behind_http_proxy(system, monkeypatch):
                                    (b"cookie", ("bloodlink_session=" + token).encode())]})
     with sessions() as db:
         assert dependencies.get_current_user(request, None, db).username == "admin"
+
+
+def test_render_blueprint_sets_proxy_trust_and_admin_bootstrap_variables():
+    blueprint = (BASE_DIR / "render.yaml").read_text(encoding="utf-8")
+    assert f"- key: FORWARDED_ALLOW_IPS\n        value: {RENDER_PROXY_NETWORKS}" in blueprint
+    assert "- key: ALLOWED_HOSTS\n        sync: false" in blueprint
+    assert "- key: DEFAULT_VOLUNTEER_USERNAME\n        sync: false" in blueprint
+
+
+def _render_environment(config_env):
+    config_env.setenv("RENDER", "true")
+    config_env.setenv("RENDER_EXTERNAL_URL", "https://bloodlink.onrender.com")
+    config_env.setenv("RENDER_EXTERNAL_HOSTNAME", "bloodlink.onrender.com")
+    config_env.setenv("DATABASE_URL", "postgres://u:p@db.example.org/app")
+    config_env.delenv("FORWARDED_ALLOW_IPS", raising=False)
+
+
+def test_render_trusts_its_private_proxy_network_by_default(config_env):
+    _render_environment(config_env)
+    options = server_options(get_settings())
+    assert options["proxy_headers"] is True
+    assert options["forwarded_allow_ips"] == RENDER_PROXY_NETWORKS
+    assert "*" not in options["forwarded_allow_ips"]
+    config_env.setenv("FORWARDED_ALLOW_IPS", "10.42.0.0/16")
+    assert server_options(get_settings())["forwarded_allow_ips"] == "10.42.0.0/16"
+
+
+def test_local_proxy_trust_stays_loopback(config_env, tmp_path):
+    config_env.chdir(tmp_path)
+    config_env.delenv("FORWARDED_ALLOW_IPS", raising=False)
+    config_env.setenv("DATABASE_URL", "sqlite:///./bloodlink.db")
+    assert server_options(get_settings())["forwarded_allow_ips"] == "127.0.0.1"
+
+
+def test_production_bootstrap_credentials_must_not_be_guessable(config_env):
+    _render_environment(config_env)
+    config_env.setenv("DEFAULT_VOLUNTEER_USERNAME", "volunteer")
+    config_env.setenv("DEFAULT_VOLUNTEER_PASSWORD", "a-perfectly-long-password-1")
+    with pytest.raises(ConfigurationError):
+        get_default_volunteer_credentials()
+    config_env.setenv("DEFAULT_VOLUNTEER_USERNAME", "Campus.Coordinator")
+    config_env.setenv("DEFAULT_VOLUNTEER_PASSWORD", "short-pass1")
+    with pytest.raises(ConfigurationError):
+        get_default_volunteer_credentials()
+    config_env.setenv("DEFAULT_VOLUNTEER_PASSWORD", "a-perfectly-long-password-1")
+    credentials = get_default_volunteer_credentials()
+    assert credentials.username == "campus.coordinator"
+    assert credentials.email == "admin@bloodlink.local"
+
+
+def test_development_bootstrap_keeps_working_with_defaults(config_env, tmp_path):
+    config_env.chdir(tmp_path)
+    config_env.setenv("DATABASE_URL", "sqlite:///./bloodlink.db")
+    config_env.setenv("DEFAULT_VOLUNTEER_USERNAME", "Volunteer")
+    config_env.setenv("DEFAULT_VOLUNTEER_PASSWORD", "devpass1")
+    assert get_default_volunteer_credentials().username == "volunteer"
+
+
+@pytest.mark.parametrize("overrides", [
+    {"SECRET_KEY": "REPLACE_WITH_AT_LEAST_32_RANDOM_BYTES"},
+    {"SECRET_KEY": "too-short"},
+    {"ALLOWED_HOSTS": "*.example.org"},
+])
+def test_production_refuses_weak_secret_or_wildcard_hosts(config_env, overrides):
+    config_env.setenv("APP_ENV", "production")
+    config_env.setenv("BACKEND_URL", "https://bloodlink.example.org")
+    config_env.setenv("FRONTEND_URL", "https://bloodlink.example.org")
+    config_env.setenv("DATABASE_URL", "postgres://u:p@db.example.org/app")
+    for name, value in overrides.items():
+        config_env.setenv(name, value)
+    with pytest.raises(ConfigurationError):
+        get_settings()

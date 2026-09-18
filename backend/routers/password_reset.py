@@ -7,7 +7,7 @@ from html import escape
 from typing import Annotated
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from jwt import InvalidTokenError as JWTError
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func, select, update
@@ -19,9 +19,11 @@ from backend.auth.security import (
     hash_password,
 )
 from backend.config.settings import get_settings
+from backend.database import database as database_module
 from backend.database.database import get_db
 from backend.database.models import User
-from backend.services.email_service import send_email
+from backend.security.rate_limit import consume_limit
+from backend.services import email_service
 
 
 logger = logging.getLogger(__name__)
@@ -30,6 +32,7 @@ router = APIRouter(prefix="/api/auth/password-reset", tags=["password recovery"]
 GENERIC_REQUEST_MESSAGE = (
     "If a donor account uses this username, a password reset link has been sent."
 )
+RESET_EMAIL_LIMIT, RESET_EMAIL_WINDOW = 3, 3600
 
 
 class PasswordResetRequest(BaseModel):
@@ -85,28 +88,21 @@ def _build_reset_email(reset_url: str, full_name: str) -> str:
     """
 
 
-@router.post("/request", status_code=status.HTTP_202_ACCEPTED)
-def request_password_reset(
-    data: PasswordResetRequest,
-    database_session: Annotated[Session, Depends(get_db)],
-) -> dict[str, str]:
-    """Email a recovery link to the address stored for a username.
-
-    The response is deliberately identical whether the username exists or not,
-    preventing the endpoint from being used to enumerate donor accounts.
-    """
-    user = database_session.scalar(
-        select(User).where(func.lower(User.username) == data.username)
-    )
-
-    if user and user.active and _is_donor_account(user):
+def _deliver_reset_email(username: str) -> None:
+    # Runs after the response is sent; the request's session is already closed.
+    with database_module.SessionLocal() as database_session:
+        user = database_session.scalar(
+            select(User).where(func.lower(User.username) == username)
+        )
+        if not (user and user.active and _is_donor_account(user)):
+            return
         settings = get_settings()
         token = create_password_reset_token(user.username, user.auth_version)
         reset_url = (
             f"{settings.frontend_url.rstrip('/')}/reset-password"
             f"?token={quote(token, safe='')}"
         )
-        delivered = send_email(
+        delivered = email_service.send_email(
             recipient_email=user.email,
             subject="Reset your BloodLink donor password",
             html_body=_build_reset_email(reset_url, user.full_name),
@@ -114,6 +110,20 @@ def request_password_reset(
         if not delivered:
             logger.error("Password reset email could not be delivered for donor account %s", user.id)
 
+
+@router.post("/request", status_code=status.HTTP_202_ACCEPTED)
+def request_password_reset(
+    data: PasswordResetRequest,
+    background_tasks: BackgroundTasks,
+) -> dict[str, str]:
+    """Queue a recovery email for a username.
+
+    Every request performs the same work before responding (one counter update)
+    and returns the same body, so neither content nor timing reveals whether
+    the username belongs to a donor. Delivery is capped per account.
+    """
+    if consume_limit(data.username, "password-reset-account", RESET_EMAIL_LIMIT, RESET_EMAIL_WINDOW):
+        background_tasks.add_task(_deliver_reset_email, data.username)
     return {"detail": GENERIC_REQUEST_MESSAGE}
 
 

@@ -3,11 +3,17 @@ Create the default administrator account for BloodLink.
 Run this once after creating the database.
 """
 
+import logging
+import os
+
 from backend.database.database import SessionLocal
 from backend.database import crud
 from backend.database.schemas import UserCreate
 from backend.auth.security import hash_password
-from backend.config.settings import get_default_volunteer_credentials
+from backend.config.settings import get_default_volunteer_credentials, get_settings
+
+
+logger = logging.getLogger(__name__)
 
 
 def create_admin():
@@ -17,7 +23,12 @@ def create_admin():
     try:
 
         if crud.volunteer_exists(db):
-            print("Default administrator already exists.")
+            if get_settings().production and os.getenv("DEFAULT_VOLUNTEER_PASSWORD"):
+                # A wiped database would silently recreate an administrator
+                # with this known value; it is only needed for the first boot.
+                logger.warning(
+                    "DEFAULT_VOLUNTEER_PASSWORD is still configured although accounts exist; remove it from the environment."
+                )
             return
 
         credentials = get_default_volunteer_credentials()
@@ -29,15 +40,13 @@ def create_admin():
                 full_name="System Administrator",
                 department="Blood Bank",
                 role="Administrator",
-                email="admin@bloodlink.local",
+                email=credentials.email,
                 phone="9999999999",
                 active=True,
             ),
         )
 
-        print("Default administrator created successfully.")
-        print(f"Username : {admin.username}")
-        print("Password was read from DEFAULT_VOLUNTEER_PASSWORD.")
+        logger.info("Default administrator account created (id %s). Change its password after first sign-in.", admin.id)
 
     finally:
 

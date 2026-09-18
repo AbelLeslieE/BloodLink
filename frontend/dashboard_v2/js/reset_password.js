@@ -3,6 +3,10 @@ const confirmForm = document.getElementById("passwordResetConfirmForm");
 const requestMessage = document.getElementById("resetRequestMessage");
 const confirmMessage = document.getElementById("resetConfirmMessage");
 const resetToken = new URLSearchParams(window.location.search).get("token");
+if (resetToken) {
+    // Keep the single-use link out of browser history and synced tabs.
+    history.replaceState(null, "", window.location.pathname);
+}
 const isPasswordSetup = window.location.pathname === "/setup-password";
 const newPassword = document.getElementById("newPassword");
 const confirmPassword = document.getElementById("confirmPassword");

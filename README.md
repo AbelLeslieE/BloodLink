@@ -178,6 +178,9 @@ including Web Push subscriptions and pending donor registration profiles.
 
 The first administrator is created from `DEFAULT_VOLUNTEER_USERNAME` and
 `DEFAULT_VOLUNTEER_PASSWORD`; no default password is shipped in source code.
+Production requires a non-guessable username and a 16+ character password, and
+the password variable should be removed once the account exists. Administrators
+change their own password from Settings → Security, which signs out every session.
 
 Administrators use the existing dashboard. Donor accounts are redirected to
 `/donor-dashboard`, which exposes only safe request details and never returns

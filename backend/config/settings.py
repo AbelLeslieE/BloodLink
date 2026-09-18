@@ -76,6 +76,22 @@ class DefaultVolunteerCredentials:
 
     username: str
     password: str
+    email: str
+
+
+RESERVED_BOOTSTRAP_USERNAMES = {"volunteer", "admin", "administrator", "root"}
+# Render reaches the app only through its private network; trusting these
+# ranges lets Uvicorn resolve the real visitor from X-Forwarded-For while a
+# client-supplied (leftmost) entry is still ignored.
+RENDER_PROXY_NETWORKS = "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10,127.0.0.1"
+
+
+def forwarded_allow_ips(settings: "Settings") -> str:
+    """Proxy addresses whose X-Forwarded-* headers Uvicorn may trust."""
+    configured = os.getenv("FORWARDED_ALLOW_IPS", "").strip()
+    if configured:
+        return configured
+    return RENDER_PROXY_NETWORKS if settings.on_render else "127.0.0.1"
 
 
 def _required_value(name: str) -> str:
@@ -189,14 +205,26 @@ def get_default_volunteer_credentials() -> DefaultVolunteerCredentials:
     username = os.getenv(
         "DEFAULT_VOLUNTEER_USERNAME",
         "volunteer",
-    ).strip()
+    ).strip().lower()
 
     if not username:
         raise ConfigurationError(
             "DEFAULT_VOLUNTEER_USERNAME cannot be empty."
         )
 
+    password = _required_value("DEFAULT_VOLUNTEER_PASSWORD")
+    if get_settings().production:
+        if username in RESERVED_BOOTSTRAP_USERNAMES:
+            raise ConfigurationError(
+                "DEFAULT_VOLUNTEER_USERNAME must not be a guessable name such as volunteer or admin in production."
+            )
+        if len(password) < 16:
+            raise ConfigurationError(
+                "DEFAULT_VOLUNTEER_PASSWORD must contain at least 16 characters in production."
+            )
+
     return DefaultVolunteerCredentials(
         username=username,
-        password=_required_value("DEFAULT_VOLUNTEER_PASSWORD"),
+        password=password,
+        email=os.getenv("DEFAULT_VOLUNTEER_EMAIL", "").strip().lower() or "admin@bloodlink.local",
     )

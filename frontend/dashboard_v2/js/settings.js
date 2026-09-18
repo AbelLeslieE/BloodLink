@@ -1,3 +1,5 @@
+import { authenticatedFetch, logoutUser } from "./api.js";
+
 function escapeSettingsHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, (char) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[char]));
 }
@@ -302,13 +304,41 @@ export function loadSettings() {
 
                         <button
                             id="changePassword"
-                            class="btn-secondary">
+                            class="btn-secondary"
+                            aria-expanded="false"
+                            aria-controls="changePasswordForm">
 
                             Change
 
                         </button>
 
                     </div>
+
+                    <form id="changePasswordForm" class="settings-password-form" hidden novalidate>
+
+                        <label>
+                            Current password
+                            <input type="password" name="current_password" autocomplete="current-password" required>
+                        </label>
+
+                        <label>
+                            New password
+                            <input type="password" name="new_password" autocomplete="new-password" minlength="8" maxlength="128" required>
+                        </label>
+
+                        <label>
+                            Confirm new password
+                            <input type="password" name="confirm_password" autocomplete="new-password" minlength="8" maxlength="128" required>
+                        </label>
+
+                        <p class="settings-password-hint">
+                            At least 8 characters including a letter and a number.
+                            Saving signs you out everywhere, including this device.
+                        </p>
+
+                        <button type="submit" class="btn-primary">Update password</button>
+
+                    </form>
 
                     <div class="settings-item">
 
@@ -819,19 +849,73 @@ function initializeSecurity(){
     const twoFactor =
         document.getElementById("twoFactor");
 
-    if(changePassword){
+    const passwordForm =
+        document.getElementById("changePasswordForm");
+
+    if(changePassword && passwordForm){
 
         changePassword.addEventListener("click",()=>{
 
-            showToast(
+            const open = passwordForm.hasAttribute("hidden");
+            passwordForm.toggleAttribute("hidden", !open);
+            changePassword.setAttribute("aria-expanded", String(open));
+            if(open){
+                passwordForm.elements.current_password.focus();
+            }
 
-                "Security",
+        });
 
-                "Password change feature will be available soon.",
+        passwordForm.addEventListener("submit", async (event)=>{
 
-                "fa-key"
+            event.preventDefault();
 
-            );
+            const current = passwordForm.elements.current_password.value;
+            const next = passwordForm.elements.new_password.value;
+            const confirm = passwordForm.elements.confirm_password.value;
+
+            if(next !== confirm){
+                showToast("Security", "The new passwords do not match.", "fa-key");
+                return;
+            }
+
+            const submit = passwordForm.querySelector("button[type=submit]");
+            submit.disabled = true;
+
+            try{
+
+                const response = await authenticatedFetch("/api/auth/change-password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ current_password: current, new_password: next })
+                });
+
+                if(!response){
+                    return;
+                }
+
+                const data = await response.json().catch(() => ({}));
+
+                if(!response.ok){
+                    const detail = Array.isArray(data.detail)
+                        ? String(data.detail[0]?.msg || "").replace(/^Value error,\s*/i, "")
+                        : data.detail;
+                    showToast("Security", detail || "The password could not be changed.", "fa-key");
+                    return;
+                }
+
+                passwordForm.reset();
+                showToast("Security", "Password updated. Signing you out…", "fa-key");
+                setTimeout(() => logoutUser(), 1200);
+
+            }catch(error){
+
+                showToast("Security", "The password could not be changed. Check your connection.", "fa-key");
+
+            }finally{
+
+                submit.disabled = false;
+
+            }
 
         });
 

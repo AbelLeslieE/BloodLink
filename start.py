@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parent
 
 
 def server_options(settings):
-    from backend.config.settings import ConfigurationError
+    from backend.config.settings import ConfigurationError, forwarded_allow_ips
     try:
         port = int(os.getenv("PORT", "10000" if settings.on_render else "8000"))
     except ValueError:
@@ -17,11 +17,19 @@ def server_options(settings):
     return dict(
         host="0.0.0.0" if settings.on_render else os.getenv("HOST", "127.0.0.1"),
         port=port,
-        # Do not trust arbitrary forwarded IPs. Configure actual trusted proxies
-        # explicitly if needed; account throttling also runs independently of IP.
         proxy_headers=True,
-        forwarded_allow_ips=os.getenv("FORWARDED_ALLOW_IPS", "127.0.0.1"),
+        forwarded_allow_ips=forwarded_allow_ips(settings),
     )
+
+
+def logging_config():
+    """Uvicorn's default config has no root handler, which silently drops the
+    application's INFO records such as the startup security posture line."""
+    import copy
+    from uvicorn.config import LOGGING_CONFIG
+    config = copy.deepcopy(LOGGING_CONFIG)
+    config["root"] = {"handlers": ["default"], "level": "INFO"}
+    return config
 
 
 def main():
@@ -34,7 +42,7 @@ def main():
     options = server_options(get_settings())
     command.upgrade(Config(str(ROOT / "alembic.ini")), "head")
     if "--migrate-only" not in sys.argv:
-        uvicorn.run("backend.main:app", **options)
+        uvicorn.run("backend.main:app", log_config=logging_config(), **options)
 
 
 if __name__ == "__main__":

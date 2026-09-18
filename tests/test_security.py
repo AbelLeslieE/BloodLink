@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from io import BytesIO
 import base64
+import re
 import secrets
 import sqlite3
 from dataclasses import replace
@@ -10,12 +11,14 @@ from zipfile import ZipFile
 import pytest
 import jwt
 from jwt import InvalidTokenError as JWTError
+from fastapi.testclient import TestClient
 from openpyxl import Workbook, load_workbook
 from sqlalchemy import select
 from backend.auth.security import (create_access_token, create_password_reset_token,
     get_token_subject, get_password_reset_data, hash_password, verify_password)
-from backend.config.settings import get_settings, ConfigurationError
-from backend.database.models import Donor, User, BloodRequest
+from backend.config.settings import get_settings, ConfigurationError, forwarded_allow_ips
+from backend.database.models import Donor, User, BloodRequest, DonationHistory
+from backend.main import app
 from backend.security.database import configure_sqlcipher, create_database_engine
 from backend.security.encrypt_database import encrypted_copy
 from backend.security.exports import protect_workbook, safe_spreadsheet_cell
@@ -333,3 +336,151 @@ assert c.get('https://testserver/openapi.json').status_code == 404
 assert c.get('https://attacker.test/login').status_code == 400
 '''
     subprocess.run([sys.executable, "-c", code], env=env, check=True, capture_output=True, text=True)
+
+
+def _client_from(address):
+    return TestClient(app, client=(address, 50000))
+
+
+def test_login_lockout_is_per_client_and_resets_on_success(system):
+    client, _, _ = system
+    bad = {"username": "admin", "password": "wrong-password"}
+    good = {"username": "admin", "password": "AdminPassword123"}
+    for _ in range(5):
+        assert client.post("/api/auth/login", data=bad).status_code == 401
+    locked = client.post("/api/auth/login", data=bad)
+    assert locked.status_code == 429 and locked.headers["retry-after"] == "900"
+    assert client.post("/api/auth/login", data=good).status_code == 429
+    # Failures are counted per client and account, so the holder elsewhere is unaffected.
+    other = _client_from("10.0.0.2")
+    try:
+        assert other.post("/api/auth/login", data=good).status_code == 200
+        for _ in range(4):
+            assert other.post("/api/auth/login", data=bad).status_code == 401
+        assert other.post("/api/auth/login", data=good).status_code == 200
+        for _ in range(5):
+            assert other.post("/api/auth/login", data=bad).status_code == 401
+        assert other.post("/api/auth/login", data=bad).status_code == 429
+    finally:
+        other.close()
+
+
+def test_login_lockout_reveals_nothing_about_account_existence(system):
+    sequences = {}
+    for index, name in enumerate(("admin", "no-such-user")):
+        other = _client_from(f"10.1.0.{index + 1}")
+        try:
+            responses = [other.post("/api/auth/login", data={"username": name, "password": "wrong"}) for _ in range(6)]
+        finally:
+            other.close()
+        sequences[name] = [(r.status_code, r.json()["detail"]) for r in responses]
+    assert sequences["admin"] == sequences["no-such-user"]
+    assert [status for status, _ in sequences["admin"]] == [401] * 5 + [429]
+
+
+def test_password_reset_request_is_uniform_and_capped(system, monkeypatch):
+    from backend.services import email_service
+    client, _, _ = system
+    sent = []
+    monkeypatch.setattr(email_service, "send_email", lambda **kwargs: sent.append(kwargs) or True)
+    bodies = set()
+    for _ in range(4):
+        response = client.post("/api/auth/password-reset/request", json={"username": "donor1"})
+        assert response.status_code == 202
+        bodies.add(response.text)
+    assert len(sent) == 3 and {item["recipient_email"] for item in sent} == {"donor1@example.org"}
+    # Unknown accounts and non-donor roles answer identically and never trigger email.
+    for name in ("no-such-user", "admin"):
+        response = client.post("/api/auth/password-reset/request", json={"username": name})
+        assert response.status_code == 202
+        bodies.add(response.text)
+    assert len(bodies) == 1 and len(sent) == 3
+
+
+def test_registration_conflicts_share_one_generic_message(system):
+    from backend.services.pending_registration_service import REGISTRATION_CONFLICT_MESSAGE
+    client, sessions, _ = system
+    attempts = [registration("donor1", "fresh@example.org", "9999900050"),
+                registration("freshuser", "donor1@example.org", "9999900051"),
+                registration("freshuser2", "fresh2@example.org", "9999900001")]
+    for payload in attempts:
+        response = client.post("/api/donor-registration/complete", json=payload)
+        assert response.status_code == 409 and response.json()["detail"] == REGISTRATION_CONFLICT_MESSAGE
+    assert not any(word in REGISTRATION_CONFLICT_MESSAGE.lower() for word in ("email", "username", "phone"))
+    with sessions() as db:
+        assert db.scalar(select(User).where(User.username.in_(("freshuser", "freshuser2")))) is None
+
+
+def test_password_setup_send_never_reveals_or_rotates(system, monkeypatch):
+    from backend.services import email_service
+    client, sessions, _ = system
+    sent = []
+    monkeypatch.setattr(email_service, "send_email", lambda *args, **kwargs: sent.append(args) or True)
+    data = registration()
+    data.pop("password"); data.pop("confirm_password")
+    assert client.post("/api/donor-registration/verify-details", json=data).status_code == 200
+    first = client.post("/api/donor-registration/password-setup/send", json={"username": "newdonor"})
+    assert first.status_code == 202 and len(sent) == 1
+    with sessions() as db:
+        token_hash = db.scalar(select(User.password_setup_token_hash).where(User.username == "newdonor"))
+    assert token_hash
+    # A repeat request, whoever sends it, must not invalidate the live link.
+    second = client.post("/api/donor-registration/password-setup/send", json={"username": "newdonor"})
+    assert second.status_code == 202 and second.text == first.text and len(sent) == 1
+    with sessions() as db:
+        assert db.scalar(select(User.password_setup_token_hash).where(User.username == "newdonor")) == token_hash
+    for name in ("no-such-user", "donor1"):
+        response = client.post("/api/donor-registration/password-setup/send", json={"username": name})
+        assert response.status_code == 202 and response.text == first.text
+    assert len(sent) == 1
+    token = re.search(r"token=([A-Za-z0-9_-]+)", sent[0][2]).group(1)
+    payload = {"token": token, "new_password": "SetupPassword123"}
+    assert client.post("/api/donor-registration/password-setup/confirm", json=payload).status_code == 200
+
+
+def test_change_password_requires_current_and_revokes_sessions(system):
+    client, _, tokens = system
+    url = "/api/auth/change-password"
+    assert client.post(url, json={"current_password": "x", "new_password": "NewPassword123"}).status_code == 401
+    assert client.post(url, json={"current_password": "wrong", "new_password": "NewPassword123"}, headers=tokens["donor1"]).status_code == 400
+    assert client.post(url, json={"current_password": "DonorPassword123", "new_password": "short"}, headers=tokens["donor1"]).status_code == 422
+    changed = client.post(url, json={"current_password": "DonorPassword123", "new_password": "NewPassword123"}, headers=tokens["donor1"])
+    assert changed.status_code == 200
+    assert client.get("/api/auth/me", headers=tokens["donor1"]).status_code == 401
+    assert client.post("/api/auth/login", data={"username": "donor1", "password": "DonorPassword123"}).status_code == 401
+    assert client.post("/api/auth/login", data={"username": "donor1", "password": "NewPassword123"}).status_code == 200
+
+
+def test_diagnostics_endpoint_is_admin_only_and_free_of_pii(system):
+    client, _, tokens = system
+    url = "/api/admin/diagnostics/request"
+    assert client.get(url).status_code == 401
+    assert client.get(url, headers=tokens["donor1"]).status_code == 403
+    response = client.get(url, headers={**tokens["admin"], "X-Forwarded-For": "1.2.3.4, 10.0.0.9"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["resolved_client_ip"] == "testclient"
+    assert body["forwarded_chain_length"] == 2
+    assert body["forwarded_allow_ips"] == forwarded_allow_ips(get_settings())
+    assert set(body) == {"resolved_client_ip", "forwarded_chain_length", "secure_scheme", "production", "docs_disabled",
+                         "forwarded_allow_ips", "database_tls_mode", "bootstrap_password_configured"}
+
+
+def test_dashboard_summary_counts_current_month_on_any_database(system):
+    from backend.database import crud
+    client, sessions, tokens = system
+    today = date.today()
+    previous_month = today.replace(day=1) - timedelta(days=1)
+    with sessions.begin() as db:
+        request = BloodRequest(patient_name="Test", case_details="Test", blood_group="A+", units_required=1,
+            required_date=today, priority="Normal", hospital_name="Test", hospital_location="Test",
+            contact_person="Test", contact_phone="9999900099", created_by=1)
+        db.add(request); db.flush()
+        db.add_all([
+            DonationHistory(donor_id=1, blood_request_id=request.id, hospital_name="Test", donation_date=today, recorded_by=1),
+            DonationHistory(donor_id=2, blood_request_id=request.id, hospital_name="Test", donation_date=previous_month, recorded_by=1),
+        ])
+    with sessions() as db:
+        summary = crud.get_donation_dashboard_summary(db)
+    assert summary["total_donations"] == 2 and summary["this_month"] == 1
+    assert client.get("/api/donations/summary", headers=tokens["admin"]).status_code == 200

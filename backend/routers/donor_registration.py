@@ -5,12 +5,13 @@ from __future__ import annotations
 from datetime import date
 from html import escape
 from io import BytesIO
+import logging
 import re
 from typing import Annotated
 from urllib.parse import quote
 
 import qrcode
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from sqlalchemy import select
@@ -18,17 +19,22 @@ from sqlalchemy.orm import Session
 
 from backend.auth.dependencies import require_administrator
 from backend.config.settings import get_settings
+from backend.database import database as database_module
 from backend.database.database import get_db
 from backend.database.models import User
+from backend.security.rate_limit import consume_limit
+from backend.services import email_service
 from backend.services.donor_account_service import create_donor_account
-from backend.services.email_service import send_email
 from backend.services.pending_registration_service import (
     complete_direct_registration, complete_password_setup, fail_password_setup_delivery, issue_password_setup_token,
     verify_registration_details,
 )
 
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/donor-registration", tags=["donor registration"])
+SETUP_EMAIL_MESSAGE = "If this registration is awaiting password setup, a secure link has been sent to its email address."
+SETUP_EMAIL_LIMIT, SETUP_EMAIL_WINDOW = 3, 3600
 ALLOWED_BLOOD_GROUPS = {"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"}
 ALLOWED_GENDERS = {"Female", "Male", "Non-binary", "Other", "Not Specified"}
 USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -227,17 +233,27 @@ def complete_direct_donor_registration(data: DirectRegistration, db: Annotated[S
     }
 
 
+def _deliver_setup_email(username: str) -> None:
+    # Runs after the response is sent; the request's session is already closed.
+    with database_module.SessionLocal() as db:
+        user = db.scalar(select(User).where(User.username == username))
+        if user is None or user.active or user.registration_status not in {"DETAILS_VERIFIED", "PASSWORD_SETUP_SENT"}:
+            return
+        token = issue_password_setup_token(db, user)
+        if token is None:
+            return
+        setup_url = f"{get_settings().backend_url.rstrip('/')}/setup-password?token={quote(token, safe='')}"
+        if not email_service.send_email(user.email, "Set up your BloodLink password", _setup_email_html(setup_url, user.full_name)):
+            fail_password_setup_delivery(db, user)
+            logger.error("Password setup email could not be delivered for account %s", user.id)
+
+
 @router.post("/password-setup/send", status_code=status.HTTP_202_ACCEPTED)
-def send_password_setup_email(data: SetupEmailRequest, db: Annotated[Session, Depends(get_db)]) -> dict:
-    user = db.scalar(select(User).where(User.username == data.username))
-    if user is None or user.registration_status not in {"DETAILS_VERIFIED", "PASSWORD_SETUP_SENT"} or user.active:
-        raise HTTPException(status_code=400, detail="Verify your registration details before requesting a password setup email.")
-    token = issue_password_setup_token(db, user)
-    setup_url = f"{get_settings().backend_url.rstrip('/')}/setup-password?token={quote(token, safe='')}"
-    if not send_email(user.email, "Set up your BloodLink password", _setup_email_html(setup_url, user.full_name)):
-        fail_password_setup_delivery(db, user)
-        raise HTTPException(status_code=503, detail="We could not send the setup email. Please try again shortly.")
-    return {"detail": "A secure password setup link has been sent to your email address."}
+def send_password_setup_email(data: SetupEmailRequest, background_tasks: BackgroundTasks) -> dict:
+    """Always answer identically; existence of a pending registration is never revealed."""
+    if consume_limit(data.username, "setup-email-account", SETUP_EMAIL_LIMIT, SETUP_EMAIL_WINDOW):
+        background_tasks.add_task(_deliver_setup_email, data.username)
+    return {"detail": SETUP_EMAIL_MESSAGE}
 
 
 @router.post("/password-setup/confirm")

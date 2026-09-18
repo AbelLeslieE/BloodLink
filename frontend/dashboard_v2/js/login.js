@@ -99,8 +99,10 @@ form.addEventListener("submit", async (event) => {
             message.style.color = "#dc2626";
             message.textContent =
                 data.detail || "Invalid username or password.";
-            passwordInput.closest(".input-group").classList.add("is-invalid");
-            passwordInput.focus();
+            if (response.status !== 429) {
+                passwordInput.closest(".input-group").classList.add("is-invalid");
+                passwordInput.focus();
+            }
 
             return;
 

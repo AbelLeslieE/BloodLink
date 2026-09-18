@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -12,7 +13,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
-from backend.config.settings import get_settings
+from backend.config.settings import forwarded_allow_ips, get_settings
 from backend.security.middleware import SecurityMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -46,6 +47,7 @@ from backend.routers.donor_portal import donor_router
 from backend.routers.donor_registration import router as donor_registration_router
 from backend.routers.donation_history import router as donation_history_router
 from backend.routers.push_notifications import router as push_notifications_router
+from backend.routers.diagnostics import router as diagnostics_router
 # ==========================================================
 # Paths
 # ==========================================================
@@ -77,6 +79,13 @@ async def lifespan(_: FastAPI):
     verify_database_connection()
 
     logger.info("Database initialized successfully.")
+    settings = get_settings()
+    logger.info(
+        "Security posture: production=%s docs_disabled=%s on_render=%s forwarded_allow_ips=%s "
+        "database_tls_mode=%s bootstrap_password_configured=%s",
+        settings.production, settings.production, settings.on_render, forwarded_allow_ips(settings),
+        os.getenv("DATABASE_TLS_MODE", "").strip() or "automatic", bool(os.getenv("DEFAULT_VOLUNTEER_PASSWORD")),
+    )
 
     try:
         yield
@@ -150,6 +159,7 @@ app.include_router(
     notifications_router
 )
 app.include_router(push_notifications_router)
+app.include_router(diagnostics_router)
 
 app.include_router(
     donations_router,

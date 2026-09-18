@@ -17,7 +17,19 @@ services:
         value: HS256
       - key: SECRET_KEY
         generateValue: true
+      # Render's proxy reaches the app over its private network. Trusting these
+      # ranges gives each visitor their own rate-limit identity; verify with
+      # GET /api/admin/diagnostics/request after deploying (see DEPLOYMENT.md).
+      - key: FORWARDED_ALLOW_IPS
+        value: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10,127.0.0.1
+      # Every public hostname, comma-separated (custom domains + onrender.com).
+      - key: ALLOWED_HOSTS
+        sync: false
       - key: DATABASE_URL
+        sync: false
+      # Bootstrap administrator: a non-guessable username and a 16+ character
+      # password. Remove DEFAULT_VOLUNTEER_PASSWORD after the first successful boot.
+      - key: DEFAULT_VOLUNTEER_USERNAME
         sync: false
       - key: DEFAULT_VOLUNTEER_PASSWORD
         sync: false

@@ -27,6 +27,17 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
         return False
 
 
+def validate_password_strength(value: str) -> str:
+    """Minimum rules for passwords chosen by account holders."""
+    if len(value) < 8:
+        raise ValueError("Password must contain at least 8 characters.")
+    if value != value.strip():
+        raise ValueError("Password cannot start or end with a space.")
+    if not any(character.isalpha() for character in value) or not any(character.isdigit() for character in value):
+        raise ValueError("Password must include at least one letter and one number.")
+    return value
+
+
 def create_access_token(subject: str, auth_version: int) -> str:
     """Create a time-limited access token for an authenticated volunteer."""
     settings = get_settings()

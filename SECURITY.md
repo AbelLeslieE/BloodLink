@@ -36,8 +36,20 @@ donor/patient records, original database files and older backups were preserved.
   Previously issued plaintext tokens remain compatible until expiry; they were not rewritten.
 - Shared, atomic database-backed throttling: 30 public login attempts/IP/15 minutes,
   30 combined public registration/recovery/email-response submissions/IP/15 minutes,
-  and 10 login attempts/account/15 minutes. Account/IP identifiers are HMACed in storage.
-  Review these limits for campus NATs and registration events. HTTP 429 includes Retry-After.
+  and 5 failed login attempts per (client address, account) pair/15 minutes, cleared by a
+  successful sign-in. Keying failures on the pair means a stranger cannot lock the real
+  account holder out from elsewhere; a log-only tripwire notes sustained distributed
+  failures against one account. Account/IP identifiers are HMACed in storage. Per-IP
+  limits are only meaningful when proxy trust (FORWARDED_ALLOW_IPS) is configured as in
+  DEPLOYMENT.md. HTTP 429 includes Retry-After.
+- Password-reset and setup-link emails are queued after the response and capped at three
+  per account per hour; the response body and timing are identical whether or not the
+  account exists. A still-valid setup link is never replaced by a later request. Public
+  registration returns one generic message for any username/email/phone conflict.
+- Authenticated users change their own password after proving the current one; the change
+  revokes every existing session. Production refuses guessable bootstrap administrator
+  usernames and passwords under 16 characters, and warns while DEFAULT_VOLUNTEER_PASSWORD
+  remains configured after the account exists.
 - Request body bounds, compressed/uncompressed workbook limits, defused XML parsing, and
   spreadsheet formula neutralization for donor/history/campaign/match exports.
 - Browser-provider allowlisting for Web Push, outbound timeouts, redirect rejection, and

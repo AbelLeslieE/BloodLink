@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 import secrets
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -19,7 +19,11 @@ from backend.services.donor_account_service import _phone_key, normalise_phone
 
 
 SETUP_TOKEN_TTL = timedelta(minutes=30)
-SETUP_EMAIL_COOLDOWN = timedelta(seconds=60)
+# One message for every conflict so the public form cannot be used to test
+# whether a username, email address or phone number belongs to a donor.
+REGISTRATION_CONFLICT_MESSAGE = (
+    "These details match an existing BloodLink account. Sign in, use your original setup link, or contact support."
+)
 
 
 def token_hash(token: str) -> str:
@@ -70,41 +74,38 @@ def verify_registration_details(db: Session, data) -> User:
     clean_username = data.username.strip().lower()
     clean_phone = normalise_phone(data.phone)
 
-    existing_username = db.scalar(select(User).where(func.lower(User.username) == clean_username))
-    if existing_username is not None:
-        # Contact details are not proof of ownership. Existing pending users
-        # must use their emailed setup link; disabled accounts stay disabled.
-        raise HTTPException(status_code=409, detail="This username is already in use. Use your setup link or contact support.")
-    else:
-        email_user = db.scalar(select(User).where(func.lower(User.email) == clean_email))
-        email_donor = db.scalar(select(Donor).where(func.lower(Donor.email) == clean_email))
-        if email_user is not None or email_donor is not None:
-            raise HTTPException(status_code=409, detail="That email address is already registered.")
-        if _find_phone_conflict(db, clean_phone):
-            raise HTTPException(status_code=409, detail="That phone number is already registered.")
-        donor = Donor(
-            donor_code=crud.generate_donor_code(db), full_name=data.full_name,
-            blood_group=data.blood_group, gender=data.gender or "Not Specified",
-            date_of_birth=data.date_of_birth,
-            phone=clean_phone, email=clean_email, class_department=_profile_summary(data),
-            status="Available", hb_above_12_5="Not Recorded", regular_medication="Not Recorded", bp_normal="Not Recorded",
-        )
-        db.add(donor)
-        db.flush()
-        user = User(
-            full_name=data.full_name, department=_profile_summary(data)[:100], role="Donor",
-            email=clean_email, phone=clean_phone, username=clean_username,
-            password_hash=hash_password(secrets.token_urlsafe(32)), donor_id=donor.id,
-            active=False, registration_status="DETAILS_VERIFIED",
-        )
-        db.add(user)
-        db.flush()
+    # Contact details are not proof of ownership. Existing pending users must
+    # use their emailed setup link; disabled accounts stay disabled. All three
+    # checks always run so the response time does not depend on which matched.
+    username_taken = db.scalar(select(User.id).where(func.lower(User.username) == clean_username)) is not None
+    email_taken = (db.scalar(select(User.id).where(func.lower(User.email) == clean_email)) is not None
+                   or db.scalar(select(Donor.id).where(func.lower(Donor.email) == clean_email)) is not None)
+    phone_taken = _find_phone_conflict(db, clean_phone)
+    if username_taken or email_taken or phone_taken:
+        raise HTTPException(status_code=409, detail=REGISTRATION_CONFLICT_MESSAGE)
+    donor = Donor(
+        donor_code=crud.generate_donor_code(db), full_name=data.full_name,
+        blood_group=data.blood_group, gender=data.gender or "Not Specified",
+        date_of_birth=data.date_of_birth,
+        phone=clean_phone, email=clean_email, class_department=_profile_summary(data),
+        status="Available", hb_above_12_5="Not Recorded", regular_medication="Not Recorded", bp_normal="Not Recorded",
+    )
+    db.add(donor)
+    db.flush()
+    user = User(
+        full_name=data.full_name, department=_profile_summary(data)[:100], role="Donor",
+        email=clean_email, phone=clean_phone, username=clean_username,
+        password_hash=hash_password(secrets.token_urlsafe(32)), donor_id=donor.id,
+        active=False, registration_status="DETAILS_VERIFIED",
+    )
+    db.add(user)
+    db.flush()
 
     donor = user.donor
     if donor is None:
-        raise HTTPException(status_code=409, detail="This pending registration is incomplete. Please contact BloodLink support.")
+        raise HTTPException(status_code=409, detail=REGISTRATION_CONFLICT_MESSAGE)
     if _find_phone_conflict(db, clean_phone, user.id, donor.id):
-        raise HTTPException(status_code=409, detail="That phone number is already registered.")
+        raise HTTPException(status_code=409, detail=REGISTRATION_CONFLICT_MESSAGE)
     donor.full_name, donor.blood_group, donor.gender = data.full_name, data.blood_group, data.gender or "Not Specified"
     donor.date_of_birth = data.date_of_birth
     donor.phone, donor.email, donor.class_department = clean_phone, clean_email, _profile_summary(data)
@@ -121,20 +122,23 @@ def verify_registration_details(db: Session, data) -> User:
         db.commit()
     except IntegrityError as error:
         db.rollback()
-        raise HTTPException(status_code=409, detail="This registration conflicts with an existing account. Please review your details.") from error
+        raise HTTPException(status_code=409, detail=REGISTRATION_CONFLICT_MESSAGE) from error
     db.refresh(user)
     return user
 
 
-def issue_password_setup_token(db: Session, user: User) -> str:
-    """Replace any earlier setup token and return the raw value for email only."""
+def issue_password_setup_token(db: Session, user: User) -> str | None:
+    """Return a new raw setup token, or None while an unexpired one is outstanding.
+
+    A live link is never replaced: otherwise anyone who knew the username could
+    keep invalidating the link the real recipient is about to use.
+    """
     now = datetime.now(timezone.utc)
-    previous_sent = user.password_setup_sent_at
-    if previous_sent is not None:
-        if previous_sent.tzinfo is None:
-            previous_sent = previous_sent.replace(tzinfo=timezone.utc)
-        if now - previous_sent < SETUP_EMAIL_COOLDOWN:
-            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Please wait one minute before requesting another setup email.")
+    expires_at = user.password_setup_expires_at
+    if expires_at is not None and expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if user.password_setup_token_hash and expires_at is not None and expires_at > now:
+        return None
     token = secrets.token_urlsafe(48)
     user.password_setup_token_hash = token_hash(token)
     user.password_setup_expires_at = now + SETUP_TOKEN_TTL

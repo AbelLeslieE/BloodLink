@@ -23,6 +23,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from backend.main import app
+from backend.database import database
 from backend.database.database import Base, get_db
 from backend.database.models import Donor, User
 from backend.auth.security import hash_password, create_access_token
@@ -40,6 +41,8 @@ def system(tmp_path, monkeypatch, request):
     Base.metadata.create_all(engine)
     sessions = sessionmaker(bind=engine, expire_on_commit=False)
     monkeypatch.setattr(rate_limit, "SessionLocal", sessions)
+    # Background email tasks open their own sessions via the database module.
+    monkeypatch.setattr(database, "SessionLocal", sessions)
     def override_db():
         with sessions() as db:
             yield db

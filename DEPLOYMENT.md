@@ -16,8 +16,10 @@ python start.py
 ```
 
 For a new installation, copy .env.example to .env and set a random SECRET_KEY
-(at least 32 bytes) and a strong DEFAULT_VOLUNTEER_PASSWORD. Never reuse the JWT
-secret as an encryption key. Existing .env files are not overwritten.
+(at least 32 bytes), a non-guessable DEFAULT_VOLUNTEER_USERNAME and a strong
+DEFAULT_VOLUNTEER_PASSWORD (production requires 16+ characters and rejects names
+such as volunteer or admin). Never reuse the JWT secret as an encryption key.
+Existing .env files are not overwritten.
 Open http://localhost:8000 (or your PORT). The launcher defaults to loopback only.
 
 Leave BACKEND_URL, FRONTEND_URL and ALLOWED_HOSTS blank for local automatic
@@ -51,7 +53,10 @@ deploy (that logs everyone out).
 | SECRET_KEY | Existing strong random production secret |
 | DATABASE_URL | Existing PostgreSQL connection URL |
 | DATABASE_TLS_MODE | Leave unset for automatic Render database detection |
-| DEFAULT_VOLUNTEER_PASSWORD | Strong initial admin password, needed only on a fresh DB |
+| FORWARDED_ALLOW_IPS | Leave unset for the Render private-network default (see proxies below) |
+| ALLOWED_HOSTS | Every public hostname, comma-separated |
+| DEFAULT_VOLUNTEER_USERNAME | Non-guessable bootstrap admin name (not volunteer/admin) |
+| DEFAULT_VOLUNTEER_PASSWORD | 16+ character initial admin password; remove after the first boot |
 
 Render supplies PORT and RENDER_EXTERNAL_URL. With blank BACKEND_URL/FRONTEND_URL,
 both use that HTTPS origin. For a custom domain, set both URLs to its HTTPS origin
@@ -91,10 +96,22 @@ The app therefore does not redirect again on Render; secure cookies, HSTS and
 host checks remain enabled. Other production hosts retain app HTTPS redirection.
 Do not expose Render's internal application port outside trusted infrastructure.
 
-FORWARDED_ALLOW_IPS defaults to loopback. Configure actual trusted proxy IPs/CIDRs
-when your ingress topology requires them; never blindly set it to *. Without
-correct proxy trust, multiple visitors can share an IP throttle bucket. Account
-throttling remains active. Verify client IP handling and load-test in staging.
+FORWARDED_ALLOW_IPS controls which proxies' X-Forwarded-For headers are trusted.
+Locally it defaults to loopback. On Render it defaults to the private/CGNAT ranges
+(10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 100.64.0.0/10, 127.0.0.1), because the
+app port is reachable only through Render's private network. With an explicit list,
+Uvicorn walks the header from the right and stops at the first untrusted hop, so a
+visitor cannot spoof their own address; do not use `*`, which trusts the leftmost
+(client-supplied) entry. Without correct proxy trust every visitor shares one
+throttle bucket and thirty failed attempts would block sign-in for everyone.
+
+Verify after every deploy: sign in as an administrator and call
+`GET /api/admin/diagnostics/request` twice from the same machine, once plain and
+once with an added header `X-Forwarded-For: 1.2.3.4`. `resolved_client_ip` must be
+your real public address both times. If it shows a private address for everyone,
+Render's proxy peer is outside the default ranges: set FORWARDED_ALLOW_IPS to that
+peer's range. The startup log line beginning `Security posture:` shows the same
+values without signing in.
 
 Render free services block SMTP ports: leave SMTP settings blank and configure
 RESEND_API_KEY plus EMAIL_FROM with an authorized sender. Paid SMTP-enabled hosts
@@ -106,6 +123,21 @@ provide all secure-context PWA/push features.
 [Render HTTPS behavior](https://render.com/docs/web-services)
 [Render health checks](https://render.com/docs/health-checks)
 [Render free-plan limits](https://render.com/docs/free)
+
+## Pre-hosting checklist
+
+1. Repository visibility is private and `git rev-list --all --objects | grep bloodlink.db`
+   prints nothing (no database file anywhere in history).
+2. Render environment: APP_ENV=production, random SECRET_KEY, PostgreSQL DATABASE_URL,
+   ALLOWED_HOSTS, non-guessable DEFAULT_VOLUNTEER_USERNAME, 16+ character
+   DEFAULT_VOLUNTEER_PASSWORD, RESEND_API_KEY and EMAIL_FROM.
+3. First boot: the log shows `Security posture: production=True docs_disabled=True`.
+4. Sign in as the bootstrap administrator, change the password from Settings →
+   Security (this signs every session out), then remove DEFAULT_VOLUNTEER_PASSWORD
+   from the environment and redeploy. The posture line must now show
+   `bootstrap_password_configured=False`.
+5. Run the proxy-trust check with `GET /api/admin/diagnostics/request` described above.
+6. Enable two-factor authentication on the Render and GitHub accounts themselves.
 
 ## Verification and rollout
 
