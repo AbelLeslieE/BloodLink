@@ -893,7 +893,7 @@ label,
     overflow: hidden auto;
     background:
         linear-gradient(90deg, rgba(255, 255, 255, .02) 0 47%, rgba(12, 25, 48, .08) 100%),
-        url("/static/assets/login-background-glass.png") center center / cover no-repeat;
+        url("/static/assets/login-background-abplus.png") center center / cover no-repeat;
 }
 
 .login-container::before {
