@@ -151,6 +151,51 @@ function requestStatistics(requests = bloodRequests) {
         fulfilled: requests.filter((request) => hasStatus(request, "fulfilled")).length,
     };
 }
+
+function normalizeRequestFilterValue(value) {
+    return String(value ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+}
+
+function filterBloodRequests(
+    requests = bloodRequests,
+    {
+        query = "",
+        bloodGroup = "",
+        urgency = "",
+        status = ""
+    } = {}
+) {
+    const normalizedQuery = normalizeRequestFilterValue(query);
+    const normalizedBloodGroup = normalizeRequestFilterValue(bloodGroup);
+    const normalizedUrgency = normalizeRequestFilterValue(urgency);
+    const normalizedStatus = normalizeRequestFilterValue(status);
+
+    return requests.filter((request) => {
+        const displayRequestId =
+            `BR-${String(request.id).padStart(4, "0")}`;
+        const searchableText = [
+            displayRequestId,
+            request.id,
+            request.patient_name,
+            request.hospital_name
+        ]
+            .map(normalizeRequestFilterValue)
+            .join(" ");
+
+        return (
+            (!normalizedQuery || searchableText.includes(normalizedQuery)) &&
+            (!normalizedBloodGroup ||
+                normalizeRequestFilterValue(request.blood_group) === normalizedBloodGroup) &&
+            (!normalizedUrgency ||
+                normalizeRequestFilterValue(request.priority) === normalizedUrgency) &&
+            (!normalizedStatus ||
+                normalizeRequestFilterValue(request.status) === normalizedStatus)
+        );
+    });
+}
 // ==========================================================
 // 3. SHOW MODULE VIEW
 // ==========================================================
@@ -2318,6 +2363,62 @@ async function deleteBloodRequest(
     }
 
 }
+
+function connectBloodRequestTableActions() {
+    document
+        .querySelectorAll(".table-action-button[data-request-id]")
+        .forEach((button) => {
+            button.addEventListener("click", () => {
+                openBloodRequestDetails(button.dataset.requestId);
+            });
+        });
+
+    document
+        .querySelectorAll(".table-delete-button[data-delete-request-id]")
+        .forEach((button) => {
+            button.addEventListener("click", () => {
+                deleteBloodRequest(
+                    button.dataset.deleteRequestId,
+                    button
+                );
+            });
+        });
+}
+
+function updateBloodRequestTable() {
+    const tableBody = document.getElementById("bloodRequestTableBody");
+    const resultSummary = document.getElementById("requestResultSummary");
+
+    if (!tableBody) {
+        return;
+    }
+
+    const filteredRequests = filterBloodRequests(bloodRequests, {
+        query: document.getElementById("requestSearch")?.value,
+        bloodGroup: document.getElementById("bloodGroupFilter")?.value,
+        urgency: document.getElementById("urgencyFilter")?.value,
+        status: document.getElementById("statusFilter")?.value
+    });
+
+    tableBody.innerHTML = buildRequestRows(filteredRequests);
+
+    if (resultSummary) {
+        const firstVisibleRequest = filteredRequests.length ? 1 : 0;
+        resultSummary.innerHTML = `
+            Showing
+            <strong>${firstVisibleRequest}–${filteredRequests.length}</strong>
+            of
+            <strong>${bloodRequests.length}</strong>
+            requests
+        `;
+    }
+
+    connectBloodRequestTableActions();
+
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+}
 // ==========================================================
 // 8. RENDER BLOOD REQUESTS
 // ==========================================================
@@ -2722,7 +2823,7 @@ async function renderBloodRequests(
 
                 <div class="request-table-footer">
 
-                    <p>
+                    <p id="requestResultSummary" aria-live="polite">
                         Showing
                         <strong>${firstVisibleRequest}–${visibleRequestCount}</strong>
                         of
@@ -2797,52 +2898,19 @@ async function renderBloodRequests(
 
         }
     );
-        // ======================================================
-        // CONNECT REQUEST DETAILS BUTTONS
-        // ======================================================
 
-        document
-            .querySelectorAll(
-                ".table-action-button[data-request-id]"
-            )
-            .forEach(
-                (button) => {
+    connectBloodRequestTableActions();
 
-                    button.addEventListener(
-                        "click",
-                        () => {
+    document
+        .getElementById("requestSearch")
+        ?.addEventListener("input", updateBloodRequestTable);
 
-                            openBloodRequestDetails(
-                                button.dataset.requestId
-                            );
-
-                        }
-                    );
-
-                }
-            );
-
-        document
-            .querySelectorAll(
-                ".table-delete-button[data-delete-request-id]"
-            )
-            .forEach(
-                (button) => {
-
-                    button.addEventListener(
-                        "click",
-                        () => {
-
-                            deleteBloodRequest(
-                                button.dataset.deleteRequestId,
-                                button
-                            );
-
-                        }
-                    );
-
-                }
-            );
+    ["bloodGroupFilter", "urgencyFilter", "statusFilter"]
+        .forEach((filterId) => {
+            document
+                .getElementById(filterId)
+                ?.addEventListener("change", updateBloodRequestTable);
+        });
 
     }
 
