@@ -1,0 +1,77 @@
+/* Shared visual identity for every authenticated admin view. */
+
+:root {
+    --admin-portal-backdrop:
+        linear-gradient(
+            112deg,
+            rgba(4, 13, 26, .72) 0%,
+            rgba(6, 19, 36, .57) 46%,
+            rgba(25, 19, 26, .45) 100%
+        ),
+        url("/static/assets/admin-portal-background.png");
+}
+
+.main-content {
+    position: relative;
+    isolation: isolate;
+    background-color: #071426;
+    background-image: var(--admin-portal-backdrop);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+/* Page modules previously supplied their own unrelated artwork. Keeping the
+   modules transparent lets the portal use one continuous visual language. */
+#dashboardView,
+.blood-requests-module,
+.donor-management,
+.find-match-page,
+.donation-history-page,
+.notifications-page,
+.users-page,
+.settings-page {
+    position: relative;
+    background: transparent !important;
+    background-image: none !important;
+}
+
+/* A light edge treatment makes the artwork feel integrated without reducing
+   the contrast of the page cards and tables. */
+.main-content::before {
+    content: "";
+    position: fixed;
+    inset: var(--topbar-height, 76px) 0 0 var(--sidebar-width, 260px);
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 14% 12%, rgba(255, 255, 255, .10), transparent 32%),
+        linear-gradient(to bottom, rgba(255, 255, 255, .025), transparent 35%);
+}
+
+.main-content > * {
+    position: relative;
+    z-index: 1;
+}
+
+.dashboard.sidebar-collapsed .main-content::before {
+    inset-inline-start: var(--sidebar-collapsed-width, 92px);
+}
+
+@media (max-width: 1024px) {
+    .main-content {
+        background-attachment: scroll;
+        background-position: 36% center;
+    }
+
+    .main-content::before {
+        inset-inline-start: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .main-content {
+        background-attachment: scroll;
+    }
+}
