@@ -59,6 +59,183 @@
     inset-inline-start: var(--sidebar-collapsed-width, 92px);
 }
 
+/* Find Match uses translucent surfaces over the shared image. Its original
+   ink-on-white palette made the headings and request details disappear. */
+.find-match-page {
+    --fm-text: #d9e5f2;
+    --fm-text-light: #bfd0e1;
+    --fm-text-muted: #9fb4c9;
+    --fm-heading: #f8fbff;
+    color: #e8f0f9;
+}
+
+.find-match-page :is(.glass-card, .search-panel) {
+    background: linear-gradient(145deg, rgba(12, 29, 51, .84), rgba(7, 20, 38, .76));
+    border-color: rgba(191, 219, 254, .22);
+    box-shadow: 0 18px 38px rgba(1, 8, 20, .24), inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+
+.find-match-page :is(.request-card, .donor-card, .availability-card) {
+    background: linear-gradient(145deg, rgba(27, 52, 82, .76), rgba(8, 28, 52, .78));
+    border-color: rgba(191, 219, 254, .28);
+}
+
+.find-match-page :is(
+    .fm-title,
+    .quick-actions-card h3,
+    .section-header h2,
+    .kpi-card h2,
+    .request-header h3,
+    .info-item strong,
+    .donor-header h3,
+    .compatibility-header,
+    .availability-group
+) {
+    color: #f8fbff;
+}
+
+.find-match-page :is(
+    .fm-subtitle,
+    .kpi-title,
+    .request-header p,
+    .donor-header p,
+    .info-label,
+    .selected-info,
+    .select-all-wrapper
+) {
+    color: #c5d5e6;
+}
+
+.find-match-page :is(.search-input, .search-select) {
+    color: #f8fbff;
+    caret-color: #f8fbff;
+    background: rgba(5, 20, 37, .78);
+    border-color: rgba(191, 219, 254, .32);
+}
+
+.find-match-page :is(.search-input, .search-select)::placeholder {
+    color: #b8c9dc;
+    opacity: 1;
+}
+
+.find-match-page :is(.search-input, .search-select):focus {
+    background: rgba(5, 20, 37, .94);
+    border-color: #60a5fa;
+}
+
+/* The compatible-donor column has its own high-specificity component rules. */
+.find-match-page .right-column > .section-card,
+.find-match-page .right-column .donor-panel-footer {
+    background: linear-gradient(145deg, rgba(12, 29, 51, .88), rgba(7, 20, 38, .82));
+    border-color: rgba(191, 219, 254, .22);
+}
+
+.find-match-page .right-column .donor-search-input {
+    color: #f8fbff;
+    background: rgba(5, 20, 37, .88);
+    border-color: rgba(191, 219, 254, .32);
+}
+
+.find-match-page .right-column .donor-search-input::placeholder {
+    color: #b8c9dc;
+}
+
+/* Strong, consistent glass refraction for the shared portal surfaces. */
+.main-content :is(.glass-card, .section-card) {
+    backdrop-filter: blur(26px) saturate(155%);
+    -webkit-backdrop-filter: blur(26px) saturate(155%);
+    border-color: rgba(226, 239, 255, .26);
+    box-shadow:
+        0 20px 42px rgba(1, 8, 20, .20),
+        inset 0 1px 0 rgba(255, 255, 255, .16),
+        inset 0 -1px 0 rgba(10, 27, 51, .22);
+}
+
+/* Notifications has a set of dense, page-specific panels. These values keep
+   the artwork visible behind every layer while retaining white text contrast. */
+.notifications-page .glass-card {
+    background: linear-gradient(145deg, rgba(15, 38, 68, .64), rgba(8, 23, 44, .48));
+    border-color: rgba(220, 237, 255, .28);
+    box-shadow:
+        0 22px 46px rgba(1, 8, 20, .20),
+        inset 0 1px 0 rgba(255, 255, 255, .18),
+        inset 0 -1px 0 rgba(12, 34, 61, .25);
+}
+
+.notifications-page .notifications-hero {
+    background:
+        radial-gradient(circle at 92% 20%, rgba(79, 140, 255, .28), transparent 34%),
+        radial-gradient(circle at 8% 120%, rgba(244, 63, 74, .20), transparent 32%),
+        linear-gradient(125deg, rgba(14, 33, 63, .72), rgba(7, 22, 44, .56));
+}
+
+.notifications-page .kpi-card {
+    background: linear-gradient(145deg, rgba(22, 50, 90, .62), rgba(9, 27, 54, .46));
+}
+
+.notifications-page .notifications-toolbar {
+    background: linear-gradient(145deg, rgba(16, 40, 74, .66), rgba(8, 24, 47, .50));
+}
+
+.notifications-page :is(#notificationSearch, #typeFilter, #statusFilter, #dateFilter) {
+    background: rgba(4, 18, 37, .34);
+    border-color: rgba(220, 237, 255, .23);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+.notifications-page .notification-feed,
+.notifications-page .notification-details {
+    background: linear-gradient(155deg, rgba(10, 31, 59, .68), rgba(5, 20, 41, .54));
+    border-color: rgba(220, 237, 255, .24);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    box-shadow:
+        0 24px 48px rgba(1, 8, 20, .22),
+        inset 0 1px 0 rgba(255, 255, 255, .15);
+}
+
+.notifications-page .notification-card,
+.notifications-page .glass-inner-card,
+.notifications-page .timeline-item {
+    background: linear-gradient(145deg, rgba(26, 58, 101, .42), rgba(8, 28, 55, .30));
+    border-color: rgba(220, 237, 255, .18);
+    backdrop-filter: blur(18px) saturate(145%);
+    -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
+.notifications-page .notification-card.active {
+    background:
+        radial-gradient(circle at 100% 0, rgba(79, 140, 255, .16), transparent 38%),
+        linear-gradient(145deg, rgba(80, 34, 66, .58), rgba(15, 38, 72, .50));
+    box-shadow:
+        0 18px 38px rgba(6, 12, 29, .24),
+        inset 0 1px 0 rgba(255, 255, 255, .13);
+}
+
+/* Keep the Users directory and its companion panels as one intentional
+   desktop composition instead of exposing a dead backdrop below the table. */
+@media (min-width: 993px) {
+    .users-layout {
+        align-items: stretch;
+        gap: 18px;
+    }
+
+    .users-main {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .users-main .users-table-wrapper {
+        flex: 1 0 auto;
+    }
+
+    .users-sidebar {
+        gap: 18px;
+    }
+}
+
 @media (max-width: 1024px) {
     .main-content {
         background-attachment: scroll;
