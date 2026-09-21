@@ -4,9 +4,9 @@
     --admin-portal-backdrop:
         linear-gradient(
             112deg,
-            rgba(4, 13, 26, .72) 0%,
-            rgba(6, 19, 36, .57) 46%,
-            rgba(25, 19, 26, .45) 100%
+            rgba(4, 13, 26, .58) 0%,
+            rgba(6, 19, 36, .47) 46%,
+            rgba(25, 19, 26, .36) 100%
         ),
         url("/static/assets/admin-portal-background.png");
 }
@@ -69,15 +69,24 @@
     color: #e8f0f9;
 }
 
+.find-match-page .find-match-overlay {
+    background: rgba(6, 24, 52, .12);
+}
+
 .find-match-page :is(.glass-card, .search-panel) {
-    background: linear-gradient(145deg, rgba(12, 29, 51, .84), rgba(7, 20, 38, .76));
-    border-color: rgba(191, 219, 254, .22);
-    box-shadow: 0 18px 38px rgba(1, 8, 20, .24), inset 0 1px 0 rgba(255, 255, 255, .06);
+    background: linear-gradient(145deg, rgba(15, 38, 68, .64), rgba(8, 23, 44, .48));
+    border-color: rgba(220, 237, 255, .28);
+    box-shadow:
+        0 22px 46px rgba(1, 8, 20, .20),
+        inset 0 1px 0 rgba(255, 255, 255, .18),
+        inset 0 -1px 0 rgba(12, 34, 61, .25);
 }
 
 .find-match-page :is(.request-card, .donor-card, .availability-card) {
-    background: linear-gradient(145deg, rgba(27, 52, 82, .76), rgba(8, 28, 52, .78));
-    border-color: rgba(191, 219, 254, .28);
+    background: linear-gradient(145deg, rgba(26, 58, 101, .42), rgba(8, 28, 55, .30));
+    border-color: rgba(220, 237, 255, .20);
+    backdrop-filter: blur(18px) saturate(145%);
+    -webkit-backdrop-filter: blur(18px) saturate(145%);
 }
 
 .find-match-page :is(
@@ -109,8 +118,10 @@
 .find-match-page :is(.search-input, .search-select) {
     color: #f8fbff;
     caret-color: #f8fbff;
-    background: rgba(5, 20, 37, .78);
-    border-color: rgba(191, 219, 254, .32);
+    background: rgba(4, 18, 37, .34);
+    border-color: rgba(220, 237, 255, .23);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
 }
 
 .find-match-page :is(.search-input, .search-select)::placeholder {
@@ -119,21 +130,23 @@
 }
 
 .find-match-page :is(.search-input, .search-select):focus {
-    background: rgba(5, 20, 37, .94);
+    background: rgba(5, 20, 37, .58);
     border-color: #60a5fa;
 }
 
 /* The compatible-donor column has its own high-specificity component rules. */
 .find-match-page .right-column > .section-card,
 .find-match-page .right-column .donor-panel-footer {
-    background: linear-gradient(145deg, rgba(12, 29, 51, .88), rgba(7, 20, 38, .82));
-    border-color: rgba(191, 219, 254, .22);
+    background: linear-gradient(155deg, rgba(10, 31, 59, .68), rgba(5, 20, 41, .54));
+    border-color: rgba(220, 237, 255, .24);
 }
 
 .find-match-page .right-column .donor-search-input {
     color: #f8fbff;
-    background: rgba(5, 20, 37, .88);
-    border-color: rgba(191, 219, 254, .32);
+    background: rgba(4, 18, 37, .34);
+    border-color: rgba(220, 237, 255, .23);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
 }
 
 .find-match-page .right-column .donor-search-input::placeholder {
