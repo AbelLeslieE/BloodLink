@@ -1,541 +1,325 @@
 /* ==========================================================
-   BLOODLINK TOPBAR
-   File: topbar.css
-
-   Responsibilities:
-   - Topbar layout
-   - Menu toggle
-   - Greeting and date
-   - Search
-   - Notifications
-   - User profile
-   - Responsive topbar behavior
-========================================================== */
-
-
-/* ==========================================================
-   1. TOPBAR CONTAINER
-========================================================== */
-
-/* ==========================================================
-   1. TOPBAR CONTAINER
+   PRANADAN TOPBAR
 ========================================================== */
 
 .topbar {
     width: 100%;
     height: var(--topbar-height);
     min-height: var(--topbar-height);
-
-    flex-shrink: 0;
-
+    position: sticky;
+    top: 0;
+    z-index: 900;
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    gap: var(--space-lg);
-
-    padding:
-        0
-        var(--page-padding);
-
-    position: sticky;
-    top: 0;
-
-    /* Dark navy theme matching the BloodLink sidebar */
-    background: #101c2f;
-
-    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
-
-    box-shadow:
-        0 4px 18px rgba(0, 0, 0, 0.14);
-
-    z-index: 900;
+    gap: clamp(18px, 2vw, 34px);
+    padding: 0 var(--page-padding);
+    background:
+        radial-gradient(circle at 42% -80%, rgba(220, 38, 38, .2), transparent 38%),
+        linear-gradient(108deg, #101d32 0%, #0c1729 55%, #111f35 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    box-shadow: 0 8px 28px rgba(4, 11, 24, .18);
 }
 
+.topbar::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    left: 0;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(239, 68, 68, .7), transparent 32%, transparent 72%, rgba(239, 68, 68, .28));
+    pointer-events: none;
+}
 
-/* ==========================================================
-   2. TOPBAR LEFT
-========================================================== */
+.topbar-left,
+.topbar-right {
+    display: flex;
+    align-items: center;
+}
 
 .topbar-left {
-    min-width: max-content;
-
-    display: flex;
-    align-items: center;
-
-    gap: var(--space-md);
-}
-
-
-/* ==========================================================
-   3. MENU TOGGLE
-========================================================== */
-
-.menu-toggle {
-    width: 44px;
-    height: 44px;
-
-    flex-shrink: 0;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: var(--radius-md);
-
-    background: transparent;
-
-    color: rgba(255, 255, 255, 0.88);
-
-    cursor: pointer;
-
-    transition:
-        background var(--transition),
-        color var(--transition),
-        transform var(--transition);
-}
-
-
-.menu-toggle:hover {
-    background: rgba(255, 255, 255, 0.08);
-
-    color: #ffffff;
-}
-
-.menu-toggle:active {
-    transform: scale(0.96);
-}
-
-
-.menu-toggle svg {
-    width: 22px;
-    height: 22px;
-}
-
-
-/* ==========================================================
-   4. PAGE TITLE / GREETING
-========================================================== */
-
-.page-title {
     min-width: 0;
-
-    display: flex;
-    flex-direction: column;
+    gap: 16px;
 }
-
-
-.page-title h1 {
-    color: #ffffff;
-    font-size: var(--font-xl);
-    font-weight: 700;
-
-    line-height: 1.2;
-
-    white-space: nowrap;
-}
-
-
-.page-title p {
-    margin-top: var(--space-xs);
-
-    color: rgba(255, 255, 255, 0.62);
-
-    font-size: var(--font-xs);
-    font-weight: 500;
-
-    white-space: nowrap;
-}
-
-
-/* ==========================================================
-   5. TOPBAR CENTER
-========================================================== */
-
-.topbar-center {
-    min-width: 0;
-    flex: 1;
-
-    display: flex;
-    justify-content: center;
-
-    padding:
-        0
-        var(--space-lg);
-}
-
-
-/* ==========================================================
-   6. SEARCH
-========================================================== */
-
-.search-box {
-    width: 100%;
-    max-width: 560px;
-    height: 46px;
-
-    display: flex;
-    align-items: center;
-
-    gap: var(--space-sm);
-
-    padding:
-        0
-        var(--space-md);
-
-    background: rgba(255, 255, 255, 0.07);
-
-    border: 1px solid rgba(255, 255, 255, 0.13);
-
-    border-radius: var(--radius-md);
-
-    transition:
-        background var(--transition),
-        border-color var(--transition),
-        box-shadow var(--transition);
-}
-
-.search-box:focus-within {
-    background: rgba(255, 255, 255, 0.10);
-
-    border-color: rgba(255, 255, 255, 0.30);
-
-    box-shadow:
-        0 0 0 3px rgba(233, 39, 47, 0.12);
-}
-
-
-.search-box svg {
-    width: 19px;
-    height: 19px;
-
-    flex-shrink: 0;
-
-    color: rgba(255, 255, 255, 0.55);
-}
-
-
-.search-box input {
-    width: 100%;
-    min-width: 0;
-
-    background: transparent;
-
-    color: #ffffff;
-
-    font-size: var(--font-sm);
-}
-
-
-.search-box input::placeholder {
-    color: rgba(255, 255, 255, 0.45);
-}
-
-
-/* ==========================================================
-   7. TOPBAR RIGHT
-========================================================== */
 
 .topbar-right {
     min-width: max-content;
-
-    display: flex;
-    align-items: center;
-
-    gap: var(--space-md);
+    gap: 12px;
 }
 
-
-/* ==========================================================
-   8. ICON BUTTON
-========================================================== */
-
+.menu-toggle,
 .icon-button {
-    width: 44px;
-    height: 44px;
-
-    flex-shrink: 0;
-
+    width: 46px;
+    height: 46px;
+    flex: 0 0 auto;
     position: relative;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .055);
+    color: rgba(255, 255, 255, .84);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
+    cursor: pointer;
+    transition: transform var(--transition-fast), background var(--transition), border-color var(--transition), color var(--transition), box-shadow var(--transition);
+}
 
+.menu-toggle:hover,
+.icon-button:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, .11);
+    border-color: rgba(255, 255, 255, .24);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255, 255, 255, .08);
+    transform: translateY(-1px);
+}
+
+.menu-toggle:active,
+.icon-button:active {
+    transform: scale(.96);
+}
+
+.menu-toggle:focus-visible,
+.icon-button:focus-visible,
+.topbar-profile:focus-visible {
+    outline: 3px solid rgba(248, 113, 113, .42);
+    outline-offset: 3px;
+}
+
+.menu-toggle svg,
+.icon-button svg {
+    width: 21px;
+    height: 21px;
+}
+
+.menu-toggle {
+    border-color: rgba(248, 113, 113, .25);
+    background: rgba(220, 38, 38, .09);
+}
+
+.page-title {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    column-gap: 10px;
+}
+
+.topbar-eyebrow {
+    grid-column: 1 / -1;
+    margin-bottom: 3px;
+    color: #fca5a5;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .13em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.page-title h1 {
+    min-width: 0;
+    color: #fff;
+    font-size: clamp(17px, 1.35vw, 21px);
+    font-weight: 750;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.page-title p {
+    min-width: 0;
+    color: rgba(226, 232, 240, .66);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.page-title p::before {
+    content: "\2022";
+    margin-right: 10px;
+    color: rgba(248, 113, 113, .68);
+}
+
+.live-clock {
+    min-width: 178px;
+    height: 52px;
     display: flex;
     align-items: center;
-    justify-content: center;
-
-    border: 1px solid rgba(255, 255, 255, 0.13);
-
-    border-radius: var(--radius-md);
-
-    background: rgba(255, 255, 255, 0.07);
-
-    color: rgba(255, 255, 255, 0.88);
-
-    cursor: pointer;
-
-    transition:
-        background var(--transition),
-        color var(--transition),
-        box-shadow var(--transition),
-        transform var(--transition);
+    gap: 11px;
+    padding: 6px 14px 6px 8px;
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .055);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045);
 }
 
-
-.icon-button:hover {
-    background: rgba(255, 255, 255, 0.12);
-
-    color: #ffffff;
-
-    box-shadow:
-        0 5px 15px rgba(0, 0, 0, 0.15);
+.clock-icon {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: linear-gradient(145deg, #ef4444, #c81e1e);
+    color: #fff;
+    box-shadow: 0 7px 18px rgba(220, 38, 38, .25);
 }
 
-
-.icon-button:active {
-    transform: scale(0.96);
+.clock-icon svg {
+    width: 18px;
+    height: 18px;
 }
 
-
-.icon-button svg {
-    width: 20px;
-    height: 20px;
+.clock-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
+.clock-content strong {
+    color: #fff;
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: .025em;
+    line-height: 1.25;
+    white-space: nowrap;
+}
 
-/* ==========================================================
-   9. NOTIFICATION BADGE
-========================================================== */
+.clock-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(226, 232, 240, .58);
+    font-size: 9px;
+    font-weight: 650;
+    letter-spacing: .055em;
+    line-height: 1.1;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.live-dot {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 0 3px rgba(74, 222, 128, .11), 0 0 10px rgba(74, 222, 128, .36);
+}
 
 .notification-badge {
     position: absolute;
-
-    top: 5px;
-    right: 5px;
-
-    min-width: 17px;
-    height: 17px;
-
+    top: 4px;
+    right: 4px;
+    min-width: 18px;
+    height: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    padding:
-        0
-        var(--space-xs);
-
-    border: 2px solid #101c2f;
-
+    padding: 0 4px;
+    border: 2px solid #0e1a2d;
     border-radius: var(--radius-pill);
-
-    background: var(--primary);
-
-    color: var(--text-white);
-
+    background: #ef2b32;
+    color: #fff;
     font-size: 9px;
-    font-weight: 700;
-
+    font-weight: 800;
     line-height: 1;
 }
 
-
-/* ==========================================================
-   10. TOPBAR PROFILE
-========================================================== */
-
 .topbar-profile {
     min-width: 0;
-
     display: flex;
     align-items: center;
-
-    gap: var(--space-sm);
-
-    padding:
-        var(--space-xs)
-        var(--space-sm);
-
-    border-radius: var(--radius-md);
-
+    gap: 10px;
+    padding: 5px 9px 5px 5px;
+    border: 1px solid transparent;
+    border-radius: 16px;
     cursor: pointer;
-
-    transition:
-        background var(--transition);
+    transition: background var(--transition), border-color var(--transition), transform var(--transition-fast);
 }
-
 
 .topbar-profile:hover {
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, .055);
+    border-color: rgba(255, 255, 255, .08);
 }
-
-/* Topbar-specific avatar sizing */
 
 .topbar-profile .profile-avatar {
     width: 42px;
     height: 42px;
-
-    font-size: var(--font-sm);
+    border: 2px solid rgba(255, 255, 255, .16);
+    background: linear-gradient(145deg, #ef4444, #dc2626);
+    box-shadow: 0 7px 16px rgba(220, 38, 38, .2);
+    font-size: 13px;
 }
-
-
-/* ==========================================================
-   11. PROFILE INFORMATION
-========================================================== */
 
 .profile-info {
     min-width: 0;
-
     display: flex;
     flex-direction: column;
 }
 
-
-.profile-info strong {
-    max-width: 150px;
-
-    overflow: hidden;
-
-    color: #ffffff;
-
-    font-size: var(--font-sm);
-    font-weight: 600;
-
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-
+.profile-info strong,
 .profile-info small {
     max-width: 150px;
-
-    margin-top: 2px;
-
     overflow: hidden;
-
-    color: rgba(255, 255, 255, 0.58);
-
-    font-size: var(--font-xs);
-
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
-
-/* ==========================================================
-   12. LAPTOP
-========================================================== */
-
-@media (max-width: 1200px) {
-
-    .topbar {
-        gap: var(--space-md);
-    }
-
-
-    .topbar-center {
-        padding:
-            0
-            var(--space-md);
-    }
-
-
-    .search-box {
-        max-width: 460px;
-    }
-
+.profile-info strong {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 650;
 }
 
-
-/* ==========================================================
-   13. TABLET
-========================================================== */
-
-@media (max-width: 900px) {
-
-    .topbar-center {
-        display: none;
-    }
-
-
-    .topbar-left {
-        flex: 1;
-    }
-
+.profile-info small {
+    margin-top: 3px;
+    color: rgba(226, 232, 240, .55);
+    font-size: 10px;
 }
 
-
-/* ==========================================================
-   14. MOBILE
-========================================================== */
-
-@media (max-width: 600px) {
-
-    .topbar {
-        padding:
-            0
-            var(--space-md);
-
-        gap: var(--space-sm);
-    }
-
-
-    .topbar-left {
-        min-width: 0;
-    }
-
-
-    .page-title h1 {
-        overflow: hidden;
-
-        font-size: var(--font-lg);
-
-        text-overflow: ellipsis;
-    }
-
-
-    .page-title p {
-        overflow: hidden;
-
-        text-overflow: ellipsis;
-    }
-
-
-    .profile-info {
-        display: none;
-    }
-
-
-    .topbar-right {
-        gap: var(--space-sm);
-    }
-
+@media (max-width: 1120px) {
+    .live-clock { min-width: 164px; }
+    .clock-icon { display: none; }
+    .profile-info { display: none; }
+    .topbar-profile { padding-right: 5px; }
 }
 
-
-/* ==========================================================
-   15. SMALL MOBILE
-========================================================== */
-
-@media (max-width: 420px) {
-
-    .page-title p {
-        display: none;
-    }
-
-
+@media (max-width: 760px) {
+    .topbar { gap: 10px; }
+    .topbar-left { gap: 10px; }
+    .page-title { display: flex; flex-direction: column; align-items: flex-start; }
+    .topbar-eyebrow { display: none; }
+    .page-title p::before { display: none; }
+    .live-clock { min-width: 126px; height: 46px; padding: 6px 10px; border-radius: 14px; }
+    .clock-meta { display: none; }
+    .clock-content strong { font-size: 14px; }
     .menu-toggle,
-    .icon-button {
-        width: 40px;
-        height: 40px;
-    }
+    .icon-button { width: 42px; height: 42px; border-radius: 13px; }
+    .topbar-profile .profile-avatar { width: 40px; height: 40px; }
+}
 
+@media (max-width: 560px) {
+    .page-title p { display: none; }
+    .page-title h1 { font-size: 16px; }
+    .live-clock { min-width: auto; padding: 0 9px; }
+    .clock-content strong { font-size: 13px; }
+}
 
-    .topbar-profile {
-        padding: 0;
-    }
+@media (max-width: 440px) {
+    .topbar { padding-right: 10px; padding-left: 10px; }
+    .page-title { display: none; }
+    .topbar-left { flex: 0 0 auto; }
+    .topbar-right { flex: 1; justify-content: flex-end; gap: 7px; }
+    .live-clock { margin-right: auto; }
+    .menu-toggle,
+    .icon-button,
+    .topbar-profile .profile-avatar { width: 38px; height: 38px; }
+    .topbar-profile { padding: 0; border: 0; }
+}
 
-
-    .topbar-profile .profile-avatar {
-        width: 40px;
-        height: 40px;
-    }
-
+@media (max-width: 360px) {
+    .topbar-profile { display: none; }
 }

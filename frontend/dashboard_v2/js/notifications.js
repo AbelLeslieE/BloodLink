@@ -49,6 +49,16 @@ let selectedRequest = null;
 
 let selectedRecipient = null;
 
+const AUTO_REFRESH_INTERVAL_MS = 15_000;
+
+let autoRefreshTimer = null;
+
+let refreshInProgress = false;
+
+let lastSuccessfulRefresh = null;
+
+let visibilityListenerAttached = false;
+
 
 /* ==========================================================
    2. CACHED DOM ELEMENTS
@@ -316,11 +326,29 @@ export function loadNotifications() {
 
                 <div class="hero-right">
 
+                    <div
+                        class="live-sync-status"
+                        id="liveSyncStatus"
+                        role="status"
+                    >
+
+                        <span class="sync-indicator" aria-hidden="true"></span>
+
+                        <span class="sync-copy">
+                            <strong id="autoRefreshStatus">Live updates</strong>
+                            <small id="lastUpdatedLabel">Connecting…</small>
+                        </span>
+
+                    </div>
+
                     <button
                         id="refreshResponsesBtn"
-                        class="primary-btn">
+                        class="primary-btn refresh-now-btn"
+                        type="button"
+                        aria-label="Refresh donor responses now">
 
-                        Refresh Responses
+                        <span class="refresh-symbol" aria-hidden="true">↻</span>
+                        <span>Refresh now</span>
 
                     </button>
 
@@ -969,9 +997,13 @@ export function initializeNotifications() {
 
     cacheElements();
 
-    loadNotificationsFromAPI();
-
     setupEventListeners();
+
+    setSyncState("connecting");
+
+    synchronizeNotifications({ initial: true });
+
+    startAutoRefresh();
 
 }
 /* ==========================================================
@@ -1423,7 +1455,7 @@ function updateKPIs() {
 
             ? 0
 
-            : Math.round((totalResponses / emailsSent) * 100);
+            : Math.min(100, Math.round((totalResponses / emailsSent) * 100));
 
 
     /* ======================================================
@@ -2424,33 +2456,150 @@ function applyFilters() {
 
 async function refreshNotifications() {
 
-    if (!elements.refreshButton) return;
+    await synchronizeNotifications({ manual: true });
 
-    const originalLabel = elements.refreshButton.textContent.trim();
+}
 
-    elements.refreshButton.disabled = true;
-    elements.refreshButton.textContent = "Refreshing...";
+function isNotificationsViewActive() {
+
+    return Boolean(
+        elements.notificationList?.isConnected &&
+        document.querySelector(".notifications-page")
+    );
+
+}
+
+function formatRefreshTime(date) {
+
+    return new Intl.DateTimeFormat(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    }).format(date);
+
+}
+
+function setSyncState(state) {
+
+    const page = document.querySelector(".notifications-page");
+    const status = document.getElementById("autoRefreshStatus");
+    const updated = document.getElementById("lastUpdatedLabel");
+
+    if (!page || !status || !updated) return;
+
+    page.classList.toggle("is-syncing", state === "syncing");
+    page.classList.toggle("has-sync-error", state === "error");
+
+    if (state === "syncing") {
+        status.textContent = "Syncing responses";
+        updated.textContent = "Checking for updates…";
+        return;
+    }
+
+    if (state === "error") {
+        status.textContent = "Connection interrupted";
+        updated.textContent = "Retrying automatically";
+        return;
+    }
+
+    status.textContent = "Live updates";
+    updated.textContent = lastSuccessfulRefresh
+        ? `Updated ${formatRefreshTime(lastSuccessfulRefresh)}`
+        : `Every ${AUTO_REFRESH_INTERVAL_MS / 1000} seconds`;
+
+}
+
+async function synchronizeNotifications({ manual = false, initial = false } = {}) {
+
+    if (refreshInProgress || (!initial && !isNotificationsViewActive())) {
+        return false;
+    }
+
+    refreshInProgress = true;
+    elements.refreshButton?.setAttribute("aria-busy", "true");
+    elements.refreshButton && (elements.refreshButton.disabled = true);
+    setSyncState("syncing");
+
+    const feedScrollTop = elements.notificationList?.scrollTop ?? 0;
+    const detailsScrollTop = elements.notificationDetails?.scrollTop ?? 0;
 
     try {
 
-        /* Keep the selected campaign open, but reload both its summary and
-           its recipients so a donor's Yes or No decision is immediately
-           reflected in the details and all KPI cards. */
         const refreshed = await loadNotificationsFromAPI({
             selectedNotificationId: selectedNotification?.id ?? null
         });
 
         if (!refreshed) {
-            alert("Unable to refresh donor responses. Please try again.");
+            setSyncState("error");
+
+            if (manual) {
+                alert("Unable to refresh donor responses. Please try again.");
+            }
+
+            return false;
         }
+
+        lastSuccessfulRefresh = new Date();
+        setSyncState("live");
+
+        if (elements.notificationList?.isConnected) {
+            elements.notificationList.scrollTop = feedScrollTop;
+        }
+
+        if (elements.notificationDetails?.isConnected) {
+            elements.notificationDetails.scrollTop = detailsScrollTop;
+        }
+
+        return true;
 
     }
 
     finally {
 
-        elements.refreshButton.disabled = false;
-        elements.refreshButton.textContent = originalLabel;
+        refreshInProgress = false;
 
+        if (elements.refreshButton?.isConnected) {
+            elements.refreshButton.disabled = false;
+            elements.refreshButton.removeAttribute("aria-busy");
+        }
+
+    }
+
+}
+
+function stopAutoRefresh() {
+
+    if (autoRefreshTimer) {
+        window.clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
+    }
+
+}
+
+function startAutoRefresh() {
+
+    stopAutoRefresh();
+
+    autoRefreshTimer = window.setInterval(() => {
+
+        if (!isNotificationsViewActive()) {
+            stopAutoRefresh();
+            return;
+        }
+
+        if (!document.hidden) {
+            synchronizeNotifications();
+        }
+
+    }, AUTO_REFRESH_INTERVAL_MS);
+
+    if (!visibilityListenerAttached) {
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden && isNotificationsViewActive()) {
+                synchronizeNotifications();
+            }
+        });
+        visibilityListenerAttached = true;
     }
 
 }

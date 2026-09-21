@@ -304,35 +304,17 @@
 
                     <div class="page-title">
 
-                        <h1>
-                            Good Morning 👋
+                        <span class="topbar-eyebrow">
+                            Operations overview
+                        </span>
+
+                        <h1 id="greetingText">
+                            Good morning
                         </h1>
 
                         <p id="todayDate">
-                            Saturday, 18 July 2026
+                            Loading today’s date…
                         </p>
-
-                    </div>
-
-                </div>
-
-
-                <!-- Topbar Search -->
-
-                <div class="topbar-center">
-
-                    <div class="search-box">
-
-                        <i
-                            data-lucide="search"
-                            aria-hidden="true"
-                        ></i>
-
-                        <input
-                            type="search"
-                            placeholder="Search donors, requests, volunteers..."
-                            aria-label="Search BloodLink"
-                        >
 
                     </div>
 
@@ -342,6 +324,26 @@
                 <!-- Topbar Right -->
 
                 <div class="topbar-right">
+
+                    <div
+                        class="live-clock"
+                        role="timer"
+                        aria-label="Current local time"
+                    >
+
+                        <span class="clock-icon" aria-hidden="true">
+                            <i data-lucide="clock-3"></i>
+                        </span>
+
+                        <span class="clock-content">
+                            <span class="clock-meta">
+                                <span class="live-dot" aria-hidden="true"></span>
+                                <span id="timeZoneLabel">Local time</span>
+                            </span>
+                            <strong id="currentTime">--:--:--</strong>
+                        </span>
+
+                    </div>
 
                     <button
                         type="button"
@@ -802,6 +804,7 @@
         type="module"
         src="/static/dashboard_v2/js/notifications.js"
     ></script>
+    <script src="/static/dashboard_v2/js/topbar.js"></script>
     <script src="/static/dashboard_v2/js/pwa.js"></script>
 
 
