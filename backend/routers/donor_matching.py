@@ -158,58 +158,31 @@ def send_notifications(
     Send notification emails to selected donors.
     """
 
-    blood_request = crud.get_blood_request_by_id(
+    blood_request, ranked, _, _, _ = _compatible_donors(
         database_session,
         request.blood_request_id,
     )
-
-    if blood_request is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Blood request not found.",
-        )
-
-    if blood_request.status not in MATCHABLE_REQUEST_STATUSES:
+    selected_donor_ids = set(request.donor_ids)
+    eligible_ids = {item.donor.id for item in ranked}
+    invalid_ids = selected_donor_ids - eligible_ids
+    if invalid_ids:
         raise HTTPException(
             status_code=409,
-            detail="Notifications cannot be sent for a request that is no longer open for matching.",
+            detail="One or more selected donors are no longer eligible for this request.",
         )
 
-    donor_eligibility_service.restore_expired_deferrals(database_session)
-    policy = donor_eligibility_service.current_policy(database_session)
-
-    selected_donors = []
-    selected_donor_ids: set[int] = set()
-    for donor_id in request.donor_ids:
-
-        if donor_id in selected_donor_ids:
-            continue
-        selected_donor_ids.add(donor_id)
-
-        donor = crud.get_donor_by_id(
-            database_session,
-            donor_id,
-        )
-
-        if donor is None:
-            raise HTTPException(status_code=404, detail=f"Donor {donor_id} was not found.")
-        if (
-            not donor_matching_service.is_compatible_donor(
-                blood_request.blood_group, donor.blood_group
-            )
-            or not donor_eligibility_service.is_donor_match_allowed(
-                database_session, donor, policy=policy
-            )
-        ):
-            raise HTTPException(status_code=409, detail=f"Donor {donor_id} is not eligible for this request.")
-        if not donor.email:
-            raise HTTPException(status_code=422, detail=f"Donor {donor_id} does not have an email address.")
-
-        selected_donors.append(
-            (
-                donor,
-                0.0,
-            )
+    # Preserve the match engine's ranking instead of the order in which boxes
+    # happened to be selected in the browser.
+    selected_donors = [
+        (item.donor, item.score.distance_km)
+        for item in ranked
+        if item.donor.id in selected_donor_ids
+    ]
+    missing_email = next((donor.id for donor, _ in selected_donors if not donor.email), None)
+    if missing_email is not None:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Donor {missing_email} does not have an email address.",
         )
 
     if not selected_donors:
@@ -222,15 +195,15 @@ def send_notifications(
     if configuration_error:
         raise HTTPException(status_code=503, detail=configuration_error)
 
-    campaign, emails_sent = notification_service.send_notification_campaign(
+    campaign, delivery = notification_service.send_notification_campaign(
         database_session=database_session,
         blood_request=blood_request,
         compatible_donors=selected_donors,
+        stage_size=request.stage_size,
+        stage_delay_minutes=request.stage_delay_minutes,
     )
 
-    attempted = len(selected_donors)
-    failed_count = attempted - emails_sent
-    if emails_sent == 0:
+    if delivery.sent == 0:
         raise HTTPException(
             status_code=502,
             detail=(
@@ -240,11 +213,15 @@ def send_notifications(
         )
 
     return {
-        "success": failed_count == 0,
+        "success": delivery.failed == 0,
         "campaign_id": campaign.id,
-        "emails_attempted": attempted,
-        "emails_sent": emails_sent,
-        "failed_count": failed_count,
+        "current_stage": delivery.stage_number,
+        "emails_attempted": delivery.attempted,
+        "emails_sent": delivery.sent,
+        "failed_count": delivery.failed,
+        "queued_count": delivery.queued_remaining,
+        "target_acceptances": campaign.target_acceptances,
+        "next_stage_at": delivery.next_stage_at,
     }
 
 

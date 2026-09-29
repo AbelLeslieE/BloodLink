@@ -781,6 +781,10 @@ class SendNotificationRequest(BaseModel):
     blood_request_id: int
 
     donor_ids: list[int]
+
+    stage_size: int = Field(default=5, ge=1, le=25)
+
+    stage_delay_minutes: int = Field(default=30, ge=0, le=1440)
 # ==========================================================
 # donation record create  
 # ==========================================================

@@ -253,7 +253,7 @@
 
     display:grid;
 
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
 
     gap:18px;
 
@@ -2006,6 +2006,10 @@
 
 }
 
+.recipient-overview .overview-card:nth-child(5) h2{
+    color:#c8a8ff;
+}
+
 
 /* ==========================================================
    SECTION HEADER
@@ -2341,6 +2345,11 @@
 
     color:#ffd463;
 
+}
+
+.status-badge.queued{
+    background:rgba(139,92,246,.14);
+    color:#c4b5fd;
 }
 
 .status-badge.default{

@@ -1771,6 +1771,12 @@ function renderNotificationDetails() {
 
 
     const request = selectedNotification.request;
+    const outreach = selectedNotification.outreach || {};
+    const nextStageLabel = outreach.status === "TARGET_MET"
+        ? "Acceptance target reached"
+        : outreach.canSendNextStage
+            ? "Send Next Stage"
+            : `Next stage ${outreach.nextStageAt ? `after ${outreach.nextStageAt}` : "not available"}`;
 
 
     /* ======================================================
@@ -1838,6 +1844,18 @@ function renderNotificationDetails() {
                     <strong>
 
                         ${escapeHtml(request.bloodGroup)}
+
+                    </strong>
+
+                </div>
+
+                <div class="info-card glass-inner-card">
+
+                    <span>Outreach Progress</span>
+
+                    <strong>
+
+                        Stage ${outreach.currentStage || 0} · ${request.accepted} / ${outreach.targetAcceptances || request.unitsRemaining} accepted
 
                     </strong>
 
@@ -1956,6 +1974,22 @@ function renderNotificationDetails() {
 
                 </div>
 
+                <div class="overview-card glass-inner-card">
+
+                    <h2>
+
+                        ${outreach.queued || 0}
+
+                    </h2>
+
+                    <span>
+
+                        Queued
+
+                    </span>
+
+                </div>
+
             </div>
 
 
@@ -2042,6 +2076,18 @@ function renderNotificationDetails() {
 
             <div class="request-actions">
 
+                ${Number(outreach.queued || 0) > 0 ? `
+                <button
+                    id="sendNextStageBtn"
+                    class="primary-btn"
+                    title="${escapeHtml(nextStageLabel)}"
+                    ${outreach.canSendNextStage ? "" : "disabled"}>
+
+                    ${escapeHtml(nextStageLabel)}
+
+                </button>
+                ` : ""}
+
                 <button
                     id="resendPendingBtn"
                     class="secondary-btn">
@@ -2094,6 +2140,11 @@ function bindRequestActionButtons() {
     const notificationId = selectedNotification?.id;
 
     if (!notificationId) return;
+
+    document.getElementById("sendNextStageBtn")?.addEventListener(
+        "click",
+        () => sendNextOutreachStage(notificationId)
+    );
 
     document.getElementById("resendPendingBtn")?.addEventListener(
         "click",
@@ -2182,6 +2233,20 @@ function renderRecipientTable() {
 
         }
 
+        else if (recipient.response === "QUEUED") {
+
+            badgeClass = "queued";
+            badgeIcon = "🕒";
+
+        }
+
+        else if (recipient.response === "DELIVERY_FAILED") {
+
+            badgeClass = "declined";
+            badgeIcon = "⚠";
+
+        }
+
 
         const row = document.createElement("tr");
 
@@ -2199,7 +2264,7 @@ function renderRecipientTable() {
 
                     <small>
 
-                        ${escapeHtml(recipient.email)}
+                        ${escapeHtml(recipient.email)}${recipient.stageNumber ? ` · Stage ${recipient.stageNumber}` : ""}
 
                     </small>
 
@@ -2627,6 +2692,10 @@ function normalizeRecipientResponse(status) {
         return "INELIGIBLE";
     }
 
+    if (["QUEUED", "DELIVERY_FAILED"].includes(normalized)) {
+        return normalized;
+    }
+
     /* Missing, legacy, or delivery-only states are not a donor decision. */
     return "PENDING";
 
@@ -2812,6 +2881,17 @@ async function loadNotificationsFromAPI({ selectedNotificationId = null } = {}) 
 
             },
 
+            outreach: {
+                status: campaign.status,
+                queued: campaign.queued_count || 0,
+                stageSize: campaign.stage_size || 5,
+                stageDelayMinutes: campaign.stage_delay_minutes || 30,
+                currentStage: campaign.current_stage || 0,
+                targetAcceptances: campaign.target_acceptances || 1,
+                nextStageAt: campaign.next_stage_at ? formatDateTime(campaign.next_stage_at) : null,
+                canSendNextStage: Boolean(campaign.can_send_next_stage)
+            },
+
             recipients: [],
 
             timeline: []
@@ -2935,6 +3015,36 @@ async function resendPendingEmails(requestId) {
 
         alert(error.message || "Unable to resend pending emails.");
 
+    }
+
+}
+
+
+async function sendNextOutreachStage(requestId) {
+
+    try {
+
+        await runRequestAction("sendNextStageBtn", "Sending stage...", async () => {
+
+            const response = await authenticatedFetch(
+                `${API.notifications}/${requestId}/send-next-stage`,
+                { method: "POST" }
+            );
+
+            if (!response?.ok) {
+                throw new Error(await getResponseError(response, "Unable to send the next donor stage."));
+            }
+
+            const result = await response.json();
+            alert(`Stage ${result.current_stage} sent to ${result.emails_sent} donor(s). ${result.queued_count} remain queued.`);
+            await loadNotificationsFromAPI({ selectedNotificationId: requestId });
+
+        });
+
+    }
+
+    catch (error) {
+        alert(error.message || "Unable to send the next donor stage.");
     }
 
 }
@@ -3349,10 +3459,11 @@ async function loadNotificationRecipients(notificationId) {
                 phone: recipient.donor.phone,
 
                 response: responseStatus,
+                stageNumber: recipient.stage_number,
                 donationConfirmed: recipient.donation_confirmed,
                 pointsAwarded: recipient.points_awarded,
 
-                respondedAt: ["PENDING", "INELIGIBLE"].includes(responseStatus)
+                respondedAt: ["PENDING", "QUEUED", "INELIGIBLE", "DELIVERY_FAILED"].includes(responseStatus)
                     ? "--"
                     : formatDate(recipient.responded_at)
 

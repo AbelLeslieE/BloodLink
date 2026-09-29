@@ -2468,6 +2468,30 @@ html{
     pointer-events: none;
     filter: grayscale(0.35);
 }
+
+.outreach-settings {
+    display:flex;
+    align-items:end;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.outreach-settings label {
+    display:grid;
+    gap:5px;
+    color:#9fb0cf;
+    font-size:12px;
+    font-weight:600;
+}
+
+.outreach-settings select {
+    min-width:112px;
+    padding:8px 10px;
+    color:#eef4ff;
+    background:rgba(12,24,48,.86);
+    border:1px solid rgba(120,168,255,.28);
+    border-radius:10px;
+}
 .donor-search-input{
 
     width:220px;

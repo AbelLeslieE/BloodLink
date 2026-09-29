@@ -151,6 +151,28 @@ phase.
   audits, expiry enforcement, closure-reason validation, reopening, fulfilment
   closure metadata, and encrypted-database migration.
 
+## Completed in the staged donor-outreach phase
+
+- Administrators can divide selected donors into ranked outreach batches of 1
+  to 25 donors and choose a 0-to-24-hour wait before releasing the next batch.
+- The matching engine's donor order is preserved even when donors are selected
+  in a different order in the browser; later stages remain queued without an
+  email token or delivery attempt.
+- Notifications shows the current stage, queued count, acceptance target, and
+  next-stage availability, with a guarded action to release exactly one batch.
+- Cooldowns are enforced by the server, not only by the browser, and normal
+  resend actions contact only already-sent pending or failed recipients.
+- Campaigns stop future staged outreach automatically once acceptances meet the
+  request's outstanding-unit target. Closing or expiring a request also blocks
+  further releases.
+- Existing campaigns are migrated as one already-sent stage, preserving their
+  prior delivery and response history.
+- CSV reports now include stage and outreach order, and queued and failed
+  delivery states remain distinct in the administrator response table.
+- Automated tests cover ranked batching, unsent queue protection, cooldown
+  enforcement, next-stage release, acceptance-target stopping, resend isolation,
+  and encrypted-database migration.
+
 ## Partially completed
 
 - Audit coverage records every authenticated mutation with its route, actor,
@@ -179,7 +201,6 @@ phase.
 
 ### Operations and donor experience
 
-- Staged donor outreach to reduce alert fatigue.
 - Donor-controlled temporary availability, travel radius, and contact hours.
 - Blood-drive scheduling, appointment capacity, QR check-in, and reminders.
 - Operational analytics such as time-to-match and time-to-fulfil.
@@ -187,9 +208,9 @@ phase.
 
 ## Verification
 
-- Migration head: `e0f1a2b3c4d5`
+- Migration head: `f1a2b3c4d5e6`
 - Security-operations test module: passing
-- Full regression suite: **196 passed** on 2026-09-29.
+- Full regression suite: **202 passed** on 2026-09-29.
 - Unit-fulfilment workflow suite: **26 passed** across normal and encrypted SQLite.
 - Donor-deferral workflow suite: **10 passed** across normal and encrypted SQLite.
 - Eligibility-policy workflow suite: **10 passed** across normal and encrypted SQLite.
@@ -197,6 +218,7 @@ phase.
 - Structured-location and distance-matching suite: **7 passed** across normal
   and encrypted SQLite where database integration is required.
 - Request-lifecycle automation suite: **10 passed** across normal and encrypted SQLite.
+- Staged donor-outreach suite: **6 passed** across normal and encrypted SQLite.
 - Deployment/security focused rerun after configuration changes: **42 passed**.
 - Frontend stored-XSS checks and JavaScript syntax checks: passing.
 - Local browser smoke check: updated login page loaded with no console warnings or errors.

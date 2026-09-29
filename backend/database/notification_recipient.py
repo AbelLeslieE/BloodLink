@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, func
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.database.database import Base
@@ -75,8 +75,22 @@ class NotificationRecipient(Base):
 
     status: Mapped[str] = mapped_column(
         String(20),
-        default="PENDING",
-        server_default="PENDING",
+        default="QUEUED",
+        server_default="QUEUED",
+        nullable=False,
+    )
+
+    stage_number: Mapped[int] = mapped_column(
+        Integer,
+        default=1,
+        server_default="1",
+        nullable=False,
+    )
+
+    outreach_order: Mapped[int] = mapped_column(
+        Integer,
+        default=1,
+        server_default="1",
         nullable=False,
     )
 
@@ -84,10 +98,9 @@ class NotificationRecipient(Base):
     # TIMESTAMPS
     # ==========================================================
 
-    sent_at: Mapped[datetime] = mapped_column(
+    sent_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
+        nullable=True,
     )
 
     responded_at: Mapped[datetime | None] = mapped_column(

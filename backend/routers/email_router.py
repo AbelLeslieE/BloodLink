@@ -15,7 +15,7 @@ from backend.database import crud
 from backend.database.database import get_db
 from backend.database.donor_response import DonorResponse
 from backend.database.notification_recipient import NotificationRecipient
-from backend.services import donor_eligibility_service, request_lifecycle_service
+from backend.services import donor_eligibility_service, notification_service, request_lifecycle_service
 
 
 router = APIRouter(prefix="/email", tags=["Email"])
@@ -106,10 +106,15 @@ def _record_decision(db: Session, token: str, response: str) -> str:
     # configured without autoflush can report stale campaign counts.
     db.flush()
     recipients = crud.get_notification_recipients(db, notification.id)
-    notification.total_sent = sum(item.status != "DELIVERY_FAILED" for item in recipients)
+    notification.total_sent = sum(
+        item.sent_at is not None and item.status != "DELIVERY_FAILED"
+        for item in recipients
+    )
     notification.accepted_count = sum(item.status == "ACCEPTED" for item in recipients)
     notification.declined_count = sum(item.status == "DECLINED" for item in recipients)
     notification.pending_count = sum(item.status == "PENDING" for item in recipients)
+    notification.queued_count = sum(item.status == "QUEUED" for item in recipients)
+    notification_service.update_campaign_target_status(notification)
     if response == "ACCEPTED" and notification.blood_request.status == "Pending":
         notification.blood_request.status = "In Progress"
     try:

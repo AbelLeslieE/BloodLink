@@ -78,6 +78,44 @@ class Notification(Base):
         nullable=False,
     )
 
+    queued_count: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default="0",
+        nullable=False,
+    )
+
+    # Donors are contacted in ranked batches.  Later stages remain queued until
+    # an administrator releases them after the cooldown and only while the
+    # campaign still needs more acceptances.
+    stage_size: Mapped[int] = mapped_column(
+        Integer,
+        default=5,
+        server_default="5",
+        nullable=False,
+    )
+
+    stage_delay_minutes: Mapped[int] = mapped_column(
+        Integer,
+        default=30,
+        server_default="30",
+        nullable=False,
+    )
+
+    current_stage: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default="0",
+        nullable=False,
+    )
+
+    target_acceptances: Mapped[int] = mapped_column(
+        Integer,
+        default=1,
+        server_default="1",
+        nullable=False,
+    )
+
     # ---------------------------------------------------------
     # Audit
     # ---------------------------------------------------------
@@ -89,6 +127,16 @@ class Notification(Base):
     )
 
     sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    last_stage_sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    next_stage_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )

@@ -143,6 +143,9 @@ def create_notification(
     database_session: Session,
     blood_request_id: int,
     title: str,
+    stage_size: int = 5,
+    stage_delay_minutes: int = 30,
+    target_acceptances: int = 1,
 ) -> Notification:
     """
     Create a notification campaign.
@@ -152,6 +155,10 @@ def create_notification(
         blood_request_id=blood_request_id,
         title=title,
         status="ACTIVE",
+        stage_size=stage_size,
+        stage_delay_minutes=stage_delay_minutes,
+        target_acceptances=target_acceptances,
+        current_stage=0,
     )
 
     database_session.add(notification)
@@ -206,6 +213,9 @@ def create_notification_recipient(
     notification_id: int,
     donor: Donor,
     distance: float,
+    status: str = "QUEUED",
+    stage_number: int = 1,
+    outreach_order: int = 1,
 ) -> NotificationRecipient:
     """
     Create one recipient entry for a donor.
@@ -216,7 +226,10 @@ def create_notification_recipient(
         donor_id=donor.id,
         email=donor.email,
         distance=distance,
-        status="PENDING",
+        status=status,
+        stage_number=stage_number,
+        outreach_order=outreach_order,
+        sent_at=None,
     )
 
     database_session.add(recipient)
@@ -307,7 +320,7 @@ def refresh_notification_statistics(
 
     notification.total_sent = sum(
         1 for recipient in recipients
-        if recipient.status != "DELIVERY_FAILED"
+        if recipient.sent_at is not None and recipient.status != "DELIVERY_FAILED"
     )
 
     notification.accepted_count = sum(
@@ -323,6 +336,11 @@ def refresh_notification_statistics(
     notification.pending_count = sum(
         1 for recipient in recipients
         if recipient.status == "PENDING"
+    )
+
+    notification.queued_count = sum(
+        1 for recipient in recipients
+        if recipient.status == "QUEUED"
     )
 
     _commit_and_refresh(

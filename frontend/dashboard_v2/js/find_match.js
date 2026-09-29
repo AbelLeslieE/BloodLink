@@ -454,6 +454,30 @@ function getFindMatchTemplate() {
 
                         </div>
 
+                        <div class="outreach-settings" aria-label="Staged outreach settings">
+
+                            <label>
+                                First batch
+                                <select id="outreachStageSize">
+                                    <option value="3">3 donors</option>
+                                    <option value="5" selected>5 donors</option>
+                                    <option value="10">10 donors</option>
+                                    <option value="25">25 donors</option>
+                                </select>
+                            </label>
+
+                            <label>
+                                Next batch wait
+                                <select id="outreachStageDelay">
+                                    <option value="15">15 min</option>
+                                    <option value="30" selected>30 min</option>
+                                    <option value="60">1 hour</option>
+                                    <option value="120">2 hours</option>
+                                </select>
+                            </label>
+
+                        </div>
+
                         <div class="panel-actions">
 
                             <button
@@ -1893,7 +1917,11 @@ async function sendEmailsToSelectedDonors() {
 
                     blood_request_id: state.selectedRequest.id,
 
-                    donor_ids: [...state.selectedDonors]
+                    donor_ids: [...state.selectedDonors],
+
+                    stage_size: Number(document.getElementById("outreachStageSize")?.value || 5),
+
+                    stage_delay_minutes: Number(document.getElementById("outreachStageDelay")?.value || 30)
 
                 })
 
@@ -1912,10 +1940,13 @@ async function sendEmailsToSelectedDonors() {
         await loadBloodRequests();
 
         const failedCount = Number(result.failed_count || 0);
+        const queuedCount = Number(result.queued_count || 0);
         showToast(
             failedCount
                 ? `${result.emails_sent} email(s) sent; ${failedCount} failed. You can retry them from Notifications.`
-                : `${result.emails_sent} notification emails sent successfully.`,
+                : queuedCount
+                    ? `Stage ${result.current_stage} sent to ${result.emails_sent} donor(s); ${queuedCount} ranked donor(s) remain queued.`
+                    : `${result.emails_sent} notification emails sent successfully.`,
             failedCount ? "warning" : "success"
         );
 

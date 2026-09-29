@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import csv
 import io
+from datetime import datetime, timezone
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -37,8 +38,8 @@ def _recipient_response_status(status: str | None) -> str:
         return "ACCEPTED"
     if normalized in {"DECLINED", "NO"}:
         return "DECLINED"
-    if normalized == "INELIGIBLE":
-        return "INELIGIBLE"
+    if normalized in {"INELIGIBLE", "QUEUED", "DELIVERY_FAILED"}:
+        return normalized
 
     # Old rows can contain delivery/sending placeholders or an empty value.
     # They are not donor decisions, so present them as a pending response.
@@ -54,6 +55,23 @@ def _notification_or_404(database_session: Session, notification_id: int):
         request_id=notification.blood_request_id,
     )
     return notification
+
+
+def _as_utc(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
+
+
+def _can_send_next_stage(notification: Notification) -> bool:
+    next_stage_at = _as_utc(notification.next_stage_at)
+    return (
+        notification.status == "ACTIVE"
+        and notification.queued_count > 0
+        and notification.accepted_count < notification.target_acceptances
+        and notification.blood_request.status not in request_lifecycle_service.TERMINAL_REQUEST_STATUSES
+        and (next_stage_at is None or next_stage_at <= datetime.now(timezone.utc))
+    )
 # ==========================================================
 # GET ALL CAMPAIGNS
 # ==========================================================
@@ -98,6 +116,22 @@ def get_notifications(
             "declined_count": notification.declined_count,
 
             "pending_count": notification.pending_count,
+
+            "queued_count": notification.queued_count,
+
+            "stage_size": notification.stage_size,
+
+            "stage_delay_minutes": notification.stage_delay_minutes,
+
+            "current_stage": notification.current_stage,
+
+            "target_acceptances": notification.target_acceptances,
+
+            "last_stage_sent_at": notification.last_stage_sent_at,
+
+            "next_stage_at": notification.next_stage_at,
+
+            "can_send_next_stage": _can_send_next_stage(notification),
 
             "blood_request": {
 
@@ -151,6 +185,43 @@ def get_notification(
         )
 
     return notification
+
+
+@router.post("/{notification_id:int}/send-next-stage")
+def send_next_stage(
+    notification_id: int,
+    database_session: Session = Depends(get_db),
+    _: User = Depends(require_administrator),
+) -> dict:
+    """Release the next ranked donor batch after its cooldown."""
+    notification = _notification_or_404(database_session, notification_id)
+    if notification.blood_request.status in request_lifecycle_service.TERMINAL_REQUEST_STATUSES:
+        raise HTTPException(status_code=409, detail="This request is no longer open for donor responses.")
+
+    configuration_error = email_service.delivery_configuration_error()
+    if configuration_error:
+        raise HTTPException(status_code=503, detail=configuration_error)
+
+    try:
+        delivery = notification_service.send_next_stage(database_session, notification)
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+
+    if delivery.sent == 0:
+        raise HTTPException(
+            status_code=502,
+            detail="The email provider rejected every delivery in this stage. Check the email configuration and retry those failed deliveries.",
+        )
+    return {
+        "success": delivery.failed == 0,
+        "current_stage": delivery.stage_number,
+        "emails_attempted": delivery.attempted,
+        "emails_sent": delivery.sent,
+        "failed_count": delivery.failed,
+        "queued_count": delivery.queued_remaining,
+        "target_met": delivery.target_met,
+        "next_stage_at": delivery.next_stage_at,
+    }
 
 
 @router.post("/{notification_id:int}/resend-pending")
@@ -237,7 +308,7 @@ def export_notification_report(
     writer.writerow([
         "Campaign ID", "Request ID", "Patient", "Hospital", "Blood Group",
         "Request Status", "Campaign Sent At", "Donor", "Donor Email",
-        "Recipient Status", "Recipient Sent At", "Responded At", "Distance",
+        "Stage", "Outreach Order", "Recipient Status", "Recipient Sent At", "Responded At", "Distance",
     ])
     from backend.security.exports import safe_spreadsheet_cell
     for recipient in recipients:
@@ -251,6 +322,8 @@ def export_notification_report(
             notification.sent_at.isoformat() if notification.sent_at else "",
             recipient.donor.full_name,
             recipient.email,
+            recipient.stage_number,
+            recipient.outreach_order,
             _recipient_response_status(recipient.status),
             recipient.sent_at.isoformat() if recipient.sent_at else "",
             recipient.responded_at.isoformat() if recipient.responded_at else "",
@@ -342,6 +415,10 @@ def get_notification_recipients(
 
             "status": response_status,
 
+            "stage_number": recipient.stage_number,
+
+            "outreach_order": recipient.outreach_order,
+
             "responded_at": (
                 recipient.responded_at
                 if response_status in {"ACCEPTED", "DECLINED"}
@@ -401,6 +478,8 @@ def get_notification_recipients(
             "email": donor.email or "Not provided",
             "distance": None,
             "status": "ACCEPTED" if donor_response.response.upper() in {"YES", "ACCEPTED"} else "DECLINED",
+            "stage_number": None,
+            "outreach_order": None,
             "responded_at": donor_response.responded_at,
             "donation_confirmed": donation is not None,
             "points_awarded": donation.points_awarded if donation else 0,
@@ -452,6 +531,11 @@ def notification_summary(
 
         "pending": sum(
             campaign.pending_count
+            for campaign in campaigns
+        ),
+
+        "queued": sum(
+            campaign.queued_count
             for campaign in campaigns
         ),
 

@@ -22,7 +22,7 @@ from backend.database.notification import Notification
 from backend.database.notification_recipient import NotificationRecipient
 from backend.services.certificate_service import ensure_certificate, render_certificate
 from backend.services.donor_matching_service import is_compatible_donor
-from backend.services import donor_eligibility_service, request_lifecycle_service
+from backend.services import donor_eligibility_service, notification_service, request_lifecycle_service
 
 
 donor_router = APIRouter(prefix="/api/donor-dashboard", tags=["donor dashboard"])
@@ -76,6 +76,7 @@ def _sync_portal_response_to_notifications(
             blood_request_id=request.id,
             title=f"Blood Request #{request.id} ({request.blood_group})",
             status="ACTIVE",
+            target_acceptances=max(1, request.units_remaining),
         )
         db.add(campaign)
         db.flush()
@@ -114,10 +115,15 @@ def _sync_portal_response_to_notifications(
         campaign_recipients = list(db.scalars(select(NotificationRecipient).where(
             NotificationRecipient.notification_id == campaign.id
         )).all())
-        campaign.total_sent = sum(item.status != "DELIVERY_FAILED" for item in campaign_recipients)
+        campaign.total_sent = sum(
+            item.sent_at is not None and item.status != "DELIVERY_FAILED"
+            for item in campaign_recipients
+        )
         campaign.accepted_count = sum(item.status == "ACCEPTED" for item in campaign_recipients) + portal_accepted
         campaign.declined_count = sum(item.status == "DECLINED" for item in campaign_recipients) + portal_declined
         campaign.pending_count = sum(item.status == "PENDING" for item in campaign_recipients)
+        campaign.queued_count = sum(item.status == "QUEUED" for item in campaign_recipients)
+        notification_service.update_campaign_target_status(campaign)
 
     if recipient_status == "ACCEPTED" and request.status == "Pending":
         request.status = "In Progress"
