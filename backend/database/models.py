@@ -641,6 +641,29 @@ class BloodRequest(Base):
         nullable=False,
     )
 
+    # Structured location fields are optional so historical requests that only
+    # recorded a free-text place remain valid.  When both coordinates are
+    # present the matching service can rank donors by real geographic distance.
+    hospital_district: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+
+    hospital_city: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+
+    hospital_latitude: Mapped[Decimal | None] = mapped_column(
+        Numeric(9, 6),
+        nullable=True,
+    )
+
+    hospital_longitude: Mapped[Decimal | None] = mapped_column(
+        Numeric(9, 6),
+        nullable=True,
+    )
+
 
     # ======================================================
     # BYSTANDER / CONTACT DETAILS

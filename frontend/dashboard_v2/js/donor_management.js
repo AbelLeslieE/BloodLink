@@ -819,6 +819,40 @@ function getAddDonorModalTemplate() {
                                 </label>
 
 
+                                <label class="donor-form-field">
+
+                                    <span>Latitude</span>
+
+                                    <input
+                                        type="number"
+                                        id="donorLatitude"
+                                        name="latitude"
+                                        min="-90"
+                                        max="90"
+                                        step="0.000001"
+                                        placeholder="Example: 10.0159"
+                                    >
+
+                                </label>
+
+
+                                <label class="donor-form-field">
+
+                                    <span>Longitude</span>
+
+                                    <input
+                                        type="number"
+                                        id="donorLongitude"
+                                        name="longitude"
+                                        min="-180"
+                                        max="180"
+                                        step="0.000001"
+                                        placeholder="Example: 76.3419"
+                                    >
+
+                                </label>
+
+
                                 <label
                                     class="
                                         donor-form-field
@@ -1500,6 +1534,36 @@ function getEditDonorModalTemplate() {
                                 </label>
 
 
+                                <label class="donor-form-field">
+
+                                    <span>Latitude</span>
+
+                                    <input
+                                        type="number"
+                                        name="latitude"
+                                        min="-90"
+                                        max="90"
+                                        step="0.000001"
+                                    >
+
+                                </label>
+
+
+                                <label class="donor-form-field">
+
+                                    <span>Longitude</span>
+
+                                    <input
+                                        type="number"
+                                        name="longitude"
+                                        min="-180"
+                                        max="180"
+                                        step="0.000001"
+                                    >
+
+                                </label>
+
+
                                 <label
                                     class="
                                         donor-form-field
@@ -1802,6 +1866,12 @@ function buildDonorPayload(
             formData.get("weight") || ""
         ).trim();
 
+    const latitudeValue =
+        String(formData.get("latitude") || "").trim();
+
+    const longitudeValue =
+        String(formData.get("longitude") || "").trim();
+
 
     return {
 
@@ -1856,6 +1926,16 @@ function buildDonorPayload(
             optionalString(
                 formData.get("address")
             ),
+
+        latitude:
+            latitudeValue
+                ? Number(latitudeValue)
+                : null,
+
+        longitude:
+            longitudeValue
+                ? Number(longitudeValue)
+                : null,
 
         weight:
             weightValue
@@ -1947,6 +2027,16 @@ function validateAddDonorPayload(
     ) {
 
         return "Please enter a valid donor weight.";
+
+    }
+
+
+    if (
+        (donor.latitude === null)
+        !== (donor.longitude === null)
+    ) {
+
+        return "Enter both donor latitude and longitude, or leave both blank.";
 
     }
 
@@ -3369,6 +3459,13 @@ function renderViewDonor(
                         donor.address
                     )
                 ],
+
+                [
+                    "Coordinates",
+                    donor.latitude != null && donor.longitude != null
+                        ? `${escapeHtml(donor.latitude)}, ${escapeHtml(donor.longitude)}`
+                        : "Not recorded"
+                ],
             ]
         )}
 
@@ -3794,6 +3891,18 @@ function populateEditDonorForm(
         form,
         "address",
         donor.address
+    );
+
+    setFormValue(
+        form,
+        "latitude",
+        donor.latitude
+    );
+
+    setFormValue(
+        form,
+        "longitude",
+        donor.longitude
     );
 
     setFormValue(

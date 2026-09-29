@@ -1738,7 +1738,11 @@ async function loadMatchingDonorsFromAPI(requestId) {
 
             rank: match.rank,
 
-            distance: match.donor.district || "Not recorded",
+            distance: Number.isFinite(match.distance_km)
+                ? `${match.distance_km.toFixed(1)} km`
+                : (match.location_match_type || match.donor.district || "Not recorded"),
+
+            locationMatchType: match.location_match_type,
 
             lastDonation: formatDate(match.donor.last_donation_date),
 

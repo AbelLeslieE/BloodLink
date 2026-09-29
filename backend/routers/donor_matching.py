@@ -68,9 +68,13 @@ def _compatible_donors(database_session: Session, blood_request_id: int) -> tupl
     )
     ranked = donor_matching_service.rank_matching_donors(
         patient_blood_group=blood_request.blood_group,
-        patient_district=blood_request.hospital_location,
-        patient_city=None,
+        # Historical requests only have hospital_location.  Keep it as a
+        # fallback district hint until an administrator records structured data.
+        patient_district=(blood_request.hospital_district or blood_request.hospital_location),
+        patient_city=blood_request.hospital_city,
         donors=included,
+        request_latitude=blood_request.hospital_latitude,
+        request_longitude=blood_request.hospital_longitude,
     )
     return blood_request, ranked, evaluations, dict(excluded_reasons), policy
 
@@ -106,6 +110,9 @@ def find_matching_donors(
                     if item.score.blood_group_score == donor_matching_service.EXACT_BLOOD_MATCH_SCORE
                     else "Compatible match"
                 ),
+                "distance_km": item.score.distance_km,
+                "location_match_type": item.score.location_match_type,
+                "location_score": item.score.location_score,
                 "screening": {
                     "passed": evaluations[item.donor.id].screening_passed,
                     "mode": evaluations[item.donor.id].policy_mode,
@@ -120,6 +127,7 @@ def find_matching_donors(
                     "phone": item.donor.phone,
                     "email": item.donor.email,
                     "district": item.donor.district,
+                    "city": item.donor.city,
                     "status": item.donor.status,
                     "last_donation_date": item.donor.last_donation_date,
                 },

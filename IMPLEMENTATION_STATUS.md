@@ -110,6 +110,24 @@ phase.
   access the dashboard or export.
 - Automated data-quality tests run against both normal and encrypted SQLite.
 
+## Completed in the structured-location and distance-matching phase
+
+- Blood requests now store optional hospital district, city, latitude, and
+  longitude alongside the existing free-text place, preserving all historical
+  requests and integrations.
+- Donor registration and editing now accept validated latitude and longitude,
+  and request entry prevents incomplete coordinate pairs.
+- Matching calculates great-circle distance when both the hospital and donor
+  have coordinates, shows the measured kilometres, and rewards donors within
+  transparent 5, 15, 30, and 60 km bands.
+- When coordinates are unavailable, matching falls back to normalized same-city
+  and same-district scoring; legacy free-text request locations remain usable as
+  a district hint.
+- Equal scores are ordered deterministically, preferring the geographically
+  nearer donor when distance is known.
+- Automated tests cover distance calculation, nearest-donor ranking, structured
+  locality fallback, coordinate validation, and encrypted-database migration.
+
 ## Partially completed
 
 - Audit coverage records every authenticated mutation with its route, actor,
@@ -134,7 +152,6 @@ phase.
 
 ### Core blood-request correctness
 
-- Structured hospital district/city/coordinates and distance-based matching.
 - Request expiry, escalation, and closure-reason automation.
 
 ### Operations and donor experience
@@ -147,13 +164,15 @@ phase.
 
 ## Verification
 
-- Migration head: `c8d9e0f1a2b3`
+- Migration head: `d9e0f1a2b3c4`
 - Security-operations test module: passing
-- Full regression suite: **179 passed** on 2026-09-29.
+- Full regression suite: **186 passed** on 2026-09-29.
 - Unit-fulfilment workflow suite: **26 passed** across normal and encrypted SQLite.
 - Donor-deferral workflow suite: **10 passed** across normal and encrypted SQLite.
 - Eligibility-policy workflow suite: **10 passed** across normal and encrypted SQLite.
 - Donor data-quality workflow suite: **10 passed** across normal and encrypted SQLite.
+- Structured-location and distance-matching suite: **7 passed** across normal
+  and encrypted SQLite where database integration is required.
 - Deployment/security focused rerun after configuration changes: **42 passed**.
 - Frontend stored-XSS checks and JavaScript syntax checks: passing.
 - Local browser smoke check: updated login page loaded with no console warnings or errors.

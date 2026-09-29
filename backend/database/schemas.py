@@ -160,12 +160,16 @@ class DonorBase(SchemaBase):
 
     latitude: Decimal | None = Field(
         default=None,
+        ge=Decimal("-90"),
+        le=Decimal("90"),
         max_digits=9,
         decimal_places=6,
     )
 
     longitude: Decimal | None = Field(
         default=None,
+        ge=Decimal("-180"),
+        le=Decimal("180"),
         max_digits=9,
         decimal_places=6,
     )
@@ -285,12 +289,16 @@ class DonorUpdate(SchemaBase):
 
     latitude: Decimal | None = Field(
         default=None,
+        ge=Decimal("-90"),
+        le=Decimal("90"),
         max_digits=9,
         decimal_places=6,
     )
 
     longitude: Decimal | None = Field(
         default=None,
+        ge=Decimal("-180"),
+        le=Decimal("180"),
         max_digits=9,
         decimal_places=6,
     )
@@ -426,6 +434,32 @@ class BloodRequestBase(SchemaBase):
         max_length=255,
     )
 
+    hospital_district: str | None = Field(
+        default=None,
+        max_length=100,
+    )
+
+    hospital_city: str | None = Field(
+        default=None,
+        max_length=100,
+    )
+
+    hospital_latitude: Decimal | None = Field(
+        default=None,
+        ge=Decimal("-90"),
+        le=Decimal("90"),
+        max_digits=9,
+        decimal_places=6,
+    )
+
+    hospital_longitude: Decimal | None = Field(
+        default=None,
+        ge=Decimal("-180"),
+        le=Decimal("180"),
+        max_digits=9,
+        decimal_places=6,
+    )
+
 
     # ======================================================
     # BYSTANDER / CONTACT DETAILS
@@ -447,6 +481,12 @@ class BloodRequestBase(SchemaBase):
     # ======================================================
 
     additional_notes: str | None = None
+
+    @model_validator(mode="after")
+    def validate_hospital_coordinates(self) -> "BloodRequestBase":
+        if (self.hospital_latitude is None) != (self.hospital_longitude is None):
+            raise ValueError("Hospital latitude and longitude must be provided together.")
+        return self
 
 class MatchResult(BaseModel):
     rank: int
@@ -528,6 +568,26 @@ class BloodRequestUpdate(SchemaBase):
         default=None,
         min_length=1,
         max_length=255,
+    )
+
+    hospital_district: str | None = Field(default=None, max_length=100)
+
+    hospital_city: str | None = Field(default=None, max_length=100)
+
+    hospital_latitude: Decimal | None = Field(
+        default=None,
+        ge=Decimal("-90"),
+        le=Decimal("90"),
+        max_digits=9,
+        decimal_places=6,
+    )
+
+    hospital_longitude: Decimal | None = Field(
+        default=None,
+        ge=Decimal("-180"),
+        le=Decimal("180"),
+        max_digits=9,
+        decimal_places=6,
     )
 
     contact_person: str | None = Field(

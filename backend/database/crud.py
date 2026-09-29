@@ -825,6 +825,14 @@ def create_blood_request(
 
         hospital_location=request_data.hospital_location,
 
+        hospital_district=request_data.hospital_district,
+
+        hospital_city=request_data.hospital_city,
+
+        hospital_latitude=request_data.hospital_latitude,
+
+        hospital_longitude=request_data.hospital_longitude,
+
 
         # --------------------------------------------------
         # Bystander / Contact

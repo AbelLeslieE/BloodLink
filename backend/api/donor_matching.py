@@ -66,9 +66,11 @@ def find_matching_donors(
     ]
     ranked = donor_matching_service.rank_matching_donors(
         patient_blood_group=blood_request.blood_group,
-        patient_district=None,
-        patient_city=None,
+        patient_district=(blood_request.hospital_district or blood_request.hospital_location),
+        patient_city=blood_request.hospital_city,
         donors=donors,
+        request_latitude=blood_request.hospital_latitude,
+        request_longitude=blood_request.hospital_longitude,
     )
 
     return {
@@ -84,6 +86,9 @@ def find_matching_donors(
                     if donor.score.blood_group_score == donor_matching_service.EXACT_BLOOD_MATCH_SCORE
                     else "Compatible match"
                 ),
+                "distance_km": donor.score.distance_km,
+                "location_match_type": donor.score.location_match_type,
+                "location_score": donor.score.location_score,
                 "donor": {
                     "id": donor.donor.id,
                     "name": donor.donor.full_name,
@@ -91,6 +96,7 @@ def find_matching_donors(
                     "phone": donor.donor.phone,
                     "email": donor.donor.email,
                     "district": donor.donor.district,
+                    "city": donor.donor.city,
                     "status": donor.donor.status,
                 },
             }

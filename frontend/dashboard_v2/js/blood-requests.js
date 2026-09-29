@@ -894,6 +894,40 @@ function renderBloodRequestDetails(request) {
 
                         </div>
 
+
+                        <div>
+
+                            <span>
+                                District / City
+                            </span>
+
+                            <strong>
+                                ${escapeRequestHtml(
+                                    [request.hospital_district, request.hospital_city]
+                                        .filter(Boolean)
+                                        .join(", ") || "Not recorded"
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                Coordinates
+                            </span>
+
+                            <strong>
+                                ${escapeRequestHtml(
+                                    request.hospital_latitude != null && request.hospital_longitude != null
+                                        ? `${request.hospital_latitude}, ${request.hospital_longitude}`
+                                        : "Not recorded"
+                                )}
+                            </strong>
+
+                        </div>
+
                     </div>
 
                 </article>
@@ -3393,6 +3427,66 @@ function renderNewBloodRequestForm() {
 
                         </div>
 
+                        <div class="form-field">
+
+                            <label for="hospitalDistrict">District</label>
+
+                            <input
+                                type="text"
+                                id="hospitalDistrict"
+                                name="hospitalDistrict"
+                                maxlength="100"
+                                placeholder="Enter district"
+                            >
+
+                        </div>
+
+                        <div class="form-field">
+
+                            <label for="hospitalCity">City</label>
+
+                            <input
+                                type="text"
+                                id="hospitalCity"
+                                name="hospitalCity"
+                                maxlength="100"
+                                placeholder="Enter city"
+                            >
+
+                        </div>
+
+                        <div class="form-field">
+
+                            <label for="hospitalLatitude">Latitude</label>
+
+                            <input
+                                type="number"
+                                id="hospitalLatitude"
+                                name="hospitalLatitude"
+                                min="-90"
+                                max="90"
+                                step="0.000001"
+                                placeholder="Example: 10.0159"
+                            >
+
+                        </div>
+
+                        <div class="form-field">
+
+                            <label for="hospitalLongitude">Longitude</label>
+
+                            <input
+                                type="number"
+                                id="hospitalLongitude"
+                                name="hospitalLongitude"
+                                min="-180"
+                                max="180"
+                                step="0.000001"
+                                placeholder="Example: 76.3419"
+                            >
+
+                        </div>
+
                     </div>
 
                 </section>
@@ -3698,6 +3792,28 @@ function initializeBloodRequestForm() {
                         .value
                         .trim(),
 
+                hospital_district:
+                    document
+                        .getElementById("hospitalDistrict")
+                        .value
+                        .trim() || null,
+
+                hospital_city:
+                    document
+                        .getElementById("hospitalCity")
+                        .value
+                        .trim() || null,
+
+                hospital_latitude:
+                    document.getElementById("hospitalLatitude").value === ""
+                        ? null
+                        : Number(document.getElementById("hospitalLatitude").value),
+
+                hospital_longitude:
+                    document.getElementById("hospitalLongitude").value === ""
+                        ? null
+                        : Number(document.getElementById("hospitalLongitude").value),
+
                 contact_person:
                     document
                         .getElementById("contactPerson")
@@ -3714,11 +3830,17 @@ function initializeBloodRequestForm() {
                     document
                         .getElementById("requestNotes")
                         .value
-                        .trim() || null,
-
-                status: "Pending"
+                        .trim() || null
 
             };
+
+            if (
+                (requestData.hospital_latitude === null)
+                !== (requestData.hospital_longitude === null)
+            ) {
+                alert("Enter both hospital latitude and longitude, or leave both blank.");
+                return;
+            }
 
 
             // ==================================================

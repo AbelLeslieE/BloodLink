@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Dict, List
 from datetime import date
+from math import asin, cos, radians, sin, sqrt
 
 # ==========================================================
 # BLOOD COMPATIBILITY MATRIX
@@ -132,6 +133,14 @@ SAME_DISTRICT_SCORE = 15
 
 SAME_CITY_SCORE = 10
 
+WITHIN_5_KM_SCORE = 30
+
+WITHIN_15_KM_SCORE = 25
+
+WITHIN_30_KM_SCORE = 18
+
+WITHIN_60_KM_SCORE = 10
+
 AGE_BONUS = 5
 # ==========================================================
 # BLOOD GROUP SCORE
@@ -230,20 +239,96 @@ def calculate_location_score(
     if (
         request_district
         and donor_district
-        and request_district.lower()
-        == donor_district.lower()
+        and request_district.strip().casefold()
+        == donor_district.strip().casefold()
     ):
         score += SAME_DISTRICT_SCORE
 
     if (
         request_city
         and donor_city
-        and request_city.lower()
-        == donor_city.lower()
+        and request_city.strip().casefold()
+        == donor_city.strip().casefold()
     ):
         score += SAME_CITY_SCORE
 
     return score
+
+
+def calculate_distance_km(
+    request_latitude,
+    request_longitude,
+    donor_latitude,
+    donor_longitude,
+) -> float | None:
+    """Return great-circle distance in kilometres when both points exist."""
+
+    coordinates = (
+        request_latitude,
+        request_longitude,
+        donor_latitude,
+        donor_longitude,
+    )
+    if any(value is None for value in coordinates):
+        return None
+
+    request_lat, request_lon, donor_lat, donor_lon = map(float, coordinates)
+    latitude_delta = radians(donor_lat - request_lat)
+    longitude_delta = radians(donor_lon - request_lon)
+    request_latitude_radians = radians(request_lat)
+    donor_latitude_radians = radians(donor_lat)
+
+    haversine = (
+        sin(latitude_delta / 2) ** 2
+        + cos(request_latitude_radians)
+        * cos(donor_latitude_radians)
+        * sin(longitude_delta / 2) ** 2
+    )
+    angular_distance = 2 * asin(sqrt(min(1.0, haversine)))
+    return round(6371.0088 * angular_distance, 2)
+
+
+def calculate_distance_score(distance_km: float) -> int:
+    """Reward nearby donors using transparent distance bands."""
+
+    if distance_km <= 5:
+        return WITHIN_5_KM_SCORE
+    if distance_km <= 15:
+        return WITHIN_15_KM_SCORE
+    if distance_km <= 30:
+        return WITHIN_30_KM_SCORE
+    if distance_km <= 60:
+        return WITHIN_60_KM_SCORE
+    return 0
+
+
+def describe_location_match(
+    distance_km: float | None,
+    request_district: str | None,
+    donor_district: str | None,
+    request_city: str | None,
+    donor_city: str | None,
+) -> str:
+    if distance_km is not None:
+        return "Coordinate distance"
+
+    same_district = bool(
+        request_district
+        and donor_district
+        and request_district.strip().casefold() == donor_district.strip().casefold()
+    )
+    same_city = bool(
+        request_city
+        and donor_city
+        and request_city.strip().casefold() == donor_city.strip().casefold()
+    )
+    if same_district and same_city:
+        return "Same city and district"
+    if same_district:
+        return "Same district"
+    if same_city:
+        return "Same city"
+    return "Location unavailable"
 # ==========================================================
 # MATCH SCORE RESULT
 # ==========================================================
@@ -265,6 +350,10 @@ class MatchScore:
     donation_score: int
 
     location_score: int
+
+    distance_km: float | None
+
+    location_match_type: str
 # ==========================================================
 # FINAL MATCH SCORE
 # ==========================================================
@@ -274,6 +363,8 @@ def calculate_match_score(
     patient_district: str | None,
     patient_city: str | None,
     donor,
+    request_latitude=None,
+    request_longitude=None,
 ) -> MatchScore:
     """
     Calculate the complete donor match score.
@@ -296,7 +387,25 @@ def calculate_match_score(
         donor.last_donation_date,
     )
 
-    location_score = calculate_location_score(
+    distance_km = calculate_distance_km(
+        request_latitude,
+        request_longitude,
+        donor.latitude,
+        donor.longitude,
+    )
+
+    location_score = (
+        calculate_distance_score(distance_km)
+        if distance_km is not None
+        else calculate_location_score(
+            patient_district,
+            donor.district,
+            patient_city,
+            donor.city,
+        )
+    )
+    location_match_type = describe_location_match(
+        distance_km,
         patient_district,
         donor.district,
         patient_city,
@@ -325,6 +434,10 @@ def calculate_match_score(
 
         location_score=location_score,
 
+        distance_km=distance_km,
+
+        location_match_type=location_match_type,
+
     )
 # ==========================================================
 # RANKED DONOR
@@ -347,6 +460,8 @@ def rank_matching_donors(
     patient_district: str | None,
     patient_city: str | None,
     donors: list,
+    request_latitude=None,
+    request_longitude=None,
 ) -> list[RankedDonor]:
     """
     Rank compatible donors from best to worst.
@@ -369,6 +484,10 @@ def rank_matching_donors(
 
             donor,
 
+            request_latitude,
+
+            request_longitude,
+
         )
 
         ranked.append(
@@ -384,11 +503,12 @@ def rank_matching_donors(
         )
 
     ranked.sort(
-
-        key=lambda x: x.score.total_score,
-
-        reverse=True,
-
+        key=lambda item: (
+            -item.score.total_score,
+            item.score.distance_km is None,
+            item.score.distance_km if item.score.distance_km is not None else float("inf"),
+            getattr(item.donor, "id", 0) or 0,
+        )
     )
 
     for index, donor in enumerate(
