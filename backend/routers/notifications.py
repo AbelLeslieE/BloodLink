@@ -37,6 +37,8 @@ def _recipient_response_status(status: str | None) -> str:
         return "ACCEPTED"
     if normalized in {"DECLINED", "NO"}:
         return "DECLINED"
+    if normalized == "INELIGIBLE":
+        return "INELIGIBLE"
 
     # Old rows can contain delivery/sending placeholders or an empty value.
     # They are not donor decisions, so present them as a pending response.
@@ -107,6 +109,10 @@ def get_notifications(
                 "priority": request.priority,
 
                 "units_required": request.units_required,
+
+                "units_fulfilled": request.units_fulfilled,
+
+                "units_remaining": request.units_remaining,
 
                 "required_date": request.required_date,
 
@@ -182,15 +188,28 @@ def complete_notification_request(
     database_session: Session = Depends(get_db),
     _: User = Depends(require_administrator),
 ) -> dict:
-    """Close a request after its donor-response workflow is complete."""
+    """Close donor outreach without claiming that blood was supplied.
+
+    Confirmed donation units are the only source of truth for fulfilment. An
+    administrator may finish an outreach campaign even when the request still
+    needs blood, so this endpoint deliberately leaves the request open.
+    """
     notification = _notification_or_404(database_session, notification_id)
     notification.status = "COMPLETED"
-    notification.blood_request.status = "Fulfilled"
+    blood_request = notification.blood_request
+    if blood_request.status not in {"Fulfilled", "Closed", "Cancelled"}:
+        blood_request.status = (
+            "Partially Fulfilled"
+            if blood_request.units_fulfilled > 0
+            else "In Progress"
+        )
     database_session.commit()
     return {
         "success": True,
         "notification_status": notification.status,
-        "request_status": notification.blood_request.status,
+        "request_status": blood_request.status,
+        "units_fulfilled": blood_request.units_fulfilled,
+        "units_remaining": blood_request.units_remaining,
     }
 
 

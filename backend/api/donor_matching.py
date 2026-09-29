@@ -16,7 +16,7 @@ from backend.database.schemas import (
     SendNotificationRequest,
 )
 
-from backend.services import donor_matching_service, email_service, notification_service
+from backend.services import donor_eligibility_service, donor_matching_service, email_service, notification_service
 router = APIRouter(
     prefix="/api/match",
     tags=["Donor Matching"],
@@ -57,6 +57,13 @@ def find_matching_donors(
         compatible_groups,
     )
 
+    policy = donor_eligibility_service.current_policy(database_session)
+    donors = [
+        donor for donor in donors
+        if donor_eligibility_service.is_donor_match_allowed(
+            database_session, donor, policy=policy
+        )
+    ]
     ranked = donor_matching_service.rank_matching_donors(
         patient_blood_group=blood_request.blood_group,
         patient_district=None,
@@ -128,7 +135,7 @@ def send_notification_campaign(
             continue
 
         if (
-            donor.status.strip().lower() != "available"
+            not donor_eligibility_service.is_donor_match_allowed(database_session, donor)
             or not donor_matching_service.is_compatible_donor(
                 blood_request.blood_group, donor.blood_group
             )

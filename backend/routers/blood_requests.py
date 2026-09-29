@@ -50,6 +50,7 @@ ALLOWED_STATUSES = {
     "Awaiting Donation",
     "Donation Completed",
     "Points Awarded",
+    "Partially Fulfilled",
     "Fulfilled",
     "Closed",
     "Cancelled",
@@ -201,6 +202,19 @@ def update_blood_request_status(
             ),
         )
 
+    if requested_status in {"Fulfilled", "Partially Fulfilled"}:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Fulfilment status is calculated from confirmed donation units.",
+        )
+    if blood_request.status == "Fulfilled" and requested_status != "Fulfilled":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A fully supplied request cannot be reopened without increasing its required units.",
+        )
+    if requested_status == "Pending" and blood_request.units_fulfilled:
+        requested_status = "Partially Fulfilled"
+
 
     # ======================================================
     # 3. UPDATE DATABASE
@@ -320,8 +334,7 @@ def complete_blood_request(
 
 ) -> BloodRequestResponse:
     """
-    Complete a blood request by recording a donation
-    and marking the request as fulfilled.
+    Record a donor contribution and fulfil the request only when all units are supplied.
     """
 
     # ------------------------------------------------------
@@ -354,6 +367,7 @@ def complete_blood_request(
                 recorded_by=administrator.id,
                 donation_type=request_data.donation_type,
                 remarks=request_data.remarks,
+                units=request_data.units,
             )
         except ValueError as error:
             raise HTTPException(
@@ -385,6 +399,7 @@ def complete_blood_request(
             recorded_by=administrator.id,
             donation_type=request_data.donation_type,
             remarks=request_data.remarks,
+            units=request_data.units,
         )
 
     except ValueError as error:

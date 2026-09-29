@@ -1,0 +1,71 @@
+.tech-page { display: grid; gap: 22px; padding-bottom: 42px; color: #162237; }
+.tech-hero { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 28px; }
+.tech-eyebrow { margin: 0 0 6px; color: #a10f32; font-size: .76rem; font-weight: 800; letter-spacing: .13em; }
+.tech-hero h1 { margin: 0; font-size: clamp(1.75rem, 3vw, 2.5rem); }
+.tech-hero p:not(.tech-eyebrow) { margin: 8px 0 0; color: #637087; }
+.tech-summary { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
+.tech-metric { padding: 19px; border-top: 3px solid rgba(179, 19, 55, .58); }
+.tech-metric span { display: block; color: #69758a; font-size: .78rem; font-weight: 700; }
+.tech-metric strong { display: block; margin-top: 7px; color: #172136; font-size: 1.7rem; }
+.tech-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 5px; border-radius: 16px; background: rgba(255,255,255,.7); }
+.tech-tabs button { border: 0; border-radius: 11px; padding: 11px 18px; background: transparent; color: #59667a; font: inherit; font-weight: 750; cursor: pointer; white-space: nowrap; }
+.tech-tabs button.active { color: white; background: linear-gradient(135deg, #9f1239, #c31f49); box-shadow: 0 8px 20px rgba(159,18,57,.22); }
+.tech-panel { padding: 24px; min-width: 0; }
+.tech-panel[hidden] { display: none; }
+.tech-panel-header, .tech-subpanel { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.tech-panel-header h2, .tech-subpanel h3 { margin: 0; }
+.tech-panel-header p, .tech-subpanel p { margin: 6px 0 0; color: #667389; }
+.tech-button, a.tech-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid transparent; border-radius: 10px; padding: 10px 14px; color: white; background: #a81439; font: inherit; font-size: .86rem; font-weight: 750; text-decoration: none; cursor: pointer; }
+.tech-button.secondary { color: #27354b; border-color: #cfd7e4; background: rgba(255,255,255,.78); }
+.tech-button.danger { background: #a91d2d; }
+.tech-button.small { padding: 7px 10px; font-size: .76rem; }
+.tech-button:disabled { opacity: .5; cursor: not-allowed; }
+.tech-filters { display: grid; grid-template-columns: minmax(220px, 1fr) 190px 160px auto; gap: 10px; margin: 22px 0 14px; }
+.tech-filters input, .tech-filters select, .tech-enrollment input, .tech-policy-form input, .tech-policy-form select, .tech-policy-form textarea { width: 100%; border: 1px solid #d8deea; border-radius: 10px; padding: 10px 12px; background: rgba(255,255,255,.88); color: #1f2a3d; font: inherit; }
+.tech-table-wrap { margin-top: 18px; overflow-x: auto; border: 1px solid rgba(207,215,228,.8); border-radius: 13px; }
+.tech-table-wrap table { width: 100%; border-collapse: collapse; min-width: 800px; }
+.tech-table-wrap th { background: rgba(245,247,251,.94); color: #667287; font-size: .72rem; letter-spacing: .05em; text-align: left; text-transform: uppercase; }
+.tech-table-wrap th, .tech-table-wrap td { padding: 12px 13px; border-bottom: 1px solid #e8ecf3; vertical-align: top; }
+.tech-table-wrap td { font-size: .84rem; color: #37445a; }
+.tech-table-wrap tr:last-child td { border-bottom: 0; }
+.tech-table-wrap td small { display: block; margin-top: 3px; color: #7a8596; max-width: 330px; }
+.tech-badge, .tech-status, .tech-integrity { display: inline-flex; border-radius: 999px; padding: 4px 8px; background: #eef1f6; font-size: .69rem; font-weight: 800; white-space: nowrap; }
+.tech-status.success, .tech-status.ready, .tech-integrity.valid { color: #0c6b4d; background: #e7f7f0; }
+.tech-status.failed, .tech-status.deleted, .tech-integrity.invalid { color: #a21d31; background: #fce8ec; }
+.tech-status.pending, .tech-status.creating { color: #95640c; background: #fff4d8; }
+.tech-pagination { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 16px; color: #6d788b; font-size: .84rem; }
+.tech-pagination div { display: flex; gap: 8px; }
+.tech-actions { display: flex; gap: 7px; }
+.tech-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid #d6dce7; border-radius: 9px; color: #38465b; background: white; cursor: pointer; text-decoration: none; }
+.tech-icon-button.danger { color: #ad1735; }
+.tech-notice { position: sticky; top: 78px; z-index: 5; padding: 13px 16px; border: 1px solid #bce5d4; border-radius: 12px; color: #0c654a; background: #ebfaf4; box-shadow: 0 8px 28px rgba(15,23,42,.1); }
+.tech-notice.error { border-color: #f1bdc8; color: #a31932; background: #fff0f3; }
+.tech-callout { margin: 18px 0 0; padding: 11px 13px; border-radius: 10px; color: #235b4a; background: #ecf8f3; }
+.tech-callout.warning { color: #8b5208; background: #fff3d8; }
+.tech-subpanel { margin: 20px 0; padding: 18px; border: 1px solid #dde3ed; border-radius: 13px; background: rgba(248,250,252,.7); }
+.tech-enrollment { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 22px; margin: 18px 0; padding: 20px; border: 1px solid #d9e0ea; border-radius: 14px; background: white; }
+.tech-enrollment img { width: 170px; height: 170px; border: 8px solid white; border-radius: 10px; box-shadow: 0 5px 18px rgba(15,23,42,.12); }
+.tech-enrollment code { display: inline-block; margin-top: 10px; padding: 7px; border-radius: 7px; background: #f1f4f8; word-break: break-all; }
+.tech-enrollment form { display: grid; gap: 12px; }
+.tech-enrollment label { display: grid; gap: 6px; font-weight: 700; }
+.tech-recovery-codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 12px 0; }
+.tech-rule-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
+.tech-rule-summary article { padding: 15px; border: 1px solid #e0e5ed; border-radius: 12px; background: rgba(248,250,252,.76); }
+.tech-rule-summary span { display: block; color: #6c7789; font-size: .75rem; font-weight: 700; }
+.tech-rule-summary strong { display: block; margin-top: 5px; font-size: 1.35rem; }
+.tech-policy-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+.tech-policy-form > label, .tech-review-fields label { display: grid; gap: 6px; color: #26344a; font-weight: 750; }
+.tech-policy-form small { color: #788397; font-weight: 500; }
+.tech-policy-check { display: flex !important; grid-column: 1 / -1; align-items: flex-start; gap: 10px !important; }
+.tech-policy-check input { width: auto; margin-top: 3px; }
+.tech-review-fields { grid-column: 1 / -1; display: grid; gap: 14px; padding: 18px; border: 1px solid #dce2eb; border-radius: 13px; }
+.tech-review-fields.required { border-color: #d6a52c; background: #fffaf0; }
+.tech-review-fields legend { padding: 0 7px; color: #4c596e; font-weight: 800; }
+.tech-policy-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.tech-policy-footer p { margin: 0; color: #69758a; }
+.tech-fixed-rules { margin-top: 22px; padding-top: 18px; border-top: 1px solid #e0e5ed; color: #526076; }
+.tech-fixed-rules h3 { margin: 0 0 10px; color: #253248; }
+.tech-fixed-rules li { margin: 7px 0; }
+.tech-fixed-rules a { color: #9f1239; font-weight: 700; }
+@media (max-width: 1150px) { .tech-summary { grid-template-columns: repeat(3, 1fr); } .tech-enrollment { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .tech-hero, .tech-panel-header, .tech-subpanel, .tech-policy-footer { align-items: stretch; flex-direction: column; } .tech-summary, .tech-rule-summary, .tech-policy-form { grid-template-columns: 1fr; } .tech-filters { grid-template-columns: 1fr; } .tech-panel { padding: 17px; } }

@@ -48,6 +48,10 @@ import {
     loadNotifications,
     initializeNotifications
 } from "./notifications.js";
+import {
+    loadTechnicalPortal,
+    initializeTechnicalPortal
+} from "./tech_portal.js";
 
 import {
     navigate
@@ -765,6 +769,13 @@ async function handleNavigation(event) {
             initializeSettings();   
 
             break;    
+        case "techPortal":
+
+            moduleView.innerHTML = loadTechnicalPortal();
+
+            initializeTechnicalPortal();
+
+            break;
         /* ======================================================
         Notifications
         ====================================================== */

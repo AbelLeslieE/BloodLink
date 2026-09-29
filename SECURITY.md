@@ -1,6 +1,6 @@
 # Security hardening and release gate
 
-Updated 2026-09-13. **This is not a penetration-test certificate or production approval.**
+Updated 2026-09-27. **This is not a penetration-test certificate or production approval.**
 The application was reviewed and hardened locally. Remote hosting, real delivery providers,
 production PostgreSQL, operating-system controls, and an independent penetration test remain unverified.
 
@@ -12,10 +12,9 @@ command are implemented and tested. Activation is deliberately pending confirmat
 production database/host and durable recovery-key custody. No encryption key was generated
 or stored for the real database, and `.env` was not changed.
 
-The additive `02a_security_rate_limits` migration was applied to the local database. It only
-creates the rate-limit table/index and updates Alembic's revision. SHA-256 digests of every
-pre-existing application table's rows were equal before and after the migration. Existing
-donor/patient records, original database files and older backups were preserved.
+The additive security-operations migration `f2a3b4c5d6e7` was applied to the local
+database. It adds tracked sessions, MFA state, signed audit events, and encrypted-backup
+metadata. Existing donor/patient records and older database copies were preserved.
 
 ## Implemented controls
 
@@ -67,7 +66,19 @@ donor/patient records, original database files and older backups were preserved.
 - SQL parameter values are hidden in exception logging; email addresses and provider error
   bodies are no longer deliberately logged by delivery code. Uvicorn access-log filtering
   strips query strings, email bearer links and client addresses. Configure upstream logs too.
-- The previous fake MFA toggle is disabled and labelled accurately; **real MFA is not implemented**.
+- Authenticator-app TOTP MFA is implemented with encrypted seeds, replay resistance,
+  one-time hashed recovery codes, login challenges, audited administrator reset, and
+  automatic session revocation during sensitive changes. It remains optional; production
+  policy must require enrollment for privileged accounts.
+- Individually tracked sessions include expiry, last-seen time, device, source address,
+  and MFA verification. Administrators can review or revoke one session; normal logout
+  retains the established behavior of closing all sessions for that account.
+- The administrator Technical Portal stores integrity-signed audit events for login,
+  MFA, sessions, backups, eligibility-policy reviews, and authenticated mutation routes. It verifies signatures and
+  exports CSV. Field-level before/after diffs, off-site retention, and alerting remain.
+- Encrypted, compressed logical database snapshots include checksums, verification,
+  download, and audited deletion. Production creation fails closed without a dedicated
+  backup key and persistent directory. Automated replication and restore are not implemented.
 
 Existing access tokens issued before the explicit-purpose change require signing in again.
 Existing passwords and account data are retained. The browser's existing session marker and
@@ -141,7 +152,7 @@ is also an option for Uvicorn). Do not use development mode for real sensitive d
 
 ## Verification evidence
 
-Initial security run: **61 tests passed** (one framework deprecation warning), frontend
+Latest security run: **141 tests passed** (one framework deprecation warning), frontend
 stored-XSS rendering checks passed, and all nine local page/asset checks plus database
 connectivity passed. `pip check` found no broken requirements. No real email/push
 messages were sent and no remote deployment was changed.
@@ -167,15 +178,16 @@ This does not audit vendored native libraries, JavaScript, infrastructure or und
 
 ## Release blockers / independent pentest scope
 
-- Activate and prove real database/backup encryption and key recovery; currently NOT complete.
+- Activate and prove real database encryption and key recovery. Application-level encrypted
+  backup creation is complete; guarded restore, off-site replication, and restore drills are not.
 - Configure and test actual production TLS, proxy trust, host allowlists, filesystem permissions,
   encrypted volumes/swap/backups, database roles/network rules, and secret rotation.
-- Add real administrator MFA (prefer a maintained identity provider), account lifecycle controls
-  and verified ownership/consent policy for public registrations.
+- Enforce the implemented MFA for every administrator (or integrate a maintained identity
+  provider), complete account lifecycle controls, and verify ownership/consent policy.
 - Perform browser/PWA/device regression testing and real provider delivery tests with authorized
   test recipients. API tests and HTML-rendering checks are not full browser acceptance tests.
-- Add access-controlled, tamper-resistant security/audit events, monitoring/alerts, retention,
-  incident response, export governance and restore drills. Local logs are not an audit system.
+- Extend the implemented signed audit store with field-level diffs, monitoring/alerts,
+  off-site retention, incident response, export governance, and restore drills.
 - Review remaining third-party font/CSS requests, independently audit native/JS dependencies,
   load-test limits and assess resource exhaustion at ingress/egress (including SSRF network rules).
 - Commission an authorized independent deployed-system test with admin/donor test accounts and

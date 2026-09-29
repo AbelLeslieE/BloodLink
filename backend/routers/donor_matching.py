@@ -4,6 +4,8 @@ BloodLink Donor Matching API
 
 from __future__ import annotations
 
+from collections import Counter
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
@@ -19,6 +21,7 @@ from backend.database.schemas import (
 )
 
 from backend.services import (
+    donor_eligibility_service,
     donor_matching_service,
     email_service,
     notification_service,
@@ -30,11 +33,12 @@ router = APIRouter(
 )
 
 MATCHABLE_REQUEST_STATUSES = {
-    "Pending", "Open", "Sent", "In Progress", "Donor Responded", "Awaiting Donation"
+    "Pending", "Open", "Sent", "In Progress", "Donor Responded", "Awaiting Donation",
+    "Partially Fulfilled",
 }
 
 
-def _compatible_donors(database_session: Session, blood_request_id: int) -> tuple[object, list]:
+def _compatible_donors(database_session: Session, blood_request_id: int) -> tuple[object, list, dict, dict, object]:
     """Resolve and rank currently eligible donors for a blood request."""
     blood_request = crud.get_blood_request_by_id(database_session, blood_request_id)
     if blood_request is None:
@@ -48,12 +52,27 @@ def _compatible_donors(database_session: Session, blood_request_id: int) -> tupl
         blood_request.blood_group
     )
     donors = crud.get_eligible_donors(database_session, compatible_groups)
-    return blood_request, donor_matching_service.rank_matching_donors(
+    policy = donor_eligibility_service.current_policy(database_session)
+    evaluations = {
+        donor.id: donor_eligibility_service.evaluate_donor(
+            database_session, donor, policy=policy
+        )
+        for donor in donors
+    }
+    included = [donor for donor in donors if evaluations[donor.id].match_allowed]
+    excluded_reasons = Counter(
+        reason
+        for donor in donors
+        if not evaluations[donor.id].match_allowed
+        for reason in (evaluations[donor.id].reasons or ("Operational eligibility policy",))
+    )
+    ranked = donor_matching_service.rank_matching_donors(
         patient_blood_group=blood_request.blood_group,
         patient_district=blood_request.hospital_location,
         patient_city=None,
-        donors=donors,
+        donors=included,
     )
+    return blood_request, ranked, evaluations, dict(excluded_reasons), policy
 
 
 # ==========================================================
@@ -70,7 +89,7 @@ def find_matching_donors(
     Find and rank compatible donors.
     """
 
-    blood_request, ranked = _compatible_donors(
+    blood_request, ranked, evaluations, excluded_reasons, policy = _compatible_donors(
         database_session, request.blood_request_id
     )
 
@@ -87,6 +106,13 @@ def find_matching_donors(
                     if item.score.blood_group_score == donor_matching_service.EXACT_BLOOD_MATCH_SCORE
                     else "Compatible match"
                 ),
+                "screening": {
+                    "passed": evaluations[item.donor.id].screening_passed,
+                    "mode": evaluations[item.donor.id].policy_mode,
+                    "reasons": list(evaluations[item.donor.id].reasons),
+                    "warnings": list(evaluations[item.donor.id].warnings),
+                    "final_decision_required": True,
+                },
                 "donor": {
                     "id": item.donor.id,
                     "name": item.donor.full_name,
@@ -100,6 +126,13 @@ def find_matching_donors(
             }
             for item in ranked
         ],
+        "eligibility_policy": {
+            "mode": policy.enforcement_mode,
+            "version": policy.version,
+            "excluded_count": sum(not item.match_allowed for item in evaluations.values()),
+            "excluded_reasons": excluded_reasons,
+            "final_decision_required": True,
+        },
     }
 
 
@@ -134,6 +167,9 @@ def send_notifications(
             detail="Notifications cannot be sent for a request that is no longer open for matching.",
         )
 
+    donor_eligibility_service.restore_expired_deferrals(database_session)
+    policy = donor_eligibility_service.current_policy(database_session)
+
     selected_donors = []
     selected_donor_ids: set[int] = set()
     for donor_id in request.donor_ids:
@@ -153,7 +189,9 @@ def send_notifications(
             not donor_matching_service.is_compatible_donor(
                 blood_request.blood_group, donor.blood_group
             )
-            or donor.status.strip().lower() != "available"
+            or not donor_eligibility_service.is_donor_match_allowed(
+                database_session, donor, policy=policy
+            )
         ):
             raise HTTPException(status_code=409, detail=f"Donor {donor_id} is not eligible for this request.")
         if not donor.email:
@@ -208,10 +246,18 @@ def blood_availability(
     _: User = Depends(require_administrator),
 ) -> list[dict]:
     """Return the actual count of currently available donors by blood group."""
+    donor_eligibility_service.restore_expired_deferrals(database_session)
     groups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
     donors = database_session.scalars(
         select(Donor).where(Donor.status == "Available")
     ).all()
+    policy = donor_eligibility_service.current_policy(database_session)
+    donors = [
+        donor for donor in donors
+        if donor_eligibility_service.is_donor_match_allowed(
+            database_session, donor, policy=policy
+        )
+    ]
     return [
         {"group": group, "available_donors": sum(donor.blood_group == group for donor in donors)}
         for group in groups
@@ -236,7 +282,7 @@ def save_matches(
     database_session: Session = Depends(get_db),
     administrator: User = Depends(require_administrator),
 ) -> dict:
-    blood_request, ranked = _compatible_donors(database_session, request.blood_request_id)
+    blood_request, ranked, _, _, _ = _compatible_donors(database_session, request.blood_request_id)
     eligible_ids = {item.donor.id for item in ranked}
     selected_ids = set(request.donor_ids)
     if not selected_ids:

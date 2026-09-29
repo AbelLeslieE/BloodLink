@@ -15,6 +15,7 @@ from backend.database import crud
 from backend.database.database import get_db
 from backend.database.donor_response import DonorResponse
 from backend.database.notification_recipient import NotificationRecipient
+from backend.services import donor_eligibility_service
 
 
 router = APIRouter(prefix="/email", tags=["Email"])
@@ -30,6 +31,13 @@ def _token_page(request: Request, token: str, decision: str, db: Session):
     if email_token.used:
         return templates.TemplateResponse(request=request, name="already_used.html", context={})
     if crud.email_token_expired(email_token):
+        return templates.TemplateResponse(request=request, name="expired.html", context={})
+    recipient = email_token.recipient
+    if recipient is None or recipient.notification.status == "COMPLETED" or recipient.notification.blood_request.status in {
+        "Fulfilled", "Closed", "Cancelled"
+    }:
+        return templates.TemplateResponse(request=request, name="expired.html", context={})
+    if decision.lower() == "accept" and not donor_eligibility_service.is_donor_match_allowed(db, recipient.donor):
         return templates.TemplateResponse(request=request, name="expired.html", context={})
     return templates.TemplateResponse(
         request=request,
@@ -52,6 +60,12 @@ def _record_decision(db: Session, token: str, response: str) -> str:
     ))
     if recipient is None:
         return "invalid"
+    if recipient.notification.status == "COMPLETED" or recipient.notification.blood_request.status in {
+        "Fulfilled", "Closed", "Cancelled"
+    }:
+        return "closed"
+    if response == "ACCEPTED" and not donor_eligibility_service.is_donor_match_allowed(db, recipient.donor):
+        return "ineligible"
 
     claimed = db.execute(update(EmailToken).where(EmailToken.id == email_token.id, EmailToken.used.is_(False))
                          .values(used=True).execution_options(synchronize_session=False))
@@ -103,7 +117,7 @@ def _record_decision(db: Session, token: str, response: str) -> str:
 def _result_page(request: Request, outcome: str, accepted: bool):
     if outcome == "used":
         return templates.TemplateResponse(request=request, name="already_used.html", context={})
-    if outcome == "expired":
+    if outcome in {"expired", "closed", "ineligible"}:
         return templates.TemplateResponse(request=request, name="expired.html", context={})
     if outcome == "invalid":
         raise HTTPException(status_code=404, detail="Invalid email token.")

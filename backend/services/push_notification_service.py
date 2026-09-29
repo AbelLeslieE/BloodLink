@@ -13,6 +13,7 @@ from backend.security.push import validate_push_endpoint, PushSession
 from backend.database.models import BloodRequest, Donor, User
 from backend.database.push_subscription import PushSubscription
 from backend.services.donor_matching_service import is_compatible_donor
+from backend.services.donor_eligibility_service import is_donor_match_allowed
 
 try:  # Keep local development usable until the Render dependency is installed.
     from pywebpush import WebPushException, webpush
@@ -50,7 +51,7 @@ def _donor_for_subscription(session: Session, subscription: PushSubscription) ->
 
 def _matches_request(session: Session, subscription: PushSubscription, blood_request: BloodRequest) -> bool:
     donor = _donor_for_subscription(session, subscription)
-    if donor is None or donor.status.strip().lower() != "available":
+    if donor is None or not is_donor_match_allowed(session, donor):
         return False
     if not is_compatible_donor(blood_request.blood_group, donor.blood_group):
         return False

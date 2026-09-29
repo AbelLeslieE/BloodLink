@@ -331,6 +331,13 @@ class DonorUpdate(SchemaBase):
         max_length=50,
     )
 
+    deferred_until: date | None = None
+
+    deferral_reason: str | None = Field(
+        default=None,
+        max_length=500,
+    )
+
 
 # ==========================================================
 # DONOR RESPONSE
@@ -342,6 +349,10 @@ class DonorResponse(DonorBase):
     id: int
 
     donor_code: str
+
+    deferred_until: date | None = None
+
+    deferral_reason: str | None = None
 
     created_at: datetime
 
@@ -562,12 +573,14 @@ class BloodRequestCompleteRequest(SchemaBase):
     - validate a registered donor or external donor name
     - create the donation history record
     - update registered-donor statistics when applicable
-    - mark the request as fulfilled
+    - add the donated units and fulfil the request only when none remain
     """
 
     donor_id: int | None = Field(default=None, gt=0)
 
     external_donor_name: str | None = Field(default=None, max_length=200)
+
+    units: int = Field(default=1, gt=0, le=20)
 
     donation_type: str = Field(
         default="Voluntary",
@@ -596,6 +609,10 @@ class BloodRequestResponse(BloodRequestBase):
     id: int
 
     status: str
+
+    units_fulfilled: int
+
+    units_remaining: int
 
     created_by: int
 

@@ -15,7 +15,7 @@ from sqlalchemy.exc import DataError, OperationalError
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from backend.config.settings import forwarded_allow_ips, get_settings
-from backend.security.middleware import SecurityMiddleware
+from backend.security.middleware import AuditMutationMiddleware, SecurityMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -49,6 +49,9 @@ from backend.routers.donor_registration import router as donor_registration_rout
 from backend.routers.donation_history import router as donation_history_router
 from backend.routers.push_notifications import router as push_notifications_router
 from backend.routers.diagnostics import router as diagnostics_router
+from backend.routers.security_operations import admin_router as technical_admin_router
+from backend.routers.security_operations import security_router
+from backend.routers.eligibility_rules import router as eligibility_rules_router
 # ==========================================================
 # Paths
 # ==========================================================
@@ -110,6 +113,7 @@ app = FastAPI(
     openapi_url=None if get_settings().production else "/openapi.json",
 )
 app.add_middleware(SecurityMiddleware, production=get_settings().production)
+app.add_middleware(AuditMutationMiddleware)
 if get_settings().production:
     # Render redirects at its TLS edge and forwards HTTP internally.
     # Redirecting again here would loop unless arbitrary proxy headers were trusted.
@@ -183,6 +187,9 @@ app.include_router(
 )
 app.include_router(push_notifications_router)
 app.include_router(diagnostics_router)
+app.include_router(security_router)
+app.include_router(technical_admin_router)
+app.include_router(eligibility_rules_router)
 
 app.include_router(
     donations_router,

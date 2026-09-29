@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -31,6 +33,7 @@ from openpyxl import load_workbook
 from backend.auth.dependencies import require_administrator
 from backend.database.models import User
 from backend.database.donor_profile import DonorProfile
+from backend.services import donor_eligibility_service
 
 # ==========================================================
 # ROUTER
@@ -115,6 +118,55 @@ def validate_health_value(
     return normalized
 
 
+def validate_deferral_update(donor, donor_data: DonorUpdate) -> None:
+    """Normalize a donor availability update and enforce complete deferrals."""
+    supplied = donor_data.model_fields_set
+    if "status" in supplied and donor_data.status is not None:
+        normalized_status = donor_data.status.strip().title()
+        if normalized_status not in donor_eligibility_service.ALLOWED_AVAILABILITY_STATUSES:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Donor status must be Available, Unavailable, or Deferred.",
+            )
+        donor_data.status = normalized_status
+
+    if "deferral_reason" in supplied and donor_data.deferral_reason is not None:
+        donor_data.deferral_reason = " ".join(donor_data.deferral_reason.split()) or None
+
+    target_status = donor_data.status if "status" in supplied else donor.status
+    target_date = donor_data.deferred_until if "deferred_until" in supplied else donor.deferred_until
+    target_reason = donor_data.deferral_reason if "deferral_reason" in supplied else donor.deferral_reason
+
+    if "deferred_until" in supplied and donor_data.deferred_until is not None:
+        donor_data.status = donor_eligibility_service.DEFERRED
+        target_status = donor_eligibility_service.DEFERRED
+
+    if target_status == donor_eligibility_service.DEFERRED:
+        if target_date is None or target_date <= date.today():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="A deferred donor requires a future next-eligible date.",
+            )
+        if not target_reason:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="A deferred donor requires a deferral reason.",
+            )
+        donor_data.status = donor_eligibility_service.DEFERRED
+        return
+
+    if "status" in supplied:
+        # An explicit manual restoration or indefinite unavailability ends any
+        # active time-bound deferral while leaving donation history untouched.
+        donor_data.deferred_until = None
+        donor_data.deferral_reason = None
+    elif "deferred_until" in supplied or "deferral_reason" in supplied:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Set status to Deferred when recording deferral details.",
+        )
+
+
 # ==========================================================
 # CREATE DONOR
 # ==========================================================
@@ -138,6 +190,16 @@ def create_donor(
     donor_data.blood_group = validate_blood_group(
         donor_data.blood_group
     )
+
+    donor_data.status = donor_data.status.strip().title()
+    if donor_data.status not in {
+        donor_eligibility_service.AVAILABLE,
+        donor_eligibility_service.UNAVAILABLE,
+    }:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="New donors must start as Available or Unavailable. Add a dated deferral after registration.",
+        )
 
     # ------------------------------------------------------
     # Validate health questions
@@ -220,6 +282,8 @@ def list_donors(
 ) -> list[DonorResponse]:
     """Return all donor records."""
 
+    donor_eligibility_service.restore_expired_deferrals(database_session)
+
     return crud.get_donors(
         database_session
     )
@@ -238,6 +302,7 @@ def export_donors(
     Export all donor records as an Excel workbook.
     """
 
+    donor_eligibility_service.restore_expired_deferrals(database_session)
     donors = crud.get_donors(database_session)
 
     workbook = Workbook()
@@ -257,6 +322,8 @@ def export_donors(
         "City",
         "Weight",
         "Status",
+        "Next Eligible Date",
+        "Deferral Reason",
         "Last Donation",
         "Total Donations",
     ]
@@ -281,6 +348,8 @@ def export_donors(
             donor.city,
             donor.weight,
             donor.status,
+            donor.deferred_until,
+            donor.deferral_reason,
             donor.last_donation_date,
             donor.total_donations,
         ])
@@ -403,6 +472,7 @@ def get_donor(
             detail="Donor not found.",
         )
 
+    donor_eligibility_service.restore_donor_if_due(database_session, donor)
     return donor
 
 
@@ -432,6 +502,8 @@ def delete_donor(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Donor not found.",
         )
+
+    donor_eligibility_service.restore_donor_if_due(database_session, donor)
 
     deletion = crud.delete_donor(
         database_session,
@@ -470,6 +542,8 @@ def update_donor(
             detail="Donor not found.",
         )
 
+    donor_eligibility_service.restore_donor_if_due(database_session, donor)
+
     # ------------------------------------------------------
     # Validate blood group when supplied
     # ------------------------------------------------------
@@ -504,6 +578,8 @@ def update_donor(
             donor_data.bp_normal,
             "BP level normal",
         )
+
+    validate_deferral_update(donor, donor_data)
 
     # ------------------------------------------------------
     # Duplicate phone check

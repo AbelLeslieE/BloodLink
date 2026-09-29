@@ -22,11 +22,12 @@ from backend.database.notification import Notification
 from backend.database.notification_recipient import NotificationRecipient
 from backend.services.certificate_service import ensure_certificate, render_certificate
 from backend.services.donor_matching_service import is_compatible_donor
+from backend.services import donor_eligibility_service
 
 
 donor_router = APIRouter(prefix="/api/donor-dashboard", tags=["donor dashboard"])
 admin_router = APIRouter(prefix="/api/admin/donations", tags=["donation verification"])
-DONOR_RESPONSE_OPEN_STATUSES = {"Pending", "Open", "Sent", "In Progress", "Donor Responded", "Awaiting Donation"}
+DONOR_RESPONSE_OPEN_STATUSES = {"Pending", "Open", "Sent", "In Progress", "Donor Responded", "Awaiting Donation", "Partially Fulfilled"}
 
 
 class DonorDecision(BaseModel):
@@ -132,6 +133,8 @@ def _safe_request_payload(request: BloodRequest, response: DonorResponse | None,
         "required_date": request.required_date,
         "priority": request.priority,
         "units_required": request.units_required,
+        "units_fulfilled": request.units_fulfilled,
+        "units_remaining": request.units_remaining,
         "message": f"{request.priority} blood requirement at {request.hospital_name}.",
         "request_status": request.status,
         "response": None if response is None else ("Yes" if response.response.upper() in {"YES", "ACCEPTED"} else "No"),
@@ -146,6 +149,7 @@ def donor_summary(
     user: Annotated[User, Depends(require_donor)],
 ) -> dict:
     donor = _donor_for_user(db, user)
+    donor_eligibility_service.restore_donor_if_due(db, donor)
     history = list(db.scalars(select(DonationHistory).where(DonationHistory.donor_id == donor.id).order_by(DonationHistory.awarded_at.desc())))
     pending = db.scalar(
         select(func.count()).select_from(DonorResponse).where(
@@ -161,12 +165,17 @@ def donor_summary(
             "email": user.email,
             "phone": user.phone,
             "department": donor.class_department,
+            "status": donor.status,
+            "deferred_until": donor.deferred_until,
+            "deferral_reason": donor.deferral_reason,
         },
         "total_points": donor.total_points,
         "donation_count": donor.donation_count,
         "badge": badge_for(donor.total_points, donor.donation_count),
         "pending_verification": max(0, pending - len(history)),
-        "eligibility_reminder": "Final eligibility must be confirmed by the hospital or blood bank.",
+        "eligibility_reminder": donor_eligibility_service.eligibility_message(
+            donor, database_session=db
+        ),
         "recent_donations": [
             {"id": item.id, "hospital_name": item.hospital_name, "donation_date": item.donation_date,
              "points_awarded": item.points_awarded, "status": item.status}
@@ -181,8 +190,11 @@ def donor_requests(
     user: Annotated[User, Depends(require_donor)],
 ) -> list[dict]:
     donor = _donor_for_user(db, user)
+    donor_eligibility_service.restore_donor_if_due(db, donor)
+    if not donor_eligibility_service.is_donor_match_allowed(db, donor):
+        return []
     open_requests = list(db.scalars(select(BloodRequest).where(
-        BloodRequest.status.in_(["Pending", "In Progress", "Open", "Sent"]),
+        BloodRequest.status.in_(list(DONOR_RESPONSE_OPEN_STATUSES)),
     ).order_by(BloodRequest.required_date, BloodRequest.id.desc())))
     requests = [
         item for item in open_requests
@@ -200,6 +212,14 @@ def submit_response(
     user: Annotated[User, Depends(require_donor)],
 ) -> dict:
     donor = _donor_for_user(db, user)
+    donor_eligibility_service.restore_donor_if_due(db, donor)
+    if not donor_eligibility_service.is_donor_match_allowed(db, donor):
+        raise HTTPException(
+            status_code=409,
+            detail=donor_eligibility_service.eligibility_message(
+                donor, database_session=db
+            ),
+        )
     request = db.get(BloodRequest, request_id)
     if request is None or request.status not in DONOR_RESPONSE_OPEN_STATUSES:
         raise HTTPException(status_code=404, detail="This blood request is no longer available.")
@@ -342,6 +362,10 @@ def confirm_donation(
         "success": True,
         "already_confirmed": already_confirmed,
         "points_awarded": donation.points_awarded,
+        "units_recorded": donation.units,
+        "units_fulfilled": request.units_fulfilled,
+        "units_remaining": request.units_remaining,
+        "request_status": request.status,
         "total_points": donor.total_points,
         "badge": badge_for(donor.total_points, donor.donation_count),
     }

@@ -143,13 +143,35 @@ function requestStatistics(requests = bloodRequests) {
         String(request.status || "").trim().toLowerCase() === status;
     const hasPriority = (request, priority) =>
         String(request.priority || "").trim().toLowerCase() === priority;
+    const activeStatuses = new Set([
+        "pending",
+        "open",
+        "sent",
+        "in progress",
+        "donor responded",
+        "awaiting donation",
+        "partially fulfilled",
+    ]);
 
     return {
         total: requests.length,
         emergency: requests.filter((request) => hasPriority(request, "emergency")).length,
-        pending: requests.filter((request) => hasStatus(request, "pending")).length,
+        pending: requests.filter((request) => activeStatuses.has(normalizeRequestFilterValue(request.status))).length,
         fulfilled: requests.filter((request) => hasStatus(request, "fulfilled")).length,
     };
+}
+
+function requestUnitProgress(request) {
+    const required = Math.max(0, Number.parseInt(request?.units_required, 10) || 0);
+    const fulfilled = Math.min(
+        required,
+        Math.max(0, Number.parseInt(request?.units_fulfilled, 10) || 0)
+    );
+    const suppliedRemaining = Number.parseInt(request?.units_remaining, 10);
+    const remaining = Number.isFinite(suppliedRemaining)
+        ? Math.min(required, Math.max(0, suppliedRemaining))
+        : Math.max(0, required - fulfilled);
+    return { required, fulfilled, remaining };
 }
 
 function normalizeRequestFilterValue(value) {
@@ -301,6 +323,7 @@ function buildRequestRows(requests = bloodRequests) {
 
     return requests
         .map((request) => {
+            const unitProgress = requestUnitProgress(request);
 
             // ----------------------------------------------
             // Display Request ID
@@ -396,7 +419,10 @@ function buildRequestRows(requests = bloodRequests) {
 
                     <td>
 
-                        ${request.units_required}
+                        <div class="request-patient">
+                            <strong>${unitProgress.fulfilled} / ${unitProgress.required}</strong>
+                            <span>${unitProgress.remaining} remaining</span>
+                        </div>
 
                     </td>
 
@@ -549,6 +575,7 @@ function renderBloodRequestDetails(request) {
 
     const displayRequestId =
         `BR-${String(request.id).padStart(4, "0")}`;
+    const unitProgress = requestUnitProgress(request);
 
 
     // ======================================================
@@ -763,13 +790,22 @@ function renderBloodRequestDetails(request) {
 
                         <div>
 
-                            <span>
-                                Number of Units
-                            </span>
+                            <span>Units Requested</span>
+                            <strong>${unitProgress.required}</strong>
 
-                            <strong>
-                                ${request.units_required}
-                            </strong>
+                        </div>
+
+                        <div>
+
+                            <span>Units Fulfilled</span>
+                            <strong>${unitProgress.fulfilled}</strong>
+
+                        </div>
+
+                        <div>
+
+                            <span>Units Remaining</span>
+                            <strong>${unitProgress.remaining}</strong>
 
                         </div>
 
@@ -1268,7 +1304,12 @@ function buildRequestStatusActions(request) {
         // IN PROGRESS
         // ==================================================
 
+        case "Open":
+        case "Sent":
         case "In Progress":
+        case "Donor Responded":
+        case "Awaiting Donation":
+        case "Partially Fulfilled":
 
             return `
 
@@ -1296,7 +1337,7 @@ function buildRequestStatusActions(request) {
                     <i data-lucide="check"></i>
 
                     <span>
-                        Mark Fulfilled
+                        Record Donation
                     </span>
 
                 </button>
@@ -1321,20 +1362,6 @@ function buildRequestStatusActions(request) {
                     </span>
 
                 </div>
-
-                <button
-                    type="button"
-                    class="secondary-btn request-status-action"
-                    data-request-status="Pending"
-                >
-
-                    <i data-lucide="rotate-ccw"></i>
-
-                    <span>
-                        Reopen Request
-                    </span>
-
-                </button>
 
             `;
 
@@ -1397,6 +1424,7 @@ async function openCompleteDonationModal(request) {
 
     const displayRequestId =
         `BR-${String(request.id).padStart(4, "0")}`;
+    const unitProgress = requestUnitProgress(request);
 
     // ======================================================
     // CREATE MODAL
@@ -1419,14 +1447,14 @@ async function openCompleteDonationModal(request) {
 
                 <div>
 
-                    <span class="complete-donation-eyebrow">Finalise request</span>
+                    <span class="complete-donation-eyebrow">Record contribution</span>
 
                     <h2 id="completeDonationTitle">
-                        Complete Donation
+                        Record Donation
                     </h2>
 
                     <p>
-                        Record the donor who fulfilled this request.
+                        Add this donor's units. The request is fulfilled only when no units remain.
                     </p>
 
                 </div>
@@ -1462,6 +1490,11 @@ async function openCompleteDonationModal(request) {
                         <i data-lucide="droplet" aria-hidden="true"></i>
                         <span>Blood group</span>
                         <strong>${escapeRequestHtml(request.blood_group)}</strong>
+                    </div>
+                    <div class="donation-summary-item">
+                        <i data-lucide="gauge" aria-hidden="true"></i>
+                        <span>Unit progress</span>
+                        <strong>${unitProgress.fulfilled} / ${unitProgress.required} · ${unitProgress.remaining} left</strong>
                     </div>
                 </section>
 
@@ -1553,6 +1586,25 @@ async function openCompleteDonationModal(request) {
 
                 </div>
 
+                <!-- Units Donated -->
+
+                <div class="form-field">
+
+                    <label for="donationUnits">Units donated</label>
+                    <p class="complete-donation-field-hint">Up to ${unitProgress.remaining} unit(s) may be recorded for this request.</p>
+
+                    <input
+                        id="donationUnits"
+                        type="number"
+                        min="1"
+                        max="${unitProgress.remaining}"
+                        step="1"
+                        value="1"
+                        inputmode="numeric"
+                    >
+
+                </div>
+
                 <!-- Remarks -->
 
                 <div class="form-field">
@@ -1593,7 +1645,7 @@ async function openCompleteDonationModal(request) {
                     id="completeDonationButton"
                 >
 
-                    Complete Donation
+                    Record Donation
 
                 </button>
 
@@ -1630,6 +1682,9 @@ async function openCompleteDonationModal(request) {
 
     const remarksInput =
         document.getElementById("donationRemarks");
+
+    const unitsInput =
+        document.getElementById("donationUnits");
 
     const completeButton =
         document.getElementById("completeDonationButton");
@@ -1944,6 +1999,17 @@ async function openCompleteDonationModal(request) {
         "click",
         async () => {
 
+            const units = Number.parseInt(unitsInput?.value, 10);
+
+            if (!Number.isInteger(units) || units < 1 || units > unitProgress.remaining) {
+
+                showCompletionError(`Enter between 1 and ${unitProgress.remaining} unit(s).`);
+                unitsInput?.focus();
+
+                return;
+
+            }
+
             // ----------------------------------------------
             // Validate donor
             // ----------------------------------------------
@@ -1980,7 +2046,7 @@ async function openCompleteDonationModal(request) {
             completeButton.disabled = true;
 
             completeButton.textContent =
-                "Completing...";
+                "Recording...";
 
             try {
 
@@ -2004,11 +2070,13 @@ async function openCompleteDonationModal(request) {
                                 donationSource === "registered"
                                     ? {
                                         donor_id: selectedDonor.id,
+                                        units,
                                         donation_type: "Voluntary",
                                         remarks: remarksInput.value.trim() || null
                                     }
                                     : {
                                         external_donor_name: externalDonorInput.value.trim(),
+                                        units,
                                         donation_type: "Voluntary",
                                         remarks: remarksInput.value.trim() || null
                                     }
@@ -2076,7 +2144,7 @@ async function openCompleteDonationModal(request) {
                 completeButton.disabled = false;
 
                 completeButton.textContent =
-                    "Complete Donation";
+                    "Record Donation";
 
             }
 
@@ -2744,6 +2812,10 @@ async function renderBloodRequests(
 
                             <option>
                                 In Progress
+                            </option>
+
+                            <option>
+                                Partially Fulfilled
                             </option>
 
                             <option>

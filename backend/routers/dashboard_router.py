@@ -57,7 +57,12 @@ def dashboard_summary(
         for request in blood_requests
         if request.status in (
             "Pending",
+            "Open",
+            "Sent",
             "In Progress",
+            "Donor Responded",
+            "Awaiting Donation",
+            "Partially Fulfilled",
         )
     )
 

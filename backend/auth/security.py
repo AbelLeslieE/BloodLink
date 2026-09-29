@@ -38,13 +38,26 @@ def validate_password_strength(value: str) -> str:
     return value
 
 
-def create_access_token(subject: str, auth_version: int) -> str:
+def create_access_token(
+    subject: str,
+    auth_version: int,
+    session_id: str | None = None,
+    mfa_verified: bool = False,
+) -> str:
     """Create a time-limited access token for an authenticated volunteer."""
     settings = get_settings()
     expires_at = datetime.now(timezone.utc) + timedelta(
         minutes=settings.access_token_expire_minutes
     )
-    payload = {"sub": subject, "ver": auth_version, "exp": expires_at, "purpose": "access"}
+    payload = {
+        "sub": subject,
+        "ver": auth_version,
+        "exp": expires_at,
+        "purpose": "access",
+        "mfa": mfa_verified,
+    }
+    if session_id:
+        payload["sid"] = session_id
     return jwt.encode(
         payload,
         settings.secret_key,
@@ -101,6 +114,29 @@ def get_token_auth_version(token: str) -> int:
     if type(auth_version) is not int or auth_version < 0:
         raise JWTError("Token session version is missing.")
     return auth_version
+
+
+def get_access_token_data(token: str) -> tuple[str, int, str | None, bool]:
+    """Decode all authentication claims with one signature verification."""
+    settings = get_settings()
+    payload = jwt.decode(
+        token,
+        settings.secret_key,
+        algorithms=[settings.jwt_algorithm],
+        options={"require": ["exp"]},
+    )
+    if payload.get("purpose") != "access":
+        raise JWTError("Token is not an access token.")
+    subject = payload.get("sub")
+    auth_version = payload.get("ver")
+    session_id = payload.get("sid")
+    if not isinstance(subject, str) or not subject:
+        raise JWTError("Token subject is missing.")
+    if type(auth_version) is not int or auth_version < 0:
+        raise JWTError("Token session version is missing.")
+    if session_id is not None and (not isinstance(session_id, str) or not session_id):
+        raise JWTError("Token session identifier is invalid.")
+    return subject, auth_version, session_id, bool(payload.get("mfa", False))
 
 
 def get_password_reset_data(token: str) -> tuple[str, int]:

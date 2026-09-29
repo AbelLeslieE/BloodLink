@@ -10,6 +10,9 @@ const passwordInput = document.getElementById("password");
 const togglePassword = document.getElementById("togglePassword");
 const loginButton = form.querySelector("button[type=submit]");
 const loginButtonLabel = loginButton.innerHTML;
+const mfaField = document.getElementById("mfaField");
+const mfaCodeInput = document.getElementById("mfaCode");
+let mfaChallengeActive = false;
 
 if (new URLSearchParams(window.location.search).get("reset") === "success") {
     message.style.color = "#167950";
@@ -74,6 +77,9 @@ form.addEventListener("submit", async (event) => {
 
     formData.append("username", username);
     formData.append("password", password);
+    if (mfaChallengeActive) {
+        formData.append("mfa_code", mfaCodeInput.value.trim());
+    }
 
     try {
 
@@ -96,12 +102,23 @@ form.addEventListener("submit", async (event) => {
 
         if (!response.ok) {
 
+            if (response.status === 428 && data.detail?.code === "MFA_REQUIRED") {
+                mfaChallengeActive = true;
+                mfaField.hidden = false;
+                mfaCodeInput.required = true;
+                message.style.color = "#9f1239";
+                message.textContent = data.detail.message;
+                mfaCodeInput.focus();
+                return;
+            }
+
             message.style.color = "#dc2626";
             message.textContent =
-                data.detail || "Invalid username or password.";
+                (typeof data.detail === "string" ? data.detail : data.detail?.message) || "Invalid username, password, or verification code.";
             if (response.status !== 429) {
-                passwordInput.closest(".input-group").classList.add("is-invalid");
-                passwordInput.focus();
+                const invalidInput = mfaChallengeActive ? mfaCodeInput : passwordInput;
+                invalidInput.closest(".input-group").classList.add("is-invalid");
+                invalidInput.focus();
             }
 
             return;

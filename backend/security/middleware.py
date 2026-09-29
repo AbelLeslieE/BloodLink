@@ -1,8 +1,14 @@
-"""Response protections, bounded bodies, and shared public-endpoint throttling."""
+"""Response protections, bounded bodies, throttling, and mutation auditing."""
+import logging
+
+from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.datastructures import MutableHeaders
 from starlette.concurrency import run_in_threadpool
 from backend.security.rate_limit import consume_limit
+
+
+logger = logging.getLogger(__name__)
 
 
 class SecurityMiddleware:
@@ -70,3 +76,57 @@ class SecurityMiddleware:
                 return await receive()
             return await self.app(scope, bounded_receive, secure_send)
         await self.app(scope, receive, secure_send)
+
+
+class AuditMutationMiddleware:
+    """Record authenticated state changes without retaining request bodies."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+        status_code = 500
+
+        async def capture_status(message):
+            nonlocal status_code
+            if message["type"] == "http.response.start":
+                status_code = message["status"]
+            await send(message)
+
+        await self.app(scope, receive, capture_status)
+        path = scope.get("path", "")
+        if (
+            scope.get("method") not in {"POST", "PUT", "PATCH", "DELETE"}
+            or not path.startswith("/api/")
+            or path.startswith(("/api/auth/", "/api/security/", "/api/admin/technical/"))
+        ):
+            return
+        state = scope.get("state", {})
+        user_id = state.get("audit_user_id")
+        if not user_id:
+            return
+
+        def persist_event():
+            from backend.database import database
+            from backend.database.models import User
+            from backend.services.audit_service import record_audit_event
+            with database.SessionLocal() as session:
+                actor = session.get(User, user_id)
+                record_audit_event(
+                    session,
+                    category="DATA_CHANGE",
+                    action=f"{scope.get('method')} {path}",
+                    result="SUCCESS" if status_code < 400 else "FAILED",
+                    actor=actor,
+                    actor_username=state.get("audit_username"),
+                    request=Request(scope),
+                    details={"status_code": status_code},
+                )
+                session.commit()
+
+        try:
+            await run_in_threadpool(persist_event)
+        except Exception:
+            logger.exception("Unable to persist mutation audit event")

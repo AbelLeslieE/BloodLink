@@ -148,6 +148,12 @@ const navigationConfig = {
                     label: "Users",
                     icon: "user-cog",
                     page: "users"
+                },
+
+                {
+                    label: "Technical Portal",
+                    icon: "shield-check",
+                    page: "techPortal"
                 }
 
             ]

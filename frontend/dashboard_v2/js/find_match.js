@@ -70,6 +70,8 @@ const state = {
 
     availability: [],
 
+    eligibilityPolicy: null,
+
     statistics: {
 
         pending: 0,
@@ -122,6 +124,8 @@ function initializeState() {
     state.selectedDonors.clear();
 
     state.availability = [];
+
+    state.eligibilityPolicy = null;
 
     state.statistics = {
 
@@ -418,6 +422,8 @@ function getFindMatchTemplate() {
                     </div>
 
                 </div>
+
+                    <div id="matchingPolicyNotice" class="matching-policy-notice" hidden></div>
 
                     <div class="donor-panel">
 
@@ -984,6 +990,11 @@ function createDonorCard(donor) {
 
                 </div>
 
+            </div>
+
+            <div class="donor-screening ${donor.screeningPassed ? "passed" : "review"}">
+                <strong>${donor.screeningPassed ? "Recorded checks passed" : "Blood-bank review needed"}</strong>
+                <span>${escapeMatchHtml(donor.screeningNotes.length ? donor.screeningNotes.join(" ") : "Final eligibility still requires blood-centre screening.")}</span>
             </div>
 
             <div class="donor-footer">
@@ -1694,6 +1705,8 @@ async function loadMatchingDonorsFromAPI(requestId) {
 
         const result = await response.json();
 
+        state.eligibilityPolicy = result.eligibility_policy || null;
+
         /*
         ----------------------------------------------------------
         Convert backend response into the UI format expected by
@@ -1727,9 +1740,22 @@ async function loadMatchingDonorsFromAPI(requestId) {
 
             distance: match.donor.district || "Not recorded",
 
-            lastDonation: formatDate(match.donor.last_donation_date)
+            lastDonation: formatDate(match.donor.last_donation_date),
+
+            screeningPassed: Boolean(match.screening?.passed),
+
+            screeningNotes: [...(match.screening?.reasons || []), ...(match.screening?.warnings || [])]
 
         }));
+
+        const policyNotice = document.getElementById("matchingPolicyNotice");
+        if (policyNotice && state.eligibilityPolicy) {
+            const policy = state.eligibilityPolicy;
+            policyNotice.hidden = false;
+            policyNotice.textContent = policy.mode === "ENFORCED"
+                ? `Eligibility policy v${policy.version} is enforced. ${policy.excluded_count} donor(s) were excluded by recorded pre-screening data. Final fitness still requires blood-centre review.`
+                : `Eligibility policy v${policy.version} is advisory. Review donor screening notes before outreach; final fitness remains a blood-centre decision.`;
+        }
 
         state.filteredDonors = [...state.matchingDonors];
 
@@ -2079,6 +2105,8 @@ function resetSelections() {
 
     state.matchingDonors = [];
 
+    state.eligibilityPolicy = null;
+
     state.filteredDonors = [];
 
     updateSelectedCounter();
@@ -2409,5 +2437,6 @@ export {
 let eventAbortController = null;
 
 const MATCHABLE_REQUEST_STATUSES = new Set([
-    "Pending", "Open", "Sent", "In Progress", "Donor Responded", "Awaiting Donation"
+    "Pending", "Open", "Sent", "In Progress", "Donor Responded", "Awaiting Donation",
+    "Partially Fulfilled"
 ]);

@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, TypeVar
 
-from sqlalchemy import select, func, or_, and_
+from sqlalchemy import select, func, or_, and_, update
 from backend.security.tokens import email_token_digest
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
@@ -25,6 +25,7 @@ from backend.database.email_token import EmailToken
 from backend.database.donor_response import DonorResponse
 from backend.config.rewards import POINTS_PER_CONFIRMED_DONATION
 from backend.services.certificate_service import ensure_certificate
+from backend.services import donor_eligibility_service
 
 from backend.database.schemas import (
     BloodRequestCreate,
@@ -654,6 +655,8 @@ def get_eligible_donors(
     Return available donors belonging to compatible blood groups.
     """
 
+    donor_eligibility_service.restore_expired_deferrals(database_session)
+
     statement = (
         select(Donor)
         .where(
@@ -961,24 +964,19 @@ def create_donation_history(
     if blood_request is None:
         raise ValueError("Blood request not found.")
 
-    donation = DonationHistory(
-        donor_id=donor_id,
-        blood_request_id=blood_request_id,
-        hospital_name=blood_request.hospital_name,
-        donation_date=donation_date,
-        units=units,
+    donor = get_donor_by_id(database_session, donor_id)
+    if donor is None:
+        raise ValueError("Donor not found.")
+    donation, _ = confirm_donation_for_request(
+        database_session=database_session,
+        blood_request=blood_request,
+        donor=donor,
+        recorded_by=recorded_by,
         donation_type=donation_type,
         remarks=remarks,
-        recorded_by=recorded_by,
+        units=units,
+        donation_date=donation_date,
     )
-
-    database_session.add(donation)
-
-    _commit_and_refresh(
-        database_session,
-        donation,
-    )
-
     return donation
 # ==========================================================
 # COMPLETE BLOOD REQUEST
@@ -991,6 +989,7 @@ def complete_blood_request(
     recorded_by: int,
     donation_type: str = "Voluntary",
     remarks: str | None = None,
+    units: int = 1,
 ) -> BloodRequest:
     """
     Complete a blood request.
@@ -1013,6 +1012,7 @@ def complete_blood_request(
         recorded_by=recorded_by,
         donation_type=donation_type,
         remarks=remarks,
+        units=units,
     )
     database_session.refresh(blood_request)
     return blood_request
@@ -1025,8 +1025,9 @@ def complete_blood_request_with_external_donor(
     recorded_by: int,
     donation_type: str = "Voluntary",
     remarks: str | None = None,
+    units: int = 1,
 ) -> BloodRequest:
-    """Record an externally fulfilled request without creating a donor account.
+    """Record an external contribution without creating a donor account.
 
     External donors are captured for operational history only. They must not
     alter registered-donor eligibility, points, certificates, or portal data.
@@ -1034,8 +1035,8 @@ def complete_blood_request_with_external_donor(
     clean_name = " ".join(external_donor_name.split())
     if len(clean_name) < 2:
         raise ValueError("External donor name must contain at least 2 characters.")
-    if blood_request.status in {"Fulfilled", "Closed", "Cancelled"}:
-        raise ValueError("This blood request is no longer open for donation confirmation.")
+    if units < 1:
+        raise ValueError("Donation units must be at least 1.")
 
     now = datetime.now(timezone.utc)
     donation = DonationHistory(
@@ -1044,7 +1045,7 @@ def complete_blood_request_with_external_donor(
         blood_request_id=blood_request.id,
         hospital_name=blood_request.hospital_name,
         donation_date=now.date(),
-        units=blood_request.units_required,
+        units=units,
         donation_type=donation_type.strip() or "Voluntary",
         remarks=remarks,
         recorded_by=recorded_by,
@@ -1052,7 +1053,7 @@ def complete_blood_request_with_external_donor(
         status="Donation Confirmed",
     )
     database_session.add(donation)
-    _close_completed_request(database_session, blood_request)
+    _allocate_request_units(database_session, blood_request, units)
 
     try:
         database_session.commit()
@@ -1071,6 +1072,8 @@ def confirm_donation_for_request(
     recorded_by: int,
     donation_type: str = "Voluntary",
     remarks: str | None = None,
+    units: int = 1,
+    donation_date: date | None = None,
 ) -> tuple[DonationHistory, bool]:
     """Confirm one donation and keep every workflow view in sync.
 
@@ -1080,6 +1083,8 @@ def confirm_donation_for_request(
     donation without updating the donor portal.
     """
     from backend.services.donor_matching_service import is_compatible_donor
+    if units < 1:
+        raise ValueError("Donation units must be at least 1.")
     if not is_compatible_donor(blood_request.blood_group, donor.blood_group):
         raise ValueError("The selected donor's blood group is not compatible with this request.")
 
@@ -1091,12 +1096,6 @@ def confirm_donation_for_request(
     )
 
     if existing is not None:
-        _close_completed_request(database_session, blood_request)
-        try:
-            database_session.commit()
-        except SQLAlchemyError:
-            database_session.rollback()
-            raise
         return existing, True
 
     if blood_request.status in {"Fulfilled", "Closed", "Cancelled"}:
@@ -1116,8 +1115,8 @@ def confirm_donation_for_request(
         donor_id=donor.id,
         blood_request_id=blood_request.id,
         hospital_name=blood_request.hospital_name,
-        donation_date=now.date(),
-        units=blood_request.units_required,
+        donation_date=donation_date or now.date(),
+        units=units,
         donation_type=donation_type.strip() or "Voluntary",
         remarks=remarks,
         recorded_by=recorded_by,
@@ -1126,6 +1125,7 @@ def confirm_donation_for_request(
         awarded_at=now,
     )
     database_session.add(donation)
+    _allocate_request_units(database_session, blood_request, units)
 
     # ``total_donations`` is retained for the administration dashboard;
     # ``donation_count`` and ``total_points`` power the donor portal.
@@ -1133,7 +1133,10 @@ def confirm_donation_for_request(
     donor.donation_count += 1
     donor.total_points += POINTS_PER_CONFIRMED_DONATION
     donor.last_donation_date = donation.donation_date
-    donor.status = "Unavailable"
+    donor_eligibility_service.apply_post_donation_deferral(
+        donor,
+        donation.donation_date,
+    )
 
     linked_users = database_session.scalars(
         select(User).where(
@@ -1144,8 +1147,6 @@ def confirm_donation_for_request(
     for account in linked_users:
         account.donation_count += 1
         account.total_points += POINTS_PER_CONFIRMED_DONATION
-
-    _close_completed_request(database_session, blood_request)
 
     try:
         database_session.flush()
@@ -1160,17 +1161,48 @@ def confirm_donation_for_request(
     return donation, False
 
 
-def _close_completed_request(
+def _allocate_request_units(
     database_session: Session,
     blood_request: BloodRequest,
-) -> None:
-    """Mark a fulfilled request and all of its campaigns as completed."""
-    blood_request.status = "Fulfilled"
-    campaigns = database_session.scalars(
-        select(Notification).where(Notification.blood_request_id == blood_request.id)
-    ).all()
-    for campaign in campaigns:
-        campaign.status = "COMPLETED"
+    units: int,
+) -> int:
+    """Atomically apply donated units and derive the request lifecycle state."""
+    if units < 1:
+        raise ValueError("Donation units must be at least 1.")
+    if blood_request.status in {"Fulfilled", "Closed", "Cancelled"}:
+        raise ValueError("This blood request is no longer open for donation confirmation.")
+
+    new_total = database_session.execute(
+        update(BloodRequest)
+        .where(
+            BloodRequest.id == blood_request.id,
+            BloodRequest.status.notin_({"Fulfilled", "Closed", "Cancelled"}),
+            BloodRequest.units_fulfilled + units <= BloodRequest.units_required,
+        )
+        .values(units_fulfilled=BloodRequest.units_fulfilled + units)
+        .returning(BloodRequest.units_fulfilled)
+        .execution_options(synchronize_session="fetch")
+    ).scalar_one_or_none()
+
+    if new_total is None:
+        database_session.refresh(blood_request)
+        if blood_request.status in {"Fulfilled", "Closed", "Cancelled"}:
+            raise ValueError("This blood request is no longer open for donation confirmation.")
+        raise ValueError(
+            f"Only {blood_request.units_remaining} unit(s) remain for this request."
+        )
+
+    blood_request.units_fulfilled = int(new_total)
+    if blood_request.units_fulfilled >= blood_request.units_required:
+        blood_request.status = "Fulfilled"
+        campaigns = database_session.scalars(
+            select(Notification).where(Notification.blood_request_id == blood_request.id)
+        ).all()
+        for campaign in campaigns:
+            campaign.status = "COMPLETED"
+    else:
+        blood_request.status = "Partially Fulfilled"
+    return blood_request.units_fulfilled
 
 
 def get_donation_history(

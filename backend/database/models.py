@@ -109,6 +109,15 @@ class User(Base):
         Integer, default=0, server_default="0", nullable=False
     )
 
+    # The TOTP seed is encrypted at rest. Recovery codes are stored only as
+    # keyed hashes and are consumed individually when used.
+    mfa_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False
+    )
+    mfa_secret_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    mfa_recovery_codes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    mfa_last_counter: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     # Existing accounts default to ACTIVE. New QR registrations remain unable
     # to sign in until their one-time email password setup is completed.
     registration_status: Mapped[str] = mapped_column(
@@ -143,6 +152,128 @@ class User(Base):
     push_subscriptions: Mapped[list["PushSubscription"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
+    )
+
+    sessions: Mapped[list["UserSession"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+
+class UserSession(Base):
+    """One independently revocable authenticated browser session."""
+
+    __tablename__ = "user_sessions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    mfa_verified: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False
+    )
+
+    user: Mapped["User"] = relationship(back_populates="sessions")
+
+
+class AuditLog(Base):
+    """Append-only, tamper-evident record of security and data operations."""
+
+    __tablename__ = "audit_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
+    )
+    actor_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    actor_username: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    category: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
+    result: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    target_type: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    target_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    request_method: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    request_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    details_json: Mapped[str] = mapped_column(Text, default="{}", server_default="{}", nullable=False)
+    integrity_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+
+
+class BackupRecord(Base):
+    """Metadata for an encrypted logical database snapshot."""
+
+    __tablename__ = "backup_records"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    created_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    created_by_username: Mapped[str] = mapped_column(String(100), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    storage_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    checksum_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    table_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+
+class EligibilityPolicy(Base):
+    """Clinician-reviewed operational donor pre-screening policy."""
+
+    __tablename__ = "eligibility_policies"
+
+    # BloodLink currently supports one active policy. Keeping it as a row,
+    # rather than environment variables, makes every reviewed change durable
+    # and auditable.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    enforcement_mode: Mapped[str] = mapped_column(
+        String(20), default="ADVISORY", server_default="ADVISORY", nullable=False
+    )
+    minimum_age_years: Mapped[int] = mapped_column(
+        Integer, default=18, server_default="18", nullable=False
+    )
+    maximum_age_years: Mapped[int] = mapped_column(
+        Integer, default=65, server_default="65", nullable=False
+    )
+    minimum_weight_kg: Mapped[Decimal] = mapped_column(
+        Numeric(5, 2), default=Decimal("45.00"), server_default="45.00", nullable=False
+    )
+    require_complete_profile: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False
+    )
+    reviewer_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    review_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    source_reference: Mapped[str] = mapped_column(Text, nullable=False)
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1", nullable=False)
+    updated_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
 
@@ -320,6 +451,20 @@ class Donor(Base):
         nullable=False,
     )
 
+    # A temporary deferral blocks matching until this date. The row is
+    # automatically returned to Available when the date arrives; the date and
+    # reason remain as useful operational context for administrators.
+    deferred_until: Mapped[date | None] = mapped_column(
+        Date,
+        nullable=True,
+        index=True,
+    )
+
+    deferral_reason: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+
     total_points: Mapped[int] = mapped_column(
         Integer, default=0, server_default="0", nullable=False
     )
@@ -452,6 +597,13 @@ class BloodRequest(Base):
         nullable=False,
     )
 
+    units_fulfilled: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default="0",
+        nullable=False,
+    )
+
     required_date: Mapped[date] = mapped_column(
         Date,
         nullable=False,
@@ -556,6 +708,11 @@ class BloodRequest(Base):
         back_populates="blood_request",
         cascade="all, delete-orphan",
     )
+
+    @property
+    def units_remaining(self) -> int:
+        """Return the unfilled request quantity without exposing negatives."""
+        return max(0, self.units_required - self.units_fulfilled)
 
 
 

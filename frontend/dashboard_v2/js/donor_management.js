@@ -229,6 +229,7 @@ function getDonorModuleTemplate() {
 
                                 <option>Available</option>
                                 <option>Unavailable</option>
+                                <option>Deferred</option>
 
                             </select>
 
@@ -1557,7 +1558,35 @@ function getEditDonorModalTemplate() {
                                             Unavailable
                                         </option>
 
+                                        <option value="Deferred">
+                                            Deferred until a date
+                                        </option>
+
                                     </select>
+
+                                </label>
+
+                                <label class="donor-form-field">
+
+                                    <span>Next Eligible Date</span>
+
+                                    <input
+                                        type="date"
+                                        name="deferred_until"
+                                    >
+
+                                </label>
+
+                                <label class="donor-form-field donor-form-field-wide">
+
+                                    <span>Deferral Reason</span>
+
+                                    <textarea
+                                        name="deferral_reason"
+                                        rows="3"
+                                        maxlength="500"
+                                        placeholder="Required for a temporary deferral"
+                                    ></textarea>
 
                                 </label>
 
@@ -2628,6 +2657,11 @@ function createDonorRow(donor) {
             donor.status
         );
 
+    const statusLabel =
+        donor.status === "Deferred" && donor.deferred_until
+            ? `Deferred until ${formatDate(donor.deferred_until)}`
+            : donor.status;
+
     return `
 
         <tr>
@@ -2695,7 +2729,7 @@ function createDonorRow(donor) {
                 <span class="donor-status ${statusClass}">
 
                     ${displayValue(
-                        donor.status
+                        statusLabel
                     )}
 
                 </span>
@@ -3367,6 +3401,20 @@ function renderViewDonor(
                         donor.status
                     )
                 ],
+
+                [
+                    "Deferral Eligible Date",
+                    formatDate(
+                        donor.deferred_until
+                    )
+                ],
+
+                [
+                    "Deferral Reason",
+                    displayValue(
+                        donor.deferral_reason
+                    )
+                ],
             ]
         )}
 
@@ -3752,6 +3800,18 @@ function populateEditDonorForm(
         form,
         "status",
         donor.status || "Available"
+    );
+
+    setFormValue(
+        form,
+        "deferred_until",
+        donor.status === "Deferred" ? donor.deferred_until : null
+    );
+
+    setFormValue(
+        form,
+        "deferral_reason",
+        donor.status === "Deferred" ? donor.deferral_reason : null
     );
 
 }
@@ -4296,6 +4356,10 @@ function getStatusClass(
         return "unavailable";
     }
 
+    if (normalized === "deferred") {
+        return "deferred";
+    }
+
     return "other";
 }
 
@@ -4533,6 +4597,45 @@ async function handleEditDonorSubmit(
         form.elements.namedItem(
             "status"
         )?.value || "Available";
+
+    donorPayload.deferred_until = optionalString(
+        form.elements.namedItem(
+            "deferred_until"
+        )?.value
+    );
+
+    donorPayload.deferral_reason = optionalString(
+        form.elements.namedItem(
+            "deferral_reason"
+        )?.value
+    );
+
+    if (donorPayload.status === "Deferred") {
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const eligibleDate = donorPayload.deferred_until
+            ? new Date(`${donorPayload.deferred_until}T00:00:00`)
+            : null;
+
+        if (!eligibleDate || Number.isNaN(eligibleDate.getTime()) || eligibleDate <= today) {
+            showEditDonorMessage("Choose a future next-eligible date for this deferral.");
+            return;
+        }
+
+        if (!donorPayload.deferral_reason) {
+            showEditDonorMessage("Enter the reason for this donor deferral.");
+            return;
+        }
+
+    }
+
+    else {
+
+        donorPayload.deferred_until = null;
+        donorPayload.deferral_reason = null;
+
+    }
 
 
     const validationError =

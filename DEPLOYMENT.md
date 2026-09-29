@@ -57,12 +57,21 @@ deploy (that logs everyone out).
 | ALLOWED_HOSTS | Every public hostname, comma-separated |
 | DEFAULT_VOLUNTEER_USERNAME | Non-guessable bootstrap admin name (not volunteer/admin) |
 | DEFAULT_VOLUNTEER_PASSWORD | 16+ character initial admin password; remove after the first boot |
+| DONOR_DEFERRAL_DAYS_MALE | Clinician-reviewed whole-blood interval; default 90 |
+| DONOR_DEFERRAL_DAYS_FEMALE | Clinician-reviewed whole-blood interval; default 120 |
+| DONOR_DEFERRAL_DAYS_OTHER | Conservative interval for other/unspecified profiles; default 120 |
 
 Render supplies PORT and RENDER_EXTERNAL_URL. With blank BACKEND_URL/FRONTEND_URL,
 both use that HTTPS origin. For a custom domain, set both URLs to its HTTPS origin
 and include every verified custom domain plus the onrender.com hostname in
 ALLOWED_HOSTS. Render can send health checks to any verified custom domain.
 Do not copy the local .env into Render; Render ignores it.
+
+The donor deferral defaults follow India's [National Standards for Blood Centres](https://clinicalestablishments.mohfw.gov.in/sites/default/files/2022-07/1491_0.pdf)
+for whole-blood donation. Before production use, the responsible blood-bank
+clinician must review these settings and the final eligibility workflow. Changing
+the environment values affects future confirmed donations; it does not rewrite
+already recorded next-eligible dates.
 
 postgres://, postgresql:// and postgresql+psycopg:// URLs all select the installed
 psycopg 3 driver. Password escaping and existing query parameters are preserved.
@@ -130,7 +139,8 @@ provide all secure-context PWA/push features.
    prints nothing (no database file anywhere in history).
 2. Render environment: APP_ENV=production, random SECRET_KEY, PostgreSQL DATABASE_URL,
    ALLOWED_HOSTS, non-guessable DEFAULT_VOLUNTEER_USERNAME, 16+ character
-   DEFAULT_VOLUNTEER_PASSWORD, RESEND_API_KEY and EMAIL_FROM.
+   DEFAULT_VOLUNTEER_PASSWORD, RESEND_API_KEY, EMAIL_FROM, a dedicated
+   BACKUP_ENCRYPTION_KEY, and persistent BACKUP_DIRECTORY storage.
 3. First boot: the log shows `Security posture: production=True docs_disabled=True`.
 4. Sign in as the bootstrap administrator, change the password from Settings →
    Security (this signs every session out), then remove DEFAULT_VOLUNTEER_PASSWORD
@@ -138,10 +148,18 @@ provide all secure-context PWA/push features.
    `bootstrap_password_configured=False`.
 5. Run the proxy-trust check with `GET /api/admin/diagnostics/request` described above.
 6. Enable two-factor authentication on the Render and GitHub accounts themselves.
+7. Open BloodLink's Technical Portal, enroll the administrator in MFA, create and
+   verify an encrypted backup, and download a protected recovery copy. Test recovery
+   in an isolated staging environment once guarded restore tooling is available.
+8. In Technical Portal → Eligibility rules, keep the policy advisory while donor
+   records are cleaned up. Have the responsible medical officer review the local
+   SOP and displayed impact counts, record that review, and only then switch to
+   enforced mode. The software remains pre-screening; final fitness is decided at
+   the blood centre.
 
 ## Verification and rollout
 
-Latest local verification: 79 tests passed (one framework deprecation warning).
+Latest local verification: 169 tests passed (one framework deprecation warning).
 Frontend XSS checks, Python compilation and dependency consistency checks passed.
 Windows runtime tested here: Python 3.11.0; Render's configured 3.11.15/Linux
 runtime has not been executed here. Upgrade the old local Python before production use.
@@ -159,5 +177,5 @@ Recheck TLS, custom-domain cookies, proxy IPs and network access controls. Revie
 the remaining production security blockers in SECURITY.md.
 
 render.yaml is optional for a NEW service and can create a billable starter
-service if you apply it. It does not create or replace a database. No deployment,
+service and persistent backup disk if you apply it. It does not create or replace a database. No deployment,
 purchase, secret rotation or real database conversion is done merely by adding it.

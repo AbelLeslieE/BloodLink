@@ -1,4 +1,5 @@
 import { authenticatedFetch, logoutUser } from "./api.js";
+import { navigate } from "./router.js";
 
 function escapeSettingsHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, (char) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[char]));
@@ -344,15 +345,7 @@ export function loadSettings() {
 
                         <span>Two Factor Authentication</span>
 
-                        <label class="switch">
-
-                            <input
-                                id="twoFactor"
-                                type="checkbox">
-
-                            <span class="slider"></span>
-
-                        </label>
+                        <button id="twoFactor" class="btn-secondary" type="button">Manage</button>
 
                     </div>
 
@@ -925,25 +918,16 @@ function initializeSecurity(){
 
         sessions.addEventListener("click",()=>{
 
-            showToast(
-
-                "Active Sessions",
-
-                "Session listing is not implemented. Signing out revokes this account's active sessions.",
-
-                "fa-laptop"
-
-            );
+            navigate("techPortal");
 
         });
 
     }
 
     if(twoFactor){
-        // A local preference is not MFA. Never display a false protection claim.
-        twoFactor.checked = false;
-        twoFactor.disabled = true;
-        twoFactor.title = "MFA is not configured. A real second-factor service is required.";
+        twoFactor.addEventListener("click",()=>{
+            navigate("techPortal");
+        });
     }
 
 }
@@ -1121,37 +1105,7 @@ function initializeBackup(){
 
         backupButton.addEventListener("click",function(){
 
-            const originalText =
-                this.innerHTML;
-
-            this.disabled = true;
-
-            this.innerHTML = `
-
-                <i class="fa-solid fa-spinner fa-spin"></i>
-
-                Creating Backup...
-
-            `;
-
-            setTimeout(()=>{
-
-                this.disabled = false;
-
-                this.innerHTML =
-                    originalText;
-
-                showToast(
-
-                    "Backup Complete",
-
-                    "BloodLink backup created successfully.",
-
-                    "fa-cloud-arrow-up"
-
-                );
-
-            },2500);
+            navigate("techPortal");
 
         });
 
@@ -1161,15 +1115,7 @@ function initializeBackup(){
 
         exportButton.addEventListener("click",()=>{
 
-            showToast(
-
-                "Export Started",
-
-                "Preparing BloodLink data for export.",
-
-                "fa-file-export"
-
-            );
+            navigate("techPortal");
 
         });
 

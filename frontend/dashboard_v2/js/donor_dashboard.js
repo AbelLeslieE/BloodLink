@@ -56,6 +56,8 @@ async function loadDashboard() {
     document.querySelector("#profile").innerHTML = [
         ["Blood group", summary.donor.blood_group], ["Email", summary.donor.email],
         ["Phone", summary.donor.phone], ["Department", summary.donor.department || "Not provided"],
+        ["Availability", summary.donor.status],
+        ["Next eligible", summary.donor.status === "Deferred" ? summary.donor.deferred_until : "Available now"],
     ].map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
     if (requestsResult.status === "fulfilled" && requestsResult.value) {
         renderRequests(requestsResult.value);
@@ -89,7 +91,7 @@ async function loadDashboard() {
 
 function renderRequests(requests) {
     const container = document.querySelector("#requests");
-    container.innerHTML = requests.length ? requests.map((request) => `<article id="request-${request.id}" class="request" tabindex="-1"><h3>${escapeHtml(request.blood_group)} needed · ${escapeHtml(request.priority)}</h3><p>${escapeHtml(request.message)}</p><p class="meta">${escapeHtml(request.hospital_location)} · ${escapeHtml(request.required_date)} · ${request.units_required} unit(s)</p><p class="status">${escapeHtml(request.donor_status)}</p>${request.response || request.donor_status === "Points Awarded" ? "" : `<div class="actions"><button class="yes" data-request="${request.id}" data-response="Yes">Yes, I am available</button><button class="no" data-request="${request.id}" data-response="No">No</button></div>`}</article>`).join("") : '<p class="empty">No matched open requests at the moment.</p>';
+    container.innerHTML = requests.length ? requests.map((request) => `<article id="request-${request.id}" class="request" tabindex="-1"><h3>${escapeHtml(request.blood_group)} needed · ${escapeHtml(request.priority)}</h3><p>${escapeHtml(request.message)}</p><p class="meta">${escapeHtml(request.hospital_location)} · ${escapeHtml(request.required_date)} · ${Number(request.units_remaining ?? request.units_required)} of ${Number(request.units_required)} unit(s) remaining</p><p class="status">${escapeHtml(request.donor_status)}</p>${request.response || request.donor_status === "Points Awarded" ? "" : `<div class="actions"><button class="yes" data-request="${request.id}" data-response="Yes">Yes, I am available</button><button class="no" data-request="${request.id}" data-response="No">No</button></div>`}</article>`).join("") : '<p class="empty">No matched open requests at the moment.</p>';
     container.querySelectorAll("button[data-request]").forEach((button) => button.addEventListener("click", async () => {
         button.disabled = true;
         const response = await authFetch(`/api/donor-dashboard/requests/${button.dataset.request}/response`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({response: button.dataset.response}) });

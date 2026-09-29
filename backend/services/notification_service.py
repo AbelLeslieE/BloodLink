@@ -22,7 +22,7 @@ from backend.database import crud
 from backend.database.models import BloodRequest, Donor
 from backend.database.notification import Notification
 
-from backend.services import email_service
+from backend.services import donor_eligibility_service, email_service
 
 
 def _send_to_recipient(
@@ -32,6 +32,11 @@ def _send_to_recipient(
 ) -> bool:
     """Send a new, one-time response link to an existing campaign recipient."""
     donor = recipient.donor
+    if not donor_eligibility_service.is_donor_match_allowed(database_session, donor):
+        recipient.status = "INELIGIBLE"
+        recipient.responded_at = None
+        database_session.commit()
+        return False
     token = email_service.generate_email_token()
     email_token = crud.create_email_token(
         database_session=database_session,
@@ -206,11 +211,21 @@ def resend_pending_recipients(
     notification: Notification,
 ) -> tuple[int, int]:
     """Resend a campaign only to donors who have not responded yet."""
-    pending_recipients = [
+    unresolved_recipients = [
         recipient
         for recipient in crud.get_notification_recipients(database_session, notification.id)
         if recipient.status in {"PENDING", "DELIVERY_FAILED"}
     ]
+    pending_recipients = []
+    for recipient in unresolved_recipients:
+        if donor_eligibility_service.is_donor_match_allowed(database_session, recipient.donor):
+            pending_recipients.append(recipient)
+        else:
+            recipient.status = "INELIGIBLE"
+            recipient.responded_at = None
+    if len(pending_recipients) != len(unresolved_recipients):
+        database_session.commit()
+        refresh_statistics(database_session, notification)
     successful_deliveries = sum(
         _send_to_recipient(database_session, notification.blood_request, recipient)
         for recipient in pending_recipients

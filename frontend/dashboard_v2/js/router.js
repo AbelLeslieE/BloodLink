@@ -46,7 +46,9 @@ const AVAILABLE_PAGES = new Set([
 
     "profile",
 
-    "settings"
+    "settings",
+
+    "techPortal"
 
 ]);
 

@@ -163,24 +163,24 @@ def create_donation(
             detail="Donor blood group is not compatible with this blood request.",
         )
 
-    donation_record = crud.create_donation_history(
-        database_session=database_session,
-        donor_id=donation.donor_id,
-        blood_request_id=donation.blood_request_id,
-        donation_date=donation.donation_date,
-        units=donation.units,
-        donation_type=donation.donation_type,
-        remarks=donation.remarks,
-        recorded_by=current_user.id,
-    )
-
-    crud.update_blood_request_status(
-        database_session,
-        blood_request,
-        "Fulfilled",
-    )
+    try:
+        donation_record = crud.create_donation_history(
+            database_session=database_session,
+            donor_id=donation.donor_id,
+            blood_request_id=donation.blood_request_id,
+            donation_date=donation.donation_date,
+            units=donation.units,
+            donation_type=donation.donation_type,
+            remarks=donation.remarks,
+            recorded_by=current_user.id,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
 
     return {
         "message": "Donation recorded successfully.",
         "donation_id": donation_record.id,
+        "units_fulfilled": blood_request.units_fulfilled,
+        "units_remaining": blood_request.units_remaining,
+        "request_status": blood_request.status,
     }

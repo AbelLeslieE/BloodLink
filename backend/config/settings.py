@@ -65,6 +65,9 @@ class Settings:
     vapid_public_key: str
     vapid_private_key: str
     vapid_subject: str
+    donor_deferral_days_male: int = 90
+    donor_deferral_days_female: int = 120
+    donor_deferral_days_other: int = 120
     on_render: bool = False
     production: bool = False
     allowed_hosts: tuple[str, ...] = ("localhost", "127.0.0.1", "testserver")
@@ -198,6 +201,12 @@ def get_settings() -> Settings:
         vapid_public_key=os.getenv("VAPID_PUBLIC_KEY", "").strip(),
         vapid_private_key=os.getenv("VAPID_PRIVATE_KEY", "").strip(),
         vapid_subject=os.getenv("VAPID_SUBJECT", "").strip(),
+        # National Standards for Blood Centres list 90 days for male and
+        # 120 days for female whole-blood donors. Deployments must have their
+        # responsible blood-bank clinician review these configurable values.
+        donor_deferral_days_male=_positive_integer("DONOR_DEFERRAL_DAYS_MALE", 90),
+        donor_deferral_days_female=_positive_integer("DONOR_DEFERRAL_DAYS_FEMALE", 120),
+        donor_deferral_days_other=_positive_integer("DONOR_DEFERRAL_DAYS_OTHER", 120),
     )
 def get_default_volunteer_credentials() -> DefaultVolunteerCredentials:
     """Load initial volunteer credentials."""

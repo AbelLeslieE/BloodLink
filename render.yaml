@@ -17,6 +17,13 @@ services:
         value: HS256
       - key: SECRET_KEY
         generateValue: true
+      # Review these whole-blood intervals with the responsible clinician.
+      - key: DONOR_DEFERRAL_DAYS_MALE
+        value: 90
+      - key: DONOR_DEFERRAL_DAYS_FEMALE
+        value: 120
+      - key: DONOR_DEFERRAL_DAYS_OTHER
+        value: 120
       # Render's proxy reaches the app over its private network. Trusting these
       # ranges gives each visitor their own rate-limit identity; verify with
       # GET /api/admin/diagnostics/request after deploying (see DEPLOYMENT.md).
@@ -27,6 +34,11 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
+      # Encrypted Technical Portal backups. Keep this stable across deploys.
+      - key: BACKUP_ENCRYPTION_KEY
+        sync: false
+      - key: BACKUP_DIRECTORY
+        value: /var/data/bloodlink-backups
       # Bootstrap administrator: a non-guessable username and a 16+ character
       # password. Remove DEFAULT_VOLUNTEER_PASSWORD after the first successful boot.
       - key: DEFAULT_VOLUNTEER_USERNAME
@@ -37,3 +49,7 @@ services:
         sync: false
       - key: EMAIL_FROM
         sync: false
+    disk:
+      name: bloodlink-backups
+      mountPath: /var/data/bloodlink-backups
+      sizeGB: 1

@@ -4,8 +4,10 @@
 
 Read [SECURITY.md](SECURITY.md) before deployment. Security hardening and SQLCipher
 support are implemented and regression-tested, but the existing local database is
-**not yet encrypted**. Production encryption/key recovery, administrator MFA and an
-independent deployed-system penetration test are still required before sensitive use.
+**not yet encrypted**. TOTP MFA, tracked sessions, signed audit events, and encrypted
+logical backups are implemented, but production MFA enforcement, database-encryption
+activation, tested recovery, and an independent deployed-system penetration test are
+still required before sensitive use.
 Install `requirements-security.txt` for SQLCipher, apply `python -m alembic upgrade head`,
 and follow the production configuration in that document. Existing sessions must sign
 in again after this update; original passwords and donor/patient records are retained.
@@ -80,14 +82,45 @@ BloodLink/
 ## Current Status
 
 The project includes administrator workflows, donor matching and notifications, secure
-donor accounts, a donor dashboard, rewards, and automatically issued donation certificates.
+donor accounts, a donor dashboard, rewards, automatically issued donation certificates,
+and multi-donor unit-based fulfilment for blood requests.
+
+Confirmed whole-blood donations also start a time-bound donor deferral. The
+default recovery interval is 90 days for male donors and 120 days for female or
+other/unspecified donor profiles, following India's [National Standards for Blood
+Centres](https://clinicalestablishments.mohfw.gov.in/sites/default/files/2022-07/1491_0.pdf).
+Deferred donors are automatically restored on their eligible date and
+are excluded from matching and outreach until then. Deployments must have their
+responsible blood-bank clinician review the configurable intervals and all final
+eligibility decisions.
+
+The Technical Portal also contains a versioned donor pre-screening policy. It
+starts in advisory mode and uses the national age (18–65), weight (45 kg),
+haemoglobin (12.5 g/dL), and blood-pressure criteria as a minimum baseline.
+Enforcement requires a recorded medical-officer review and may make thresholds
+stricter, never looser. This is an operational matching safeguard only; the
+blood centre still performs the questionnaire, examination, testing, and final
+fitness decision.
+
+## Technical Portal
+
+Administrators can open **Technical Portal** from the dashboard to manage signed
+audit logs, encrypted backups, authenticator-app MFA, recovery codes, active
+sessions, and reviewed donor eligibility rules. Production backup creation requires both `BACKUP_ENCRYPTION_KEY` and a
+persistent `BACKUP_DIRECTORY`; see `.env.example` and `DEPLOYMENT.md`. Backup
+restore remains intentionally unavailable until the guarded recovery workflow is
+implemented and reviewed.
 
 ## Donor rewards and verification
 
 BloodLink now treats a **Yes** response as willingness only. It never awards
 points until an administrator confirms the completed donation. A confirmation
-creates one donation-history record per donor and blood request, awards the
-configured 100 points, and cannot be repeated for that same pair.
+creates one donation-history record per donor and blood request, stores that
+donor's actual unit contribution, awards the configured 100 points, and cannot
+be repeated for that same pair. Multi-unit requests remain partially fulfilled
+until the confirmed contributions add up to all required units. Confirmation
+also records the donor's next eligible date and temporarily removes them from
+matching, email, push, and donor-response workflows.
 
 Before starting the application, configure the required environment variables
 including `DEFAULT_VOLUNTEER_PASSWORD`, then apply the schema with:

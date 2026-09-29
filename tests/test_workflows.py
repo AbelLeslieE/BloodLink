@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from io import BytesIO
 import os
 import secrets
@@ -7,7 +7,9 @@ from alembic.config import Config
 from openpyxl import Workbook, load_workbook
 from sqlalchemy import select, text
 from backend.config.settings import get_settings
-from backend.database.models import BloodRequest, Donor, User, DonationHistory
+from backend.database.models import BloodRequest, Donor, User, DonationHistory, Notification
+from backend.database.email_token import EmailToken
+from backend.database.notification_recipient import NotificationRecipient
 from backend.security.database import create_database_engine
 from backend.auth.security import create_password_reset_token
 from backend.services.donor_matching_service import (
@@ -233,6 +235,154 @@ def test_request_match_response_confirmation_rewards_and_certificate(system):
         assert client.get(f"/api/donation-history/export/{kind}", headers=tokens["admin"]).status_code == 200
 
 
+def test_multi_unit_request_tracks_each_donor_contribution(system):
+    client, sessions, tokens = system
+    payload = blood_request()
+    payload["units_required"] = 3
+    created = client.post("/api/blood-requests", json=payload, headers=tokens["admin"])
+    assert created.status_code == 201, created.text
+    request_id = created.json()["id"]
+
+    first = client.post(
+        f"/api/blood-requests/{request_id}/complete",
+        json={"donor_id": 1, "units": 1},
+        headers=tokens["admin"],
+    )
+    assert first.status_code == 200, first.text
+    assert first.json()["status"] == "Partially Fulfilled"
+    assert first.json()["units_fulfilled"] == 1
+    assert first.json()["units_remaining"] == 2
+
+    second = client.post(
+        f"/api/blood-requests/{request_id}/complete",
+        json={"donor_id": 2, "units": 2},
+        headers=tokens["admin"],
+    )
+    assert second.status_code == 200, second.text
+    assert second.json()["status"] == "Fulfilled"
+    assert second.json()["units_fulfilled"] == 3
+    assert second.json()["units_remaining"] == 0
+
+    with sessions() as db:
+        donations = db.scalars(
+            select(DonationHistory).where(DonationHistory.blood_request_id == request_id)
+        ).all()
+        assert sorted(donation.units for donation in donations) == [1, 2]
+        assert sum(donation.units for donation in donations) == 3
+        assert all(donation.points_awarded == 100 for donation in donations)
+
+
+def test_multi_unit_request_rejects_overfill_and_manual_fulfilment(system):
+    client, sessions, tokens = system
+    payload = blood_request()
+    payload["units_required"] = 2
+    created = client.post("/api/blood-requests", json=payload, headers=tokens["admin"])
+    assert created.status_code == 201, created.text
+    request_id = created.json()["id"]
+
+    manual = client.patch(
+        f"/api/blood-requests/{request_id}/status",
+        json={"status": "Fulfilled"},
+        headers=tokens["admin"],
+    )
+    assert manual.status_code == 409
+
+    overfill = client.post(
+        f"/api/blood-requests/{request_id}/complete",
+        json={"external_donor_name": "External Test Donor", "units": 3},
+        headers=tokens["admin"],
+    )
+    assert overfill.status_code == 400
+    assert "2 unit(s) remain" in overfill.json()["detail"]
+
+    with sessions() as db:
+        request = db.get(BloodRequest, request_id)
+        assert request.units_fulfilled == 0
+        assert request.status == "Pending"
+        assert db.scalar(
+            select(DonationHistory.id).where(DonationHistory.blood_request_id == request_id)
+        ) is None
+
+
+def test_closing_outreach_does_not_falsely_fulfil_blood_request(system):
+    client, sessions, tokens = system
+    with sessions.begin() as db:
+        request = BloodRequest(
+            patient_name="Outreach Patient", case_details="Outreach close regression",
+            blood_group="A+", units_required=2,
+            required_date=date.today() + timedelta(days=1), priority="Urgent",
+            hospital_name="Outreach Hospital", hospital_location="Test City",
+            contact_person="Test Contact", contact_phone="9999900060", created_by=1,
+            status="Awaiting Donation",
+        )
+        db.add(request)
+        db.flush()
+        campaign = Notification(
+            blood_request_id=request.id,
+            title="A+ donor outreach",
+            status="ACTIVE",
+        )
+        db.add(campaign)
+        db.flush()
+        request_id, campaign_id = request.id, campaign.id
+
+    closed = client.post(
+        f"/api/notifications/{campaign_id}/complete",
+        headers=tokens["admin"],
+    )
+    assert closed.status_code == 200, closed.text
+    assert closed.json()["notification_status"] == "COMPLETED"
+    assert closed.json()["request_status"] == "In Progress"
+    assert closed.json()["units_fulfilled"] == 0
+    assert closed.json()["units_remaining"] == 2
+
+    with sessions() as db:
+        request = db.get(BloodRequest, request_id)
+        assert request.status == "In Progress"
+        assert request.units_fulfilled == 0
+
+
+def test_closed_outreach_rejects_old_email_response_links(system):
+    client, sessions, _ = system
+    with sessions.begin() as db:
+        request = BloodRequest(
+            patient_name="Closed Link Patient", case_details="Closed link regression",
+            blood_group="A+", units_required=2,
+            required_date=date.today() + timedelta(days=1), priority="Normal",
+            hospital_name="Closed Link Hospital", hospital_location="Test City",
+            contact_person="Test Contact", contact_phone="9999900061", created_by=1,
+        )
+        db.add(request)
+        db.flush()
+        campaign = Notification(
+            blood_request_id=request.id,
+            title="Closed donor outreach",
+            status="COMPLETED",
+        )
+        token = EmailToken(
+            token="closed-outreach-token",
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+        )
+        db.add_all([campaign, token])
+        db.flush()
+        db.add(NotificationRecipient(
+            notification_id=campaign.id,
+            donor_id=1,
+            email_token_id=token.id,
+            email="donor1@example.org",
+        ))
+
+    result = client.post("/email/accept/closed-outreach-token")
+    assert result.status_code == 200
+    assert "Link Expired" in result.text
+    with sessions() as db:
+        token = db.scalar(select(EmailToken).where(EmailToken.token == "closed-outreach-token"))
+        assert token.used is False
+        assert db.scalar(select(DonationHistory.id).where(
+            DonationHistory.blood_request_id == request.id
+        )) is None
+
+
 def test_donation_history_filters_are_available(system):
     client, _, tokens = system
     response = client.get("/api/donation-history", headers=tokens["admin"])
@@ -274,7 +424,7 @@ def test_alembic_on_encrypted_database(tmp_path, monkeypatch):
         command.upgrade(Config("alembic.ini"), "head")
         engine = create_database_engine(get_settings())
         with engine.connect() as connection:
-            assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar() == "d7e8f9a0b1c2"
+            assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar() == "c8d9e0f1a2b3"
             assert connection.execute(text("SELECT COUNT(*) FROM security_rate_limits")).scalar() == 0
         engine.dispose()
     finally:

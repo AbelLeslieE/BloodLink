@@ -10,10 +10,11 @@ from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError as JWTError
 from sqlalchemy.orm import Session
 
-from backend.auth.security import get_token_auth_version, get_token_subject
+from backend.auth.security import get_access_token_data
 from backend.database import crud
 from backend.database.database import get_db
 from backend.database.models import User
+from backend.services.session_service import active_session, as_utc, utcnow
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
@@ -45,14 +46,26 @@ def get_current_user(
     if not token:
         raise _authentication_exception()
     try:
-        username = get_token_subject(token)
-        token_auth_version = get_token_auth_version(token)
+        username, token_auth_version, session_id, _ = get_access_token_data(token)
     except JWTError as error:
         raise _authentication_exception() from error
 
     user = crud.get_user_by_username(database_session, username)
     if user is None or not user.active or user.auth_version != token_auth_version:
         raise _authentication_exception()
+
+    request.state.audit_user_id = user.id
+    request.state.audit_username = user.username
+    request.state.session_id = session_id
+    request.state.user_session = None
+    if session_id:
+        tracked_session = active_session(database_session, session_id, user.id)
+        if tracked_session is None:
+            raise _authentication_exception()
+        request.state.user_session = tracked_session
+        if (utcnow() - as_utc(tracked_session.last_seen_at)).total_seconds() >= 300:
+            tracked_session.last_seen_at = utcnow()
+            database_session.commit()
 
     return user
 

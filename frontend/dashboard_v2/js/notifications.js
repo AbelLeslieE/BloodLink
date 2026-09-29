@@ -1846,11 +1846,11 @@ function renderNotificationDetails() {
 
                 <div class="info-card glass-inner-card">
 
-                    <span>Units</span>
+                    <span>Unit Progress</span>
 
                     <strong>
 
-                        ${request.units}
+                        ${request.unitsFulfilled} / ${request.units} supplied · ${request.unitsRemaining} remaining
 
                     </strong>
 
@@ -2062,7 +2062,7 @@ function renderNotificationDetails() {
                     id="markCompletedBtn"
                     class="primary-btn">
 
-                    Mark Completed
+                    Close Outreach
 
                 </button>
 
@@ -2172,6 +2172,13 @@ function renderRecipientTable() {
 
             badgeClass = "declined";
             badgeIcon = "❌";
+
+        }
+
+        else if (recipient.response === "INELIGIBLE") {
+
+            badgeClass = "declined";
+            badgeIcon = "⏸";
 
         }
 
@@ -2616,6 +2623,10 @@ function normalizeRecipientResponse(status) {
         return "DECLINED";
     }
 
+    if (normalized === "INELIGIBLE") {
+        return "INELIGIBLE";
+    }
+
     /* Missing, legacy, or delivery-only states are not a donor decision. */
     return "PENDING";
 
@@ -2776,6 +2787,10 @@ async function loadNotificationsFromAPI({ selectedNotificationId = null } = {}) 
                 bloodGroup: campaign.blood_request.blood_group,
 
                 units: campaign.blood_request.units_required,
+
+                unitsFulfilled: campaign.blood_request.units_fulfilled || 0,
+
+                unitsRemaining: campaign.blood_request.units_remaining ?? campaign.blood_request.units_required,
 
                 district: campaign.blood_request.hospital_location,
 
@@ -2970,18 +2985,18 @@ async function exportRequestReport(requestId) {
 
 
 /* ==========================================================
-   25. MARK REQUEST COMPLETED
+   25. CLOSE DONOR OUTREACH
 ========================================================== */
 
 async function markRequestCompleted(requestId) {
 
     try {
 
-        if (!window.confirm("Mark this blood request as completed? It will no longer be open for donor responses.")) {
+        if (!window.confirm("Close this donor outreach campaign? The blood request will remain open until all required units are recorded.")) {
             return;
         }
 
-        await runRequestAction("markCompletedBtn", "Completing...", async () => {
+        await runRequestAction("markCompletedBtn", "Closing...", async () => {
 
             const response = await authenticatedFetch(
                 `${API.notifications}/${requestId}/complete`,
@@ -2989,7 +3004,7 @@ async function markRequestCompleted(requestId) {
             );
 
             if (!response?.ok) {
-                throw new Error(await getResponseError(response, "Unable to complete the request."));
+                throw new Error(await getResponseError(response, "Unable to close donor outreach."));
             }
 
             await loadNotificationsFromAPI({ selectedNotificationId: requestId });
@@ -3000,7 +3015,7 @@ async function markRequestCompleted(requestId) {
 
     catch (error) {
 
-        alert(error.message || "Unable to complete the request.");
+        alert(error.message || "Unable to close donor outreach.");
 
     }
 
@@ -3337,7 +3352,7 @@ async function loadNotificationRecipients(notificationId) {
                 donationConfirmed: recipient.donation_confirmed,
                 pointsAwarded: recipient.points_awarded,
 
-                respondedAt: responseStatus === "PENDING"
+                respondedAt: ["PENDING", "INELIGIBLE"].includes(responseStatus)
                     ? "--"
                     : formatDate(recipient.responded_at)
 

@@ -1124,6 +1124,14 @@
 }
 
 
+.donor-status.deferred {
+    background:
+        rgba(217, 70, 239, 0.2);
+
+    color: #f0abfc;
+}
+
+
 .donor-status.in-progress {
     background:
         rgba(59, 130, 246, 0.24);
