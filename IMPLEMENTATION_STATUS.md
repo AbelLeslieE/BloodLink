@@ -182,6 +182,11 @@ phase.
   complete. Scheduled off-site copies and automatic retention policies are not.
 - MFA is optional for each account. A production policy requiring MFA for all
   administrators is not yet enforced.
+- Database upgrades complete successfully, but the strict schema-drift check
+  still reports historical prototype differences: legacy notification-table
+  preservation, donor-response nullability on older installations, and several
+  equivalent index/constraint definitions. A dedicated reconciliation migration
+  is still required before this check is clean across old and fresh databases.
 
 ## Not yet completed
 
