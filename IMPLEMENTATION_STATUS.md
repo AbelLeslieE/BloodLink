@@ -173,6 +173,23 @@ phase.
   enforcement, next-stage release, acceptance-target stopping, resend isolation,
   and encrypted-database migration.
 
+## Completed in the database-schema reconciliation phase
+
+- Historical databases now allow portal-only donor responses without requiring
+  an email token, matching the current donor dashboard workflow.
+- The database enforces one response per donor and blood request, and migration
+  stops safely with a clear error if conflicting duplicate history needs human
+  review instead of silently deleting it.
+- Missing model indexes are restored, while equivalent SQLite unique constraints
+  are recognized without rebuilding the live users table or breaking its foreign
+  keys.
+- The intentionally preserved prototype notification archive remains untouched
+  and is explicitly excluded from schema-drift comparisons.
+- Alembic now commits migration changes and version stamps together after its
+  schema inspection under SQLAlchemy 2.x transaction behavior.
+- Both the upgraded working database and a fresh encrypted installation pass the
+  strict Alembic schema-drift check with no pending operations.
+
 ## Partially completed
 
 - Audit coverage records every authenticated mutation with its route, actor,
@@ -182,11 +199,6 @@ phase.
   complete. Scheduled off-site copies and automatic retention policies are not.
 - MFA is optional for each account. A production policy requiring MFA for all
   administrators is not yet enforced.
-- Database upgrades complete successfully, but the strict schema-drift check
-  still reports historical prototype differences: legacy notification-table
-  preservation, donor-response nullability on older installations, and several
-  equivalent index/constraint definitions. A dedicated reconciliation migration
-  is still required before this check is clean across old and fresh databases.
 
 ## Not yet completed
 
@@ -213,9 +225,9 @@ phase.
 
 ## Verification
 
-- Migration head: `f1a2b3c4d5e6`
+- Migration head: `0a1b2c3d4e5f`
 - Security-operations test module: passing
-- Full regression suite: **202 passed** on 2026-09-29.
+- Full regression suite: **204 passed** on 2026-09-29.
 - Unit-fulfilment workflow suite: **26 passed** across normal and encrypted SQLite.
 - Donor-deferral workflow suite: **10 passed** across normal and encrypted SQLite.
 - Eligibility-policy workflow suite: **10 passed** across normal and encrypted SQLite.
@@ -224,6 +236,8 @@ phase.
   and encrypted SQLite where database integration is required.
 - Request-lifecycle automation suite: **10 passed** across normal and encrypted SQLite.
 - Staged donor-outreach suite: **6 passed** across normal and encrypted SQLite.
+- Schema-reconciliation suite: **2 passed**, plus a clean encrypted-database
+  migration and strict drift check.
 - Deployment/security focused rerun after configuration changes: **42 passed**.
 - Frontend stored-XSS checks and JavaScript syntax checks: passing.
 - Local browser smoke check: updated login page loaded with no console warnings or errors.
