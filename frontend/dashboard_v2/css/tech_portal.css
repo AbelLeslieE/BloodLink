@@ -67,5 +67,10 @@
 .tech-fixed-rules h3 { margin: 0 0 10px; color: #253248; }
 .tech-fixed-rules li { margin: 7px 0; }
 .tech-fixed-rules a { color: #9f1239; font-weight: 700; }
+.tech-quality-filters { grid-template-columns: minmax(220px, 1fr) 170px 150px 170px auto; }
+.tech-quality-score { width: 110px; height: 7px; overflow: hidden; border-radius: 999px; background: #e6eaf0; }
+.tech-quality-score span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #c42049, #278565); }
+.tech-quality-issues { min-width: 310px; }
+.tech-quality-issues small { margin: 0 0 6px !important; line-height: 1.35; }
 @media (max-width: 1150px) { .tech-summary { grid-template-columns: repeat(3, 1fr); } .tech-enrollment { grid-template-columns: 1fr; } }
-@media (max-width: 720px) { .tech-hero, .tech-panel-header, .tech-subpanel, .tech-policy-footer { align-items: stretch; flex-direction: column; } .tech-summary, .tech-rule-summary, .tech-policy-form { grid-template-columns: 1fr; } .tech-filters { grid-template-columns: 1fr; } .tech-panel { padding: 17px; } }
+@media (max-width: 720px) { .tech-hero, .tech-panel-header, .tech-subpanel, .tech-policy-footer { align-items: stretch; flex-direction: column; } .tech-summary, .tech-rule-summary, .tech-policy-form { grid-template-columns: 1fr; } .tech-filters, .tech-quality-filters { grid-template-columns: 1fr; } .tech-panel { padding: 17px; } }

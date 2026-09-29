@@ -52,6 +52,7 @@ from backend.routers.diagnostics import router as diagnostics_router
 from backend.routers.security_operations import admin_router as technical_admin_router
 from backend.routers.security_operations import security_router
 from backend.routers.eligibility_rules import router as eligibility_rules_router
+from backend.routers.data_quality import router as data_quality_router
 # ==========================================================
 # Paths
 # ==========================================================
@@ -190,6 +191,7 @@ app.include_router(diagnostics_router)
 app.include_router(security_router)
 app.include_router(technical_admin_router)
 app.include_router(eligibility_rules_router)
+app.include_router(data_quality_router)
 
 app.include_router(
     donations_router,

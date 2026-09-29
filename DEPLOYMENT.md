@@ -159,7 +159,7 @@ provide all secure-context PWA/push features.
 
 ## Verification and rollout
 
-Latest local verification: 169 tests passed (one framework deprecation warning).
+Latest local verification: 179 tests passed (one framework deprecation warning).
 Frontend XSS checks, Python compilation and dependency consistency checks passed.
 Windows runtime tested here: Python 3.11.0; Render's configured 3.11.15/Linux
 runtime has not been executed here. Upgrade the old local Python before production use.

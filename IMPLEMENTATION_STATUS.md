@@ -1,6 +1,6 @@
 # BloodLink implementation status
 
-Last updated: 2026-09-27
+Last updated: 2026-09-29
 
 This report is the project-level record of what is complete, what is partially
 implemented, and what remains. It should be updated after every implementation
@@ -94,6 +94,22 @@ phase.
   fitness remains the blood centre's medical decision.
 - Automated policy tests run against both normal and encrypted SQLite.
 
+## Completed in the donor data-quality phase
+
+- The Technical Portal now has an administrator-only cleanup queue covering
+  incomplete eligibility fields, missing or invalid contact details, missing
+  locations, stale profiles, and possible duplicates.
+- Profile completeness is scored consistently, with issue explanations and
+  high-priority, review, and informational classifications.
+- Duplicate suggestions use normalized exact email, phone, or name-and-date-of-
+  birth signals. BloodLink never automatically merges, edits, or deletes the
+  records.
+- Administrators can search, filter, paginate, change the stale-record window,
+  and export the current queue as a spreadsheet-safe CSV.
+- Queue exports are recorded in the signed audit log, and donor accounts cannot
+  access the dashboard or export.
+- Automated data-quality tests run against both normal and encrypted SQLite.
+
 ## Partially completed
 
 - Audit coverage records every authenticated mutation with its route, actor,
@@ -126,7 +142,6 @@ phase.
 - Staged donor outreach to reduce alert fatigue.
 - Donor-controlled temporary availability, travel radius, and contact hours.
 - Blood-drive scheduling, appointment capacity, QR check-in, and reminders.
-- Data-quality dashboard for duplicate and stale donor records.
 - Operational analytics such as time-to-match and time-to-fulfil.
 - Granular communication consent and quiet-hour preferences.
 
@@ -134,10 +149,11 @@ phase.
 
 - Migration head: `c8d9e0f1a2b3`
 - Security-operations test module: passing
-- Full regression suite: **169 passed** on 2026-09-27.
+- Full regression suite: **179 passed** on 2026-09-29.
 - Unit-fulfilment workflow suite: **26 passed** across normal and encrypted SQLite.
 - Donor-deferral workflow suite: **10 passed** across normal and encrypted SQLite.
 - Eligibility-policy workflow suite: **10 passed** across normal and encrypted SQLite.
+- Donor data-quality workflow suite: **10 passed** across normal and encrypted SQLite.
 - Deployment/security focused rerun after configuration changes: **42 passed**.
 - Frontend stored-XSS checks and JavaScript syntax checks: passing.
 - Local browser smoke check: updated login page loaded with no console warnings or errors.

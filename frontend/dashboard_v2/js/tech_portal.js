@@ -1,6 +1,6 @@
 import { authenticatedFetch, logoutUser } from "./api.js";
 
-const state = { auditPage: 1, auditPageSize: 25 };
+const state = { auditPage: 1, auditPageSize: 25, dataQualityPage: 1, dataQualityPageSize: 25 };
 
 function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, (character) => ({
@@ -72,6 +72,7 @@ export function loadTechnicalPortal() {
                 <button data-tech-tab="mfa" type="button">MFA</button>
                 <button data-tech-tab="sessions" type="button">Sessions</button>
                 <button data-tech-tab="eligibility" type="button">Eligibility rules</button>
+                <button data-tech-tab="data-quality" type="button">Data quality</button>
             </nav>
 
             <section id="tech-audit" class="tech-panel glass-card">
@@ -81,7 +82,7 @@ export function loadTechnicalPortal() {
                 </div>
                 <form id="auditFilters" class="tech-filters">
                     <input id="auditSearch" type="search" maxlength="120" placeholder="Search actor, action, path, or target">
-                    <select id="auditCategory"><option value="">All categories</option><option>AUTHENTICATION</option><option>DATA_CHANGE</option><option>ELIGIBILITY</option><option>MFA</option><option>SESSION</option><option>BACKUP</option><option>AUDIT</option><option>SECURITY</option></select>
+                    <select id="auditCategory"><option value="">All categories</option><option>AUTHENTICATION</option><option>DATA_CHANGE</option><option>DATA_QUALITY</option><option>ELIGIBILITY</option><option>MFA</option><option>SESSION</option><option>BACKUP</option><option>AUDIT</option><option>SECURITY</option></select>
                     <select id="auditResult"><option value="">All results</option><option>SUCCESS</option><option>FAILED</option><option>PENDING</option></select>
                     <button class="tech-button" type="submit">Apply</button>
                 </form>
@@ -160,6 +161,24 @@ export function loadTechnicalPortal() {
                     <p>Default baseline: <a id="eligibilitySource" href="#" target="_blank" rel="noopener noreferrer">National Standards for Blood Centres and Blood Transfusion Services</a>.</p>
                 </div>
             </section>
+
+            <section id="tech-data-quality" class="tech-panel glass-card" hidden>
+                <div class="tech-panel-header">
+                    <div><h2>Donor data quality</h2><p>Review incomplete, duplicate, invalid-contact, location, and stale records before enforcing stricter workflows.</p></div>
+                    <a id="dataQualityExport" class="tech-button secondary" href="/api/admin/technical/data-quality/export"><i class="fa-solid fa-file-export"></i> Export queue</a>
+                </div>
+                <p class="tech-callout warning">Duplicate matches are suggestions only. This dashboard never merges, edits, or deletes donor records automatically.</p>
+                <div id="dataQualitySummary" class="tech-rule-summary"></div>
+                <form id="dataQualityFilters" class="tech-filters tech-quality-filters">
+                    <input id="dataQualitySearch" type="search" maxlength="120" placeholder="Search donor, code, email, phone, or blood group">
+                    <select id="dataQualityCategory"><option value="">All issue types</option><option value="ELIGIBILITY">Eligibility data</option><option value="CONTACT">Contact details</option><option value="DUPLICATE">Possible duplicates</option><option value="LOCATION">Location</option><option value="STALE">Stale profiles</option></select>
+                    <select id="dataQualitySeverity"><option value="">All priorities</option><option value="HIGH">High priority</option><option value="REVIEW">Needs review</option><option value="INFO">Informational</option></select>
+                    <select id="dataQualityStaleDays"><option value="180">Stale after 180 days</option><option value="365" selected>Stale after 1 year</option><option value="730">Stale after 2 years</option></select>
+                    <button class="tech-button" type="submit">Apply</button>
+                </form>
+                <div class="tech-table-wrap"><table><thead><tr><th>Donor</th><th>Contact</th><th>Completeness</th><th>Priority</th><th>Issues</th><th>Last updated</th></tr></thead><tbody id="dataQualityRows"><tr><td colspan="6">Loading donor quality checks…</td></tr></tbody></table></div>
+                <div class="tech-pagination"><span id="dataQualityCount">—</span><div><button id="dataQualityPrevious" class="tech-button secondary" type="button">Previous</button><button id="dataQualityNext" class="tech-button secondary" type="button">Next</button></div></div>
+            </section>
         </section>`;
 }
 
@@ -212,6 +231,53 @@ async function loadEligibility() {
     toggleEligibilityReviewFields();
 }
 
+function dataQualityParameters(includePage = true) {
+    const parameters = new URLSearchParams({
+        stale_after_days: document.getElementById("dataQualityStaleDays")?.value || "365",
+    });
+    if (includePage) {
+        parameters.set("page", state.dataQualityPage);
+        parameters.set("page_size", state.dataQualityPageSize);
+    }
+    const search = document.getElementById("dataQualitySearch")?.value.trim();
+    const category = document.getElementById("dataQualityCategory")?.value;
+    const severity = document.getElementById("dataQualitySeverity")?.value;
+    if (search) parameters.set("search", search);
+    if (category) parameters.set("category", category);
+    if (severity) parameters.set("severity", severity);
+    return parameters;
+}
+
+async function loadDataQuality() {
+    const parameters = dataQualityParameters();
+    const data = await api(`/api/admin/technical/data-quality?${parameters}`);
+    const summary = data.summary;
+    document.getElementById("dataQualitySummary").innerHTML = `
+        <article><span>Donors with issues</span><strong>${escapeHtml(summary.donors_with_issues)}</strong></article>
+        <article><span>High priority</span><strong>${escapeHtml(summary.high_priority)}</strong></article>
+        <article><span>Incomplete eligibility</span><strong>${escapeHtml(summary.incomplete_eligibility)}</strong></article>
+        <article><span>Possible duplicates</span><strong>${escapeHtml(summary.possible_duplicates)}</strong></article>`;
+    const rows = document.getElementById("dataQualityRows");
+    rows.innerHTML = data.items.length ? data.items.map((item) => {
+        const severityClass = item.highest_severity === "HIGH" ? "failed" : item.highest_severity === "REVIEW" ? "pending" : item.highest_severity === "COMPLETE" ? "success" : "";
+        const issues = item.issues.length
+            ? item.issues.map((issue) => `<small><strong>${escapeHtml(issue.code.replaceAll("_", " "))}</strong> · ${escapeHtml(issue.message)}</small>`).join("")
+            : "<small>No tracked issues.</small>";
+        return `<tr>
+            <td><strong>${escapeHtml(item.full_name)}</strong><small>${escapeHtml(item.donor_code)} · ${escapeHtml(item.blood_group)} · ${escapeHtml(item.status)}</small></td>
+            <td>${escapeHtml(item.email || "—")}<small>${escapeHtml(item.phone || "—")}</small></td>
+            <td><div class="tech-quality-score"><span style="width:${Math.max(0, Math.min(100, Number(item.completeness_percent)))}%"></span></div><small>${escapeHtml(item.completeness_percent)}%</small></td>
+            <td><span class="tech-status ${severityClass}">${escapeHtml(item.highest_severity)}</span></td>
+            <td class="tech-quality-issues">${issues}</td>
+            <td>${escapeHtml(formatDate(item.updated_at))}</td>
+        </tr>`;
+    }).join("") : '<tr><td colspan="6">No donor records match these filters.</td></tr>';
+    document.getElementById("dataQualityCount").textContent = `${data.total} donor(s) · page ${data.page}`;
+    document.getElementById("dataQualityPrevious").disabled = state.dataQualityPage <= 1;
+    document.getElementById("dataQualityNext").disabled = state.dataQualityPage * state.dataQualityPageSize >= data.total;
+    document.getElementById("dataQualityExport").href = `/api/admin/technical/data-quality/export?${dataQualityParameters(false)}`;
+}
+
 async function loadAudits() {
     const parameters = new URLSearchParams({ page: state.auditPage, page_size: state.auditPageSize });
     const search = document.getElementById("auditSearch")?.value.trim();
@@ -256,7 +322,7 @@ async function loadSessions() {
 }
 
 async function refreshAll() {
-    await Promise.all([loadSummary(), loadAudits(), loadBackups(), loadMfa(), loadSessions(), loadEligibility()]);
+    await Promise.all([loadSummary(), loadAudits(), loadBackups(), loadMfa(), loadSessions(), loadEligibility(), loadDataQuality()]);
     if (window.lucide) window.lucide.createIcons();
 }
 
@@ -289,6 +355,9 @@ export function initializeTechnicalPortal() {
     document.getElementById("auditFilters").addEventListener("submit", (event) => { event.preventDefault(); state.auditPage = 1; loadAudits().catch((error) => showNotice(error.message, "error")); });
     document.getElementById("auditPrevious").addEventListener("click", () => { state.auditPage -= 1; loadAudits(); });
     document.getElementById("auditNext").addEventListener("click", () => { state.auditPage += 1; loadAudits(); });
+    document.getElementById("dataQualityFilters").addEventListener("submit", (event) => { event.preventDefault(); state.dataQualityPage = 1; loadDataQuality().catch((error) => showNotice(error.message, "error")); });
+    document.getElementById("dataQualityPrevious").addEventListener("click", () => { state.dataQualityPage -= 1; loadDataQuality().catch((error) => showNotice(error.message, "error")); });
+    document.getElementById("dataQualityNext").addEventListener("click", () => { state.dataQualityPage += 1; loadDataQuality().catch((error) => showNotice(error.message, "error")); });
     document.getElementById("eligibilityMode").addEventListener("change", toggleEligibilityReviewFields);
     document.getElementById("eligibilityPolicyForm").addEventListener("submit", async (event) => {
         event.preventDefault();

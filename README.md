@@ -106,7 +106,10 @@ fitness decision.
 
 Administrators can open **Technical Portal** from the dashboard to manage signed
 audit logs, encrypted backups, authenticator-app MFA, recovery codes, active
-sessions, and reviewed donor eligibility rules. Production backup creation requires both `BACKUP_ENCRYPTION_KEY` and a
+sessions, reviewed donor eligibility rules, and a read-only donor data-quality
+queue. The queue explains incomplete screening data, invalid contacts, missing
+locations, stale profiles, and possible exact duplicates; it never automatically
+merges or deletes donor records. Production backup creation requires both `BACKUP_ENCRYPTION_KEY` and a
 persistent `BACKUP_DIRECTORY`; see `.env.example` and `DEPLOYMENT.md`. Backup
 restore remains intentionally unavailable until the guarded recovery workflow is
 implemented and reviewed.

@@ -74,7 +74,7 @@ metadata. Existing donor/patient records and older database copies were preserve
   and MFA verification. Administrators can review or revoke one session; normal logout
   retains the established behavior of closing all sessions for that account.
 - The administrator Technical Portal stores integrity-signed audit events for login,
-  MFA, sessions, backups, eligibility-policy reviews, and authenticated mutation routes. It verifies signatures and
+  MFA, sessions, backups, eligibility-policy reviews, data-quality exports, and authenticated mutation routes. It verifies signatures and
   exports CSV. Field-level before/after diffs, off-site retention, and alerting remain.
 - Encrypted, compressed logical database snapshots include checksums, verification,
   download, and audited deletion. Production creation fails closed without a dedicated
