@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from dataclasses import dataclass
 from functools import lru_cache
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from dotenv import load_dotenv
 
@@ -68,6 +69,7 @@ class Settings:
     donor_deferral_days_male: int = 90
     donor_deferral_days_female: int = 120
     donor_deferral_days_other: int = 120
+    request_timezone: str = "Asia/Kolkata"
     on_render: bool = False
     production: bool = False
     allowed_hosts: tuple[str, ...] = ("localhost", "127.0.0.1", "testserver")
@@ -161,6 +163,11 @@ def get_settings() -> Settings:
         ])))
     if production and any("*" in h for h in hosts):
         raise ConfigurationError("Production ALLOWED_HOSTS cannot contain wildcards.")
+    request_timezone = os.getenv("REQUEST_TIMEZONE", "Asia/Kolkata").strip()
+    try:
+        ZoneInfo(request_timezone)
+    except ZoneInfoNotFoundError as error:
+        raise ConfigurationError("REQUEST_TIMEZONE must be a valid IANA timezone name.") from error
     from backend.config.database_url import normalize_database_url
     database_url = normalize_database_url(
         _required_value("DATABASE_URL") if production else os.getenv("DATABASE_URL", "") or "sqlite:///./bloodlink.db",
@@ -207,6 +214,7 @@ def get_settings() -> Settings:
         donor_deferral_days_male=_positive_integer("DONOR_DEFERRAL_DAYS_MALE", 90),
         donor_deferral_days_female=_positive_integer("DONOR_DEFERRAL_DAYS_FEMALE", 120),
         donor_deferral_days_other=_positive_integer("DONOR_DEFERRAL_DAYS_OTHER", 120),
+        request_timezone=request_timezone,
     )
 def get_default_volunteer_credentials() -> DefaultVolunteerCredentials:
     """Load initial volunteer credentials."""

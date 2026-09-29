@@ -24,6 +24,8 @@ services:
         value: 120
       - key: DONOR_DEFERRAL_DAYS_OTHER
         value: 120
+      - key: REQUEST_TIMEZONE
+        value: Asia/Kolkata
       # Render's proxy reaches the app over its private network. Trusting these
       # ranges gives each visitor their own rate-limit identity; verify with
       # GET /api/admin/diagnostics/request after deploying (see DEPLOYMENT.md).

@@ -20,9 +20,11 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.database.database import (
+    SessionLocal,
     engine,
     verify_database_connection,
 )
+from backend.services import request_lifecycle_service
 from backend.routers.auth import router as auth_router
 from backend.routers.password_reset import router as password_reset_router
 from backend.routers.blood_requests import router as blood_requests_router
@@ -83,6 +85,11 @@ async def lifespan(_: FastAPI):
 
     verify_database_connection()
 
+    with SessionLocal() as database_session:
+        lifecycle_result = request_lifecycle_service.refresh_request_lifecycles(
+            database_session
+        )
+
     logger.info("Database initialized successfully.")
     settings = get_settings()
     logger.info(
@@ -90,6 +97,13 @@ async def lifespan(_: FastAPI):
         "database_tls_mode=%s bootstrap_password_configured=%s",
         settings.production, settings.production, settings.on_render, forwarded_allow_ips(settings),
         os.getenv("DATABASE_TLS_MODE", "").strip() or "automatic", bool(os.getenv("DEFAULT_VOLUNTEER_PASSWORD")),
+    )
+    logger.info(
+        "Request lifecycle refresh: evaluated=%s initialized=%s escalated=%s expired=%s",
+        lifecycle_result.evaluated,
+        lifecycle_result.initialized,
+        lifecycle_result.escalated,
+        lifecycle_result.expired,
     )
 
     try:

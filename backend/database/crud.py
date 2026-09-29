@@ -25,7 +25,7 @@ from backend.database.email_token import EmailToken
 from backend.database.donor_response import DonorResponse
 from backend.config.rewards import POINTS_PER_CONFIRMED_DONATION
 from backend.services.certificate_service import ensure_certificate
-from backend.services import donor_eligibility_service
+from backend.services import donor_eligibility_service, request_lifecycle_service
 
 from backend.database.schemas import (
     BloodRequestCreate,
@@ -856,9 +856,13 @@ def create_blood_request(
 
         status="Pending",
 
+        expires_at=request_lifecycle_service.request_deadline(request_data.required_date),
+
         created_by=created_by,
 
     )
+
+    request_lifecycle_service.apply_request_lifecycle(blood_request)
 
     database_session.add(
         blood_request
@@ -884,6 +888,8 @@ def get_blood_requests(
 
     Newest requests are returned first.
     """
+
+    request_lifecycle_service.refresh_request_lifecycles(database_session)
 
     statement = (
 
@@ -912,6 +918,11 @@ def get_blood_request_by_id(
 ) -> BloodRequest | None:
     """Return one blood request by its database ID."""
 
+    request_lifecycle_service.refresh_request_lifecycles(
+        database_session,
+        request_id=request_id,
+    )
+
     statement = (
         select(BloodRequest)
         .where(
@@ -930,6 +941,7 @@ def update_blood_request_status(
     database_session: Session,
     blood_request: BloodRequest,
     new_status: str,
+    closure_reason: str | None = None,
 ) -> BloodRequest:
     """
     Update the status of an existing blood request
@@ -937,6 +949,14 @@ def update_blood_request_status(
     """
 
     blood_request.status = new_status
+
+    if new_status in request_lifecycle_service.CLOSURE_REQUEST_STATUSES:
+        blood_request.closure_reason = closure_reason
+        blood_request.closed_at = datetime.now(timezone.utc)
+    else:
+        blood_request.closure_reason = None
+        blood_request.closed_at = None
+        request_lifecycle_service.apply_request_lifecycle(blood_request)
 
     _commit_and_refresh(
         database_session,
@@ -1106,7 +1126,7 @@ def confirm_donation_for_request(
     if existing is not None:
         return existing, True
 
-    if blood_request.status in {"Fulfilled", "Closed", "Cancelled"}:
+    if blood_request.status in request_lifecycle_service.TERMINAL_REQUEST_STATUSES:
         raise ValueError("This blood request is no longer open for donation confirmation.")
 
     donor_response = database_session.scalar(
@@ -1177,14 +1197,14 @@ def _allocate_request_units(
     """Atomically apply donated units and derive the request lifecycle state."""
     if units < 1:
         raise ValueError("Donation units must be at least 1.")
-    if blood_request.status in {"Fulfilled", "Closed", "Cancelled"}:
+    if blood_request.status in request_lifecycle_service.TERMINAL_REQUEST_STATUSES:
         raise ValueError("This blood request is no longer open for donation confirmation.")
 
     new_total = database_session.execute(
         update(BloodRequest)
         .where(
             BloodRequest.id == blood_request.id,
-            BloodRequest.status.notin_({"Fulfilled", "Closed", "Cancelled"}),
+            BloodRequest.status.notin_(request_lifecycle_service.TERMINAL_REQUEST_STATUSES),
             BloodRequest.units_fulfilled + units <= BloodRequest.units_required,
         )
         .values(units_fulfilled=BloodRequest.units_fulfilled + units)
@@ -1194,7 +1214,7 @@ def _allocate_request_units(
 
     if new_total is None:
         database_session.refresh(blood_request)
-        if blood_request.status in {"Fulfilled", "Closed", "Cancelled"}:
+        if blood_request.status in request_lifecycle_service.TERMINAL_REQUEST_STATUSES:
             raise ValueError("This blood request is no longer open for donation confirmation.")
         raise ValueError(
             f"Only {blood_request.units_remaining} unit(s) remain for this request."
@@ -1203,6 +1223,8 @@ def _allocate_request_units(
     blood_request.units_fulfilled = int(new_total)
     if blood_request.units_fulfilled >= blood_request.units_required:
         blood_request.status = "Fulfilled"
+        blood_request.closure_reason = "Fulfilled by confirmed donation units."
+        blood_request.closed_at = datetime.now(timezone.utc)
         campaigns = database_session.scalars(
             select(Notification).where(Notification.blood_request_id == blood_request.id)
         ).all()

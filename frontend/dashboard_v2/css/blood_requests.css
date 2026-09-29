@@ -841,6 +841,22 @@
 
 }
 
+.status-closed {
+
+    background: var(--surface-secondary);
+
+    color: var(--text-secondary);
+
+}
+
+.status-expired {
+
+    background: var(--danger-light);
+
+    color: var(--danger);
+
+}
+
 
 /* ==========================================================
    18. TABLE ACTION BUTTON
@@ -2085,6 +2101,12 @@
 
 .request-status-complete:has(
     [data-lucide="circle-x"]
+) svg {
+    color: var(--danger);
+}
+
+.request-status-complete:has(
+    [data-lucide="clock-alert"]
 ) svg {
     color: var(--danger);
 }

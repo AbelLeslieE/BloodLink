@@ -20,6 +20,7 @@ from backend.database import crud
 from backend.database.database import get_db
 from backend.database.models import DonationHistory, SavedMatch, User
 from backend.services import push_notification_service
+from backend.services import request_lifecycle_service
 from backend.database.schemas import (
     BloodRequestCompleteRequest,
     BloodRequestCreate,
@@ -54,6 +55,7 @@ ALLOWED_STATUSES = {
     "Fulfilled",
     "Closed",
     "Cancelled",
+    "Expired",
 }
 
 
@@ -100,6 +102,11 @@ def create_blood_request(
         request_data.blood_group,
         request_data.priority,
     )
+    if request_data.required_date < request_lifecycle_service.local_today():
+        raise HTTPException(
+            status_code=422,
+            detail="Required date cannot be in the past.",
+        )
 
     blood_request = crud.create_blood_request(
         database_session=database_session,
@@ -212,6 +219,29 @@ def update_blood_request_status(
             status_code=status.HTTP_409_CONFLICT,
             detail="A fully supplied request cannot be reopened without increasing its required units.",
         )
+    closure_reason = " ".join((status_data.closure_reason or "").split()) or None
+    if requested_status in request_lifecycle_service.CLOSURE_REQUEST_STATUSES:
+        if closure_reason is None or len(closure_reason) < 3:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="A closure reason of at least 3 characters is required.",
+            )
+    elif status_data.closure_reason:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="A closure reason is only accepted for Closed, Cancelled, or Expired requests.",
+        )
+
+    if (
+        requested_status == "Pending"
+        and blood_request.status in {"Closed", "Cancelled", "Expired"}
+        and request_lifecycle_service.deadline_has_passed(blood_request)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This request cannot be reopened because its required date has passed.",
+        )
+
     if requested_status == "Pending" and blood_request.units_fulfilled:
         requested_status = "Partially Fulfilled"
 
@@ -224,6 +254,7 @@ def update_blood_request_status(
         database_session=database_session,
         blood_request=blood_request,
         new_status=requested_status,
+        closure_reason=closure_reason,
     )
 
 

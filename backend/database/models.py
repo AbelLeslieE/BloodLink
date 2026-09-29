@@ -626,6 +626,42 @@ class BloodRequest(Base):
         nullable=False,
     )
 
+    # Lifecycle automation uses an exact UTC deadline derived from the
+    # required date and deployment timezone.  The remaining fields preserve
+    # why and when a request was escalated or closed.
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True,
+    )
+
+    escalation_level: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default="0",
+        nullable=False,
+    )
+
+    escalation_reason: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
+    escalated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    closure_reason: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+
+    closed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
 
     # ======================================================
     # HOSPITAL DETAILS
@@ -735,7 +771,7 @@ class BloodRequest(Base):
     @property
     def units_remaining(self) -> int:
         """Return the unfilled request quantity without exposing negatives."""
-        return max(0, self.units_required - self.units_fulfilled)
+        return max(0, self.units_required - (self.units_fulfilled or 0))
 
 
 

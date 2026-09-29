@@ -60,6 +60,7 @@ deploy (that logs everyone out).
 | DONOR_DEFERRAL_DAYS_MALE | Clinician-reviewed whole-blood interval; default 90 |
 | DONOR_DEFERRAL_DAYS_FEMALE | Clinician-reviewed whole-blood interval; default 120 |
 | DONOR_DEFERRAL_DAYS_OTHER | Conservative interval for other/unspecified profiles; default 120 |
+| REQUEST_TIMEZONE | IANA timezone used for request deadlines; default Asia/Kolkata |
 
 Render supplies PORT and RENDER_EXTERNAL_URL. With blank BACKEND_URL/FRONTEND_URL,
 both use that HTTPS origin. For a custom domain, set both URLs to its HTTPS origin
@@ -72,6 +73,11 @@ for whole-blood donation. Before production use, the responsible blood-bank
 clinician must review these settings and the final eligibility workflow. Changing
 the environment values affects future confirmed donations; it does not rewrite
 already recorded next-eligible dates.
+
+Blood requests expire at midnight after their required date in REQUEST_TIMEZONE.
+Use the hospital's operating timezone so escalation and expiry occur at the
+expected local time. Existing request deadlines are backfilled using Asia/Kolkata
+by the lifecycle migration; changing the setting affects newly created requests.
 
 postgres://, postgresql:// and postgresql+psycopg:// URLs all select the installed
 psycopg 3 driver. Password escaping and existing query parameters are preserved.
@@ -159,7 +165,7 @@ provide all secure-context PWA/push features.
 
 ## Verification and rollout
 
-Latest local verification: 179 tests passed (one framework deprecation warning).
+Latest local verification: 196 tests passed (one framework deprecation warning).
 Frontend XSS checks, Python compilation and dependency consistency checks passed.
 Windows runtime tested here: Python 3.11.0; Render's configured 3.11.15/Linux
 runtime has not been executed here. Upgrade the old local Python before production use.

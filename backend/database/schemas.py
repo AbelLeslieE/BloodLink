@@ -620,6 +620,11 @@ class BloodRequestStatusUpdate(SchemaBase):
         max_length=50,
     )
 
+    closure_reason: str | None = Field(
+        default=None,
+        max_length=500,
+    )
+
 
 # ==========================================================
 # COMPLETE BLOOD REQUEST
@@ -673,6 +678,18 @@ class BloodRequestResponse(BloodRequestBase):
     units_fulfilled: int
 
     units_remaining: int
+
+    expires_at: datetime | None
+
+    escalation_level: int
+
+    escalation_reason: str | None
+
+    escalated_at: datetime | None
+
+    closure_reason: str | None
+
+    closed_at: datetime | None
 
     created_by: int
 

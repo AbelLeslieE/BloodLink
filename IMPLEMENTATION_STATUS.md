@@ -128,6 +128,29 @@ phase.
 - Automated tests cover distance calculation, nearest-donor ranking, structured
   locality fallback, coordinate validation, and encrypted-database migration.
 
+## Completed in the request-lifecycle automation phase
+
+- Every request now has an exact expiry deadline calculated from its required
+  date and the deployment's configured local timezone.
+- Open requests automatically escalate through 48-hour, 24-hour, and 6-hour
+  bands; urgent and emergency priorities receive minimum escalation levels.
+- Overdue requests automatically become `Expired`, retain their outstanding-unit
+  count in the closure reason, and are blocked from matching, outreach links,
+  donor responses, and donation recording.
+- Lifecycle reconciliation runs during application startup and every relevant
+  workflow, so a restart or quiet period cannot leave stale requests actionable.
+- Automatic escalations and expirations produce tamper-evident system events in
+  the Technical Portal audit log without duplicating events on later checks.
+- Manual Closed, Cancelled, and Expired transitions require a meaningful closure
+  reason. Reopening clears old closure metadata and is blocked after the deadline.
+- Fully supplied requests automatically record a fulfilment closure reason and
+  timestamp from confirmed donation units.
+- Blood Request screens show deadlines, escalation levels and reasons, closure
+  reasons, closure times, Expired/Closed states, and the new status filters.
+- Automated tests cover deadline creation, priority escalation, one-time signed
+  audits, expiry enforcement, closure-reason validation, reopening, fulfilment
+  closure metadata, and encrypted-database migration.
+
 ## Partially completed
 
 - Audit coverage records every authenticated mutation with its route, actor,
@@ -152,7 +175,7 @@ phase.
 
 ### Core blood-request correctness
 
-- Request expiry, escalation, and closure-reason automation.
+- No remaining correctness item from the current roadmap.
 
 ### Operations and donor experience
 
@@ -164,15 +187,16 @@ phase.
 
 ## Verification
 
-- Migration head: `d9e0f1a2b3c4`
+- Migration head: `e0f1a2b3c4d5`
 - Security-operations test module: passing
-- Full regression suite: **186 passed** on 2026-09-29.
+- Full regression suite: **196 passed** on 2026-09-29.
 - Unit-fulfilment workflow suite: **26 passed** across normal and encrypted SQLite.
 - Donor-deferral workflow suite: **10 passed** across normal and encrypted SQLite.
 - Eligibility-policy workflow suite: **10 passed** across normal and encrypted SQLite.
 - Donor data-quality workflow suite: **10 passed** across normal and encrypted SQLite.
 - Structured-location and distance-matching suite: **7 passed** across normal
   and encrypted SQLite where database integration is required.
+- Request-lifecycle automation suite: **10 passed** across normal and encrypted SQLite.
 - Deployment/security focused rerun after configuration changes: **42 passed**.
 - Frontend stored-XSS checks and JavaScript syntax checks: passing.
 - Local browser smoke check: updated login page loaded with no console warnings or errors.

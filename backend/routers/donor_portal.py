@@ -22,7 +22,7 @@ from backend.database.notification import Notification
 from backend.database.notification_recipient import NotificationRecipient
 from backend.services.certificate_service import ensure_certificate, render_certificate
 from backend.services.donor_matching_service import is_compatible_donor
-from backend.services import donor_eligibility_service
+from backend.services import donor_eligibility_service, request_lifecycle_service
 
 
 donor_router = APIRouter(prefix="/api/donor-dashboard", tags=["donor dashboard"])
@@ -189,6 +189,7 @@ def donor_requests(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[User, Depends(require_donor)],
 ) -> list[dict]:
+    request_lifecycle_service.refresh_request_lifecycles(db)
     donor = _donor_for_user(db, user)
     donor_eligibility_service.restore_donor_if_due(db, donor)
     if not donor_eligibility_service.is_donor_match_allowed(db, donor):
@@ -211,6 +212,7 @@ def submit_response(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[User, Depends(require_donor)],
 ) -> dict:
+    request_lifecycle_service.refresh_request_lifecycles(db, request_id=request_id)
     donor = _donor_for_user(db, user)
     donor_eligibility_service.restore_donor_if_due(db, donor)
     if not donor_eligibility_service.is_donor_match_allowed(db, donor):

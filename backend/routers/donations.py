@@ -8,8 +8,7 @@ from backend.database.schemas import DonationRecordCreate
 from backend.auth.dependencies import require_administrator
 from backend.database.models import User
 from backend.services.donor_matching_service import is_compatible_donor
-
-TERMINAL_REQUEST_STATUSES = {"Fulfilled", "Closed", "Cancelled"}
+from backend.services.request_lifecycle_service import TERMINAL_REQUEST_STATUSES
 
 router = APIRouter(dependencies=[Depends(require_administrator)])
 

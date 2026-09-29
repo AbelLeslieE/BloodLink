@@ -21,7 +21,7 @@ from backend.database.donor_response import DonorResponse
 from backend.database.notification import Notification
 from backend.database.notification_recipient import NotificationRecipient
 from backend.database import crud
-from backend.services import email_service, notification_service
+from backend.services import email_service, notification_service, request_lifecycle_service
 
 router = APIRouter(
     prefix="/api/notifications",
@@ -49,6 +49,10 @@ def _notification_or_404(database_session: Session, notification_id: int):
     notification = crud.get_notification_by_id(database_session, notification_id)
     if notification is None:
         raise HTTPException(status_code=404, detail="Notification not found.")
+    request_lifecycle_service.refresh_request_lifecycles(
+        database_session,
+        request_id=notification.blood_request_id,
+    )
     return notification
 # ==========================================================
 # GET ALL CAMPAIGNS
@@ -64,6 +68,7 @@ def get_notifications(
     the associated blood request summary.
     """
 
+    request_lifecycle_service.refresh_request_lifecycles(database_session)
     notifications = crud.get_notifications(
         database_session,
     )
@@ -156,7 +161,10 @@ def resend_pending_recipients(
 ) -> dict:
     """Send fresh response links to unresolved recipients in one campaign."""
     notification = _notification_or_404(database_session, notification_id)
-    if notification.status == "COMPLETED" or notification.blood_request.status in {"Fulfilled", "Closed", "Cancelled"}:
+    if (
+        notification.status == "COMPLETED"
+        or notification.blood_request.status in request_lifecycle_service.TERMINAL_REQUEST_STATUSES
+    ):
         raise HTTPException(status_code=409, detail="This request is no longer open for donor responses.")
 
     configuration_error = email_service.delivery_configuration_error()
@@ -197,7 +205,7 @@ def complete_notification_request(
     notification = _notification_or_404(database_session, notification_id)
     notification.status = "COMPLETED"
     blood_request = notification.blood_request
-    if blood_request.status not in {"Fulfilled", "Closed", "Cancelled"}:
+    if blood_request.status not in request_lifecycle_service.TERMINAL_REQUEST_STATUSES:
         blood_request.status = (
             "Partially Fulfilled"
             if blood_request.units_fulfilled > 0

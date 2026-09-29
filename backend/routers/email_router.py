@@ -15,7 +15,7 @@ from backend.database import crud
 from backend.database.database import get_db
 from backend.database.donor_response import DonorResponse
 from backend.database.notification_recipient import NotificationRecipient
-from backend.services import donor_eligibility_service
+from backend.services import donor_eligibility_service, request_lifecycle_service
 
 
 router = APIRouter(prefix="/email", tags=["Email"])
@@ -33,8 +33,13 @@ def _token_page(request: Request, token: str, decision: str, db: Session):
     if crud.email_token_expired(email_token):
         return templates.TemplateResponse(request=request, name="expired.html", context={})
     recipient = email_token.recipient
+    if recipient is not None:
+        request_lifecycle_service.refresh_request_lifecycles(
+            db,
+            request_id=recipient.notification.blood_request_id,
+        )
     if recipient is None or recipient.notification.status == "COMPLETED" or recipient.notification.blood_request.status in {
-        "Fulfilled", "Closed", "Cancelled"
+        "Fulfilled", "Closed", "Cancelled", "Expired"
     }:
         return templates.TemplateResponse(request=request, name="expired.html", context={})
     if decision.lower() == "accept" and not donor_eligibility_service.is_donor_match_allowed(db, recipient.donor):
@@ -60,8 +65,12 @@ def _record_decision(db: Session, token: str, response: str) -> str:
     ))
     if recipient is None:
         return "invalid"
+    request_lifecycle_service.refresh_request_lifecycles(
+        db,
+        request_id=recipient.notification.blood_request_id,
+    )
     if recipient.notification.status == "COMPLETED" or recipient.notification.blood_request.status in {
-        "Fulfilled", "Closed", "Cancelled"
+        "Fulfilled", "Closed", "Cancelled", "Expired"
     }:
         return "closed"
     if response == "ACCEPTED" and not donor_eligibility_service.is_donor_match_allowed(db, recipient.donor):

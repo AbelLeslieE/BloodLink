@@ -174,6 +174,23 @@ function requestUnitProgress(request) {
     return { required, fulfilled, remaining };
 }
 
+function requestEscalationLabel(request) {
+    const level = Math.max(0, Math.min(3, Number.parseInt(request?.escalation_level, 10) || 0));
+    return level > 0 ? `Level ${level}` : "Not escalated";
+}
+
+function formatRequestTimestamp(value) {
+    return value
+        ? new Date(value).toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        })
+        : "Not recorded";
+}
+
 function normalizeRequestFilterValue(value) {
     return String(value ?? "")
         .trim()
@@ -447,6 +464,14 @@ function buildRequestRows(requests = bloodRequests) {
 
                         </span>
 
+                        ${Number(request.escalation_level) > 0 ? `
+                            <div class="request-patient">
+                                <span title="${escapeRequestHtml(request.escalation_reason || "Automatically escalated")}">
+                                    Escalation ${escapeRequestHtml(requestEscalationLabel(request))}
+                                </span>
+                            </div>
+                        ` : ""}
+
                     </td>
 
 
@@ -630,6 +655,10 @@ function renderBloodRequestDetails(request) {
                 }
             )
             : "Not available";
+
+    const formattedExpiresAt = formatRequestTimestamp(request.expires_at);
+    const formattedEscalatedAt = formatRequestTimestamp(request.escalated_at);
+    const formattedClosedAt = formatRequestTimestamp(request.closed_at);
 
 
     // ======================================================
@@ -1059,6 +1088,58 @@ function renderBloodRequestDetails(request) {
 
                         </div>
 
+
+                        <div>
+
+                            <span>Expiry deadline</span>
+
+                            <strong>${formattedExpiresAt}</strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>Escalation</span>
+
+                            <strong>
+                                ${escapeRequestHtml(requestEscalationLabel(request))}
+                                ${request.escalation_reason
+                                    ? ` — ${escapeRequestHtml(request.escalation_reason)}`
+                                    : ""}
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>Escalated at</span>
+
+                            <strong>${formattedEscalatedAt}</strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>Closure reason</span>
+
+                            <strong>
+                                ${escapeRequestHtml(request.closure_reason || "Not closed")}
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>Closed at</span>
+
+                            <strong>${formattedClosedAt}</strong>
+
+                        </div>
+
                     </div>
 
                 </article>
@@ -1195,19 +1276,21 @@ function renderBloodRequestDetails(request) {
                             }
 
 
-                            // ----------------------------------
-                            // Confirm cancellation
-                            // ----------------------------------
+                            let closureReason = null;
 
-                            if (newStatus === "Cancelled") {
+                            if (["Cancelled", "Closed"].includes(newStatus)) {
 
-                                const confirmed =
-                                    window.confirm(
-                                        "Are you sure you want to cancel this blood request?"
-                                    );
+                                const suppliedReason = window.prompt(
+                                    `Enter the reason this request is being ${newStatus.toLowerCase()}:`
+                                );
 
+                                if (suppliedReason === null) {
+                                    return;
+                                }
 
-                                if (!confirmed) {
+                                closureReason = suppliedReason.trim();
+                                if (closureReason.length < 3) {
+                                    window.alert("Enter a closure reason of at least 3 characters.");
                                     return;
                                 }
 
@@ -1220,7 +1303,8 @@ function renderBloodRequestDetails(request) {
                                 newStatus === "Pending" &&
                                 (
                                     request.status === "Fulfilled" ||
-                                    request.status === "Cancelled"
+                                    request.status === "Cancelled" ||
+                                    request.status === "Closed"
                                 )
                             ) {
 
@@ -1255,7 +1339,8 @@ function renderBloodRequestDetails(request) {
 
                                 await updateBloodRequestStatus(
                                     request.id,
-                                    newStatus
+                                    newStatus,
+                                    closureReason
                                 );
 
                             }
@@ -1319,6 +1404,21 @@ function buildRequestStatusActions(request) {
 
                 <button
                     type="button"
+                    class="secondary-btn request-status-action"
+                    data-request-status="Closed"
+                >
+
+                    <i data-lucide="archive"></i>
+
+                    <span>
+                        Close Request
+                    </span>
+
+                </button>
+
+
+                <button
+                    type="button"
                     class="primary-btn request-status-action"
                     data-request-status="In Progress"
                 >
@@ -1364,6 +1464,21 @@ function buildRequestStatusActions(request) {
 
                 <button
                     type="button"
+                    class="secondary-btn request-status-action"
+                    data-request-status="Closed"
+                >
+
+                    <i data-lucide="archive"></i>
+
+                    <span>
+                        Close Request
+                    </span>
+
+                </button>
+
+
+                <button
+                    type="button"
                     class="primary-btn request-status-action"
                     data-request-status="Fulfilled"
                 >
@@ -1401,10 +1516,11 @@ function buildRequestStatusActions(request) {
 
 
         // ==================================================
-        // CANCELLED
+        // CLOSED / CANCELLED
         // ==================================================
 
         case "Cancelled":
+        case "Closed":
 
             return `
 
@@ -1413,7 +1529,7 @@ function buildRequestStatusActions(request) {
                     <i data-lucide="circle-x"></i>
 
                     <span>
-                        This blood request has been cancelled.
+                        This blood request has been ${request.status.toLowerCase()}.
                     </span>
 
                 </div>
@@ -1431,6 +1547,23 @@ function buildRequestStatusActions(request) {
                     </span>
 
                 </button>
+
+            `;
+
+
+        case "Expired":
+
+            return `
+
+                <div class="request-status-complete">
+
+                    <i data-lucide="clock-alert"></i>
+
+                    <span>
+                        This request expired after its required date passed.
+                    </span>
+
+                </div>
 
             `;
 
@@ -2192,7 +2325,8 @@ async function openCompleteDonationModal(request) {
 
 async function updateBloodRequestStatus(
     requestId,
-    newStatus
+    newStatus,
+    closureReason = null
 ) {
 
     // ======================================================
@@ -2241,7 +2375,8 @@ async function updateBloodRequestStatus(
                     body:
                         JSON.stringify(
                             {
-                                status: newStatus
+                                status: newStatus,
+                                closure_reason: closureReason
                             }
                         )
                 }
@@ -2858,6 +2993,14 @@ async function renderBloodRequests(
 
                             <option>
                                 Cancelled
+                            </option>
+
+                            <option>
+                                Closed
+                            </option>
+
+                            <option>
+                                Expired
                             </option>
 
                         </select>
