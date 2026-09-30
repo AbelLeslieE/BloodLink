@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, time
 from decimal import Decimal
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, UniqueConstraint
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, Time, UniqueConstraint
 from sqlalchemy import String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.database.email_token import EmailToken
@@ -462,6 +462,34 @@ class Donor(Base):
 
     deferral_reason: Mapped[str | None] = mapped_column(
         String(500),
+        nullable=True,
+    )
+
+    # Donor-controlled outreach preferences are independent of medical
+    # deferrals. Pausing availability never overwrites a clinical status.
+    availability_paused_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True,
+    )
+
+    travel_radius_km: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+    contact_window_start: Mapped[time | None] = mapped_column(
+        Time,
+        nullable=True,
+    )
+
+    contact_window_end: Mapped[time | None] = mapped_column(
+        Time,
+        nullable=True,
+    )
+
+    preferences_updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
     )
 

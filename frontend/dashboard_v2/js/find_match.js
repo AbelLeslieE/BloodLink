@@ -813,6 +813,22 @@ function createRequestCard(request) {
 
                     <span class="info-label">
 
+                        Donor Preference
+
+                    </span>
+
+                    <strong>
+
+                        ${escapeMatchHtml(donor.outreachPreference)}
+
+                    </strong>
+
+                </div>
+
+                <div class="info-item">
+
+                    <span class="info-label">
+
                         Units
 
                     </span>
@@ -1769,6 +1785,13 @@ async function loadMatchingDonorsFromAPI(requestId) {
             locationMatchType: match.location_match_type,
 
             lastDonation: formatDate(match.donor.last_donation_date),
+
+            outreachPreference: [
+                match.donor.travel_radius_km == null ? "No travel limit" : `${match.donor.travel_radius_km} km radius`,
+                match.donor.contact_window_start
+                    ? `${match.donor.contact_window_start.slice(0, 5)}–${match.donor.contact_window_end.slice(0, 5)}`
+                    : "Any contact time"
+            ].join(" · "),
 
             screeningPassed: Boolean(match.screening?.passed),
 

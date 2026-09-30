@@ -34,6 +34,10 @@ def _create_legacy_schema(path, *, duplicate_responses: bool = False) -> None:
             CONSTRAINT uq_users_donor_id UNIQUE (donor_id),
             UNIQUE (password_setup_token_hash)
         );
+
+        CREATE TABLE donors (
+            id INTEGER NOT NULL PRIMARY KEY
+        );
         """
     )
     connection.execute(
@@ -70,6 +74,10 @@ def test_reconciliation_upgrades_a_legacy_prototype_schema(tmp_path, monkeypatch
             for item in inspector.get_unique_constraints("donor_responses")
         }
         response_indexes = {item["name"] for item in inspector.get_indexes("donor_responses")}
+        donor_columns = {
+            column["name"]
+            for column in inspector.get_columns("donors")
+        }
         user_unique_columns = {
             tuple(item["column_names"])
             for item in inspector.get_unique_constraints("users")
@@ -79,12 +87,19 @@ def test_reconciliation_upgrades_a_legacy_prototype_schema(tmp_path, monkeypatch
             if item["unique"]
         }
         with engine.connect() as connection:
-            assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0a1b2c3d4e5f"
+            assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar() == "1b2c3d4e5f6a"
         engine.dispose()
 
         assert response_columns["email_token_id"]["nullable"] is True
         assert ("donor_id", "blood_request_id") in response_unique_columns
         assert "ix_donor_responses_id" in response_indexes
+        assert {
+            "availability_paused_until",
+            "travel_radius_km",
+            "contact_window_start",
+            "contact_window_end",
+            "preferences_updated_at",
+        } <= donor_columns
         assert ("donor_id",) in user_unique_columns
         assert ("password_setup_token_hash",) in user_unique_columns
     finally:

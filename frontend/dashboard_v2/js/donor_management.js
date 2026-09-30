@@ -2747,8 +2747,11 @@ function createDonorRow(donor) {
             donor.status
         );
 
-    const statusLabel =
-        donor.status === "Deferred" && donor.deferred_until
+    const preferencePauseActive = donor.availability_paused_until
+        && new Date(donor.availability_paused_until).getTime() > Date.now();
+    const statusLabel = preferencePauseActive
+        ? `Paused until ${formatDateTime(donor.availability_paused_until)}`
+        : donor.status === "Deferred" && donor.deferred_until
             ? `Deferred until ${formatDate(donor.deferred_until)}`
             : donor.status;
 
@@ -3511,6 +3514,37 @@ function renderViewDonor(
                     displayValue(
                         donor.deferral_reason
                     )
+                ],
+            ]
+        )}
+
+        ${createDonorDetailSection(
+            "radio",
+            "Outreach Preferences",
+            [
+                [
+                    "Availability Pause Until",
+                    donor.availability_paused_until
+                        ? formatDateTime(donor.availability_paused_until)
+                        : "Not paused"
+                ],
+                [
+                    "Travel Radius",
+                    donor.travel_radius_km == null
+                        ? "No limit"
+                        : `${escapeHtml(donor.travel_radius_km)} km`
+                ],
+                [
+                    "Preferred Contact Hours",
+                    donor.contact_window_start && donor.contact_window_end
+                        ? `${escapeHtml(donor.contact_window_start.slice(0, 5))} – ${escapeHtml(donor.contact_window_end.slice(0, 5))}`
+                        : "Any time"
+                ],
+                [
+                    "Preferences Updated",
+                    donor.preferences_updated_at
+                        ? formatDateTime(donor.preferences_updated_at)
+                        : "Not set"
                 ],
             ]
         )}

@@ -38,7 +38,7 @@ MATCHABLE_REQUEST_STATUSES = {
 }
 
 
-def _compatible_donors(database_session: Session, blood_request_id: int) -> tuple[object, list, dict, dict, object]:
+def _compatible_donors(database_session: Session, blood_request_id: int) -> tuple[object, list, dict, dict, object, int]:
     """Resolve and rank currently eligible donors for a blood request."""
     blood_request = crud.get_blood_request_by_id(database_session, blood_request_id)
     if blood_request is None:
@@ -76,7 +76,24 @@ def _compatible_donors(database_session: Session, blood_request_id: int) -> tupl
         request_latitude=blood_request.hospital_latitude,
         request_longitude=blood_request.hospital_longitude,
     )
-    return blood_request, ranked, evaluations, dict(excluded_reasons), policy
+    preference_filtered = []
+    for item in ranked:
+        reason = donor_eligibility_service.outreach_preference_block_reason(
+            item.donor,
+            distance_km=item.score.distance_km,
+        )
+        if reason:
+            excluded_reasons[reason] += 1
+        else:
+            preference_filtered.append(item)
+    return (
+        blood_request,
+        preference_filtered,
+        evaluations,
+        dict(excluded_reasons),
+        policy,
+        len(donors) - len(preference_filtered),
+    )
 
 
 # ==========================================================
@@ -93,7 +110,7 @@ def find_matching_donors(
     Find and rank compatible donors.
     """
 
-    blood_request, ranked, evaluations, excluded_reasons, policy = _compatible_donors(
+    blood_request, ranked, evaluations, excluded_reasons, policy, excluded_count = _compatible_donors(
         database_session, request.blood_request_id
     )
 
@@ -130,6 +147,10 @@ def find_matching_donors(
                     "city": item.donor.city,
                     "status": item.donor.status,
                     "last_donation_date": item.donor.last_donation_date,
+                    "availability_paused_until": item.donor.availability_paused_until,
+                    "travel_radius_km": item.donor.travel_radius_km,
+                    "contact_window_start": item.donor.contact_window_start,
+                    "contact_window_end": item.donor.contact_window_end,
                 },
             }
             for item in ranked
@@ -137,7 +158,7 @@ def find_matching_donors(
         "eligibility_policy": {
             "mode": policy.enforcement_mode,
             "version": policy.version,
-            "excluded_count": sum(not item.match_allowed for item in evaluations.values()),
+            "excluded_count": excluded_count,
             "excluded_reasons": excluded_reasons,
             "final_decision_required": True,
         },
@@ -158,7 +179,7 @@ def send_notifications(
     Send notification emails to selected donors.
     """
 
-    blood_request, ranked, _, _, _ = _compatible_donors(
+    blood_request, ranked, _, _, _, _ = _compatible_donors(
         database_session,
         request.blood_request_id,
     )
@@ -267,7 +288,7 @@ def save_matches(
     database_session: Session = Depends(get_db),
     administrator: User = Depends(require_administrator),
 ) -> dict:
-    blood_request, ranked, _, _, _ = _compatible_donors(database_session, request.blood_request_id)
+    blood_request, ranked, _, _, _, _ = _compatible_donors(database_session, request.blood_request_id)
     eligible_ids = {item.donor.id for item in ranked}
     selected_ids = set(request.donor_ids)
     if not selected_ids:

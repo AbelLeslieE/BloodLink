@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, time
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -361,6 +361,16 @@ class DonorResponse(DonorBase):
     deferred_until: date | None = None
 
     deferral_reason: str | None = None
+
+    availability_paused_until: datetime | None = None
+
+    travel_radius_km: int | None = None
+
+    contact_window_start: time | None = None
+
+    contact_window_end: time | None = None
+
+    preferences_updated_at: datetime | None = None
 
     created_at: datetime
 

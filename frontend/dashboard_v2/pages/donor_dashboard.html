@@ -35,6 +35,15 @@
             <article class="summary-card pending-card"><span class="card-icon" aria-hidden="true">◷</span><div><span>Awaiting verification</span><strong id="pending">0</strong><small>Donations being reviewed</small></div></article>
         </section>
         <section class="panel profile-panel"><div class="section-heading"><div><p class="section-eyebrow">Profile</p><h2>My donor profile</h2><p>These details help BloodLink match you with compatible requests.</p></div><span id="donorCode" class="donor-code"></span></div><div id="profile" class="profile-details"></div></section>
+        <section class="panel preferences-panel" aria-labelledby="preferencesHeading">
+            <div class="section-heading"><div><p class="section-eyebrow">Your choice</p><h2 id="preferencesHeading">Outreach preferences</h2><p>Pause matching temporarily and choose when and how far you can travel.</p></div><span id="preferenceTimezone" class="preference-timezone"></span></div>
+            <form id="preferencesForm" class="preferences-form">
+                <label><span>Pause matching until</span><input id="availabilityPausedUntil" type="datetime-local"><small>Leave blank to stay available. Medical deferrals are managed separately.</small></label>
+                <label><span>Maximum travel distance</span><select id="travelRadius"><option value="">No limit</option><option value="10">10 km</option><option value="25">25 km</option><option value="50">50 km</option><option value="100">100 km</option><option value="250">250 km</option><option value="500">500 km</option></select><small>Applied when both locations have map coordinates.</small></label>
+                <fieldset><legend>Preferred contact hours</legend><div class="time-fields"><label><span>From</span><input id="contactWindowStart" type="time"></label><label><span>Until</span><input id="contactWindowEnd" type="time"></label></div><small>Leave both blank to allow alerts at any time. Overnight windows are supported.</small></fieldset>
+                <div class="preference-actions"><button id="savePreferences" class="preference-save" type="submit">Save preferences</button><button id="resumeAvailability" class="secondary" type="button">Resume now</button><span id="preferenceStatus" role="status" aria-live="polite"></span></div>
+            </form>
+        </section>
         <section class="panel requests-panel"><div class="section-heading"><div><p class="section-eyebrow">Opportunities</p><h2>Matched blood requests</h2></div><p id="matchedRequestNote" class="safe-note"><span aria-hidden="true">✓</span> Only your blood group requests are shown</p></div><div id="requests" class="request-list"></div></section>
         <section class="two-column">
             <section class="panel activity-panel"><div class="section-heading"><div><p class="section-eyebrow">My activity</p><h2>Recent donations</h2></div></div><div id="history"></div></section>

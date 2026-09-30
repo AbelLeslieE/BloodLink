@@ -324,6 +324,10 @@ def export_donors(
         "Status",
         "Next Eligible Date",
         "Deferral Reason",
+        "Donor Pause Until",
+        "Travel Radius (km)",
+        "Contact Window Start",
+        "Contact Window End",
         "Last Donation",
         "Total Donations",
     ]
@@ -350,6 +354,10 @@ def export_donors(
             donor.status,
             donor.deferred_until,
             donor.deferral_reason,
+            donor.availability_paused_until,
+            donor.travel_radius_km,
+            donor.contact_window_start,
+            donor.contact_window_end,
             donor.last_donation_date,
             donor.total_donations,
         ])

@@ -247,7 +247,10 @@ def resend_pending_recipients(
         notification,
     )
     if pending_count == 0:
-        raise HTTPException(status_code=409, detail="There are no pending recipients to resend.")
+        raise HTTPException(
+            status_code=409,
+            detail="There are no pending recipients currently eligible and within their preferred contact hours.",
+        )
     if sent_count == 0:
         raise HTTPException(
             status_code=502,

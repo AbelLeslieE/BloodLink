@@ -12,8 +12,11 @@ from backend.config.settings import get_settings
 from backend.security.push import validate_push_endpoint, PushSession
 from backend.database.models import BloodRequest, Donor, User
 from backend.database.push_subscription import PushSubscription
-from backend.services.donor_matching_service import is_compatible_donor
-from backend.services.donor_eligibility_service import is_donor_match_allowed
+from backend.services.donor_matching_service import calculate_distance_km, is_compatible_donor
+from backend.services.donor_eligibility_service import (
+    is_donor_match_allowed,
+    outreach_preference_block_reason,
+)
 
 try:  # Keep local development usable until the Render dependency is installed.
     from pywebpush import WebPushException, webpush
@@ -55,9 +58,14 @@ def _matches_request(session: Session, subscription: PushSubscription, blood_req
         return False
     if not is_compatible_donor(blood_request.blood_group, donor.blood_group):
         return False
-    # The current request schema has free-form hospital_location, not a
-    # structured district. Keep this policy point isolated so structured
-    # district/city matching can be added without rewriting delivery.
+    distance_km = calculate_distance_km(
+        blood_request.hospital_latitude,
+        blood_request.hospital_longitude,
+        donor.latitude,
+        donor.longitude,
+    )
+    if outreach_preference_block_reason(donor, distance_km=distance_km):
+        return False
     return _priority_allows(subscription, blood_request)
 
 

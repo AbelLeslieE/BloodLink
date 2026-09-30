@@ -425,7 +425,7 @@ def test_alembic_on_encrypted_database(tmp_path, monkeypatch):
         command.check(Config("alembic.ini"))
         engine = create_database_engine(get_settings())
         with engine.connect() as connection:
-            assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0a1b2c3d4e5f"
+            assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar() == "1b2c3d4e5f6a"
             assert connection.execute(text("SELECT COUNT(*) FROM security_rate_limits")).scalar() == 0
         engine.dispose()
     finally:

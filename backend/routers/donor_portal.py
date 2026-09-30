@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, time, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.auth.dependencies import require_administrator, require_authentication, require_donor
 from backend.config.rewards import badge_for
+from backend.config.settings import get_settings
 from backend.database.database import get_db
 from backend.database import crud
 from backend.database.donor_response import DonorResponse
@@ -21,7 +22,7 @@ from backend.database.models import BloodRequest, DonationCertificate, DonationH
 from backend.database.notification import Notification
 from backend.database.notification_recipient import NotificationRecipient
 from backend.services.certificate_service import ensure_certificate, render_certificate
-from backend.services.donor_matching_service import is_compatible_donor
+from backend.services.donor_matching_service import calculate_distance_km, is_compatible_donor
 from backend.services import donor_eligibility_service, notification_service, request_lifecycle_service
 
 
@@ -32,6 +33,29 @@ DONOR_RESPONSE_OPEN_STATUSES = {"Pending", "Open", "Sent", "In Progress", "Donor
 
 class DonorDecision(BaseModel):
     response: str = Field(pattern="^(Yes|No)$")
+
+
+class DonorOutreachPreferences(BaseModel):
+    availability_paused_until: datetime | None = None
+    travel_radius_km: int | None = Field(default=None, ge=5, le=500)
+    contact_window_start: time | None = None
+    contact_window_end: time | None = None
+
+    @model_validator(mode="after")
+    def validate_preferences(self):
+        if (self.contact_window_start is None) != (self.contact_window_end is None):
+            raise ValueError("Choose both a contact start and end time, or clear both.")
+        if (
+            self.contact_window_start is not None
+            and self.contact_window_start == self.contact_window_end
+        ):
+            raise ValueError("Contact start and end times must be different.")
+        if self.availability_paused_until is not None:
+            if self.availability_paused_until.tzinfo is None:
+                raise ValueError("The pause-until time must include a timezone.")
+            if self.availability_paused_until.astimezone(timezone.utc) <= datetime.now(timezone.utc):
+                raise ValueError("The pause-until time must be in the future.")
+        return self
 
 
 def _donor_for_user(db: Session, user: User) -> Donor:
@@ -174,6 +198,20 @@ def donor_summary(
             "status": donor.status,
             "deferred_until": donor.deferred_until,
             "deferral_reason": donor.deferral_reason,
+            "availability_paused_until": donor.availability_paused_until,
+            "travel_radius_km": donor.travel_radius_km,
+            "contact_window_start": donor.contact_window_start,
+            "contact_window_end": donor.contact_window_end,
+        },
+        "preferences": {
+            "availability_paused_until": donor.availability_paused_until,
+            "pause_active": donor_eligibility_service.is_availability_pause_active(donor),
+            "travel_radius_km": donor.travel_radius_km,
+            "contact_window_start": donor.contact_window_start,
+            "contact_window_end": donor.contact_window_end,
+            "contact_window_open_now": donor_eligibility_service.is_contact_window_open(donor),
+            "timezone": get_settings().request_timezone,
+            "updated_at": donor.preferences_updated_at,
         },
         "total_points": donor.total_points,
         "donation_count": donor.donation_count,
@@ -205,11 +243,54 @@ def donor_requests(
     ).order_by(BloodRequest.required_date, BloodRequest.id.desc())))
     requests = [
         item for item in open_requests
-        if _compatible_blood_group(donor.blood_group, item.blood_group)
+        if (
+            _compatible_blood_group(donor.blood_group, item.blood_group)
+            and donor_eligibility_service.travel_radius_allows(
+                calculate_distance_km(
+                    item.hospital_latitude,
+                    item.hospital_longitude,
+                    donor.latitude,
+                    donor.longitude,
+                ),
+                donor,
+            )
+        )
     ]
     responses = {item.blood_request_id: item for item in db.scalars(select(DonorResponse).where(DonorResponse.donor_id == donor.id))}
     donations = {item.blood_request_id: item for item in db.scalars(select(DonationHistory).where(DonationHistory.donor_id == donor.id))}
     return [_safe_request_payload(item, responses.get(item.id), donations.get(item.id)) for item in requests]
+
+
+@donor_router.put("/preferences")
+def update_outreach_preferences(
+    preferences: DonorOutreachPreferences,
+    db: Annotated[Session, Depends(get_db)],
+    user: Annotated[User, Depends(require_donor)],
+) -> dict:
+    """Let a donor control temporary availability and automated outreach."""
+    donor = _donor_for_user(db, user)
+    donor.availability_paused_until = (
+        preferences.availability_paused_until.astimezone(timezone.utc)
+        if preferences.availability_paused_until
+        else None
+    )
+    donor.travel_radius_km = preferences.travel_radius_km
+    donor.contact_window_start = preferences.contact_window_start
+    donor.contact_window_end = preferences.contact_window_end
+    donor.preferences_updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(donor)
+    return {
+        "success": True,
+        "availability_paused_until": donor.availability_paused_until,
+        "pause_active": donor_eligibility_service.is_availability_pause_active(donor),
+        "travel_radius_km": donor.travel_radius_km,
+        "contact_window_start": donor.contact_window_start,
+        "contact_window_end": donor.contact_window_end,
+        "contact_window_open_now": donor_eligibility_service.is_contact_window_open(donor),
+        "timezone": get_settings().request_timezone,
+        "updated_at": donor.preferences_updated_at,
+    }
 
 
 @donor_router.post("/requests/{request_id}/response")
@@ -233,6 +314,17 @@ def submit_response(
         raise HTTPException(status_code=404, detail="This blood request is no longer available.")
     if not _compatible_blood_group(donor.blood_group, request.blood_group):
         raise HTTPException(status_code=403, detail="Your blood group is not compatible with this request.")
+    request_distance = calculate_distance_km(
+        request.hospital_latitude,
+        request.hospital_longitude,
+        donor.latitude,
+        donor.longitude,
+    )
+    if not donor_eligibility_service.travel_radius_allows(request_distance, donor):
+        raise HTTPException(
+            status_code=409,
+            detail="This request is outside your preferred travel radius. Update your preferences if you want to respond.",
+        )
     if db.scalar(select(DonationHistory).where(DonationHistory.donor_id == donor.id, DonationHistory.blood_request_id == request_id)):
         raise HTTPException(status_code=409, detail="Donation has already been confirmed for this request.")
     response = db.scalar(select(DonorResponse).where(DonorResponse.donor_id == donor.id, DonorResponse.blood_request_id == request_id))

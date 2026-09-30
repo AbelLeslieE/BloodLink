@@ -42,7 +42,14 @@ def _token_page(request: Request, token: str, decision: str, db: Session):
         "Fulfilled", "Closed", "Cancelled", "Expired"
     }:
         return templates.TemplateResponse(request=request, name="expired.html", context={})
-    if decision.lower() == "accept" and not donor_eligibility_service.is_donor_match_allowed(db, recipient.donor):
+    if decision.lower() == "accept" and (
+        not donor_eligibility_service.is_donor_match_allowed(db, recipient.donor)
+        or donor_eligibility_service.outreach_preference_block_reason(
+            recipient.donor,
+            distance_km=recipient.distance,
+            include_contact_window=False,
+        )
+    ):
         return templates.TemplateResponse(request=request, name="expired.html", context={})
     return templates.TemplateResponse(
         request=request,
@@ -73,7 +80,14 @@ def _record_decision(db: Session, token: str, response: str) -> str:
         "Fulfilled", "Closed", "Cancelled", "Expired"
     }:
         return "closed"
-    if response == "ACCEPTED" and not donor_eligibility_service.is_donor_match_allowed(db, recipient.donor):
+    if response == "ACCEPTED" and (
+        not donor_eligibility_service.is_donor_match_allowed(db, recipient.donor)
+        or donor_eligibility_service.outreach_preference_block_reason(
+            recipient.donor,
+            distance_km=recipient.distance,
+            include_contact_window=False,
+        )
+    ):
         return "ineligible"
 
     claimed = db.execute(update(EmailToken).where(EmailToken.id == email_token.id, EmailToken.used.is_(False))

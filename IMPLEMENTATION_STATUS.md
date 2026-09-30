@@ -1,6 +1,6 @@
 # BloodLink implementation status
 
-Last updated: 2026-09-29
+Last updated: 2026-09-30
 
 This report is the project-level record of what is complete, what is partially
 implemented, and what remains. It should be updated after every implementation
@@ -190,6 +190,26 @@ phase.
 - Both the upgraded working database and a fresh encrypted installation pass the
   strict Alembic schema-drift check with no pending operations.
 
+## Completed in the donor outreach-preferences phase
+
+- Donors can temporarily pause outreach until a future date and resume
+  immediately without changing clinical deferrals or donation history.
+- Donors can set an optional travel radius from 10 to 500 km and a daily contact
+  window, including overnight windows that cross midnight.
+- Matching, saved selections, staged email outreach, resends, push outreach, and
+  direct donor responses consistently honor an active pause and measurable
+  travel-radius limits. Automated outreach also waits until contact hours open.
+- Donor dashboard request lists apply measurable travel-radius limits while
+  remaining available for voluntary review outside configured contact hours.
+- Matching explains how many otherwise-compatible donors were excluded by
+  outreach preferences, and administrator donor details expose the current
+  settings without allowing administrators to silently change them.
+- Donor exports include availability pause, travel radius, and contact-window
+  fields for operational review.
+- Automated tests cover self-service updates, authorization and validation,
+  pause and radius enforcement, normal and overnight contact windows, staged
+  resend behavior, exports, and encrypted SQLite.
+
 ## Partially completed
 
 - Audit coverage records every authenticated mutation with its route, actor,
@@ -218,16 +238,15 @@ phase.
 
 ### Operations and donor experience
 
-- Donor-controlled temporary availability, travel radius, and contact hours.
 - Blood-drive scheduling, appointment capacity, QR check-in, and reminders.
 - Operational analytics such as time-to-match and time-to-fulfil.
-- Granular communication consent and quiet-hour preferences.
+- Granular per-channel communication consent and quiet-hour policy preferences.
 
 ## Verification
 
-- Migration head: `0a1b2c3d4e5f`
+- Migration head: `1b2c3d4e5f6a`
 - Security-operations test module: passing
-- Full regression suite: **204 passed** on 2026-09-29.
+- Full regression suite: **213 passed** on 2026-09-30.
 - Unit-fulfilment workflow suite: **26 passed** across normal and encrypted SQLite.
 - Donor-deferral workflow suite: **10 passed** across normal and encrypted SQLite.
 - Eligibility-policy workflow suite: **10 passed** across normal and encrypted SQLite.
@@ -238,6 +257,9 @@ phase.
 - Staged donor-outreach suite: **6 passed** across normal and encrypted SQLite.
 - Schema-reconciliation suite: **2 passed**, plus a clean encrypted-database
   migration and strict drift check.
+- Donor outreach-preferences suite: **9 passed** across normal and encrypted
+  SQLite where database integration is required.
 - Deployment/security focused rerun after configuration changes: **42 passed**.
 - Frontend stored-XSS checks and JavaScript syntax checks: passing.
-- Local browser smoke check: updated login page loaded with no console warnings or errors.
+- Local browser smoke check: the protected donor dashboard route correctly
+  redirected an unauthenticated visitor to the sign-in page.

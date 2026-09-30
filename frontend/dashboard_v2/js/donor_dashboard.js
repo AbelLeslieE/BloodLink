@@ -7,6 +7,23 @@ const authFetch = (url, options = {}) => fetch(url, {
 });
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
 
+function toLocalDateTimeInput(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16);
+}
+
+function renderPreferences(preferences = {}) {
+    document.querySelector("#availabilityPausedUntil").value = toLocalDateTimeInput(preferences.availability_paused_until);
+    document.querySelector("#travelRadius").value = preferences.travel_radius_km == null ? "" : String(preferences.travel_radius_km);
+    document.querySelector("#contactWindowStart").value = preferences.contact_window_start?.slice(0, 5) || "";
+    document.querySelector("#contactWindowEnd").value = preferences.contact_window_end?.slice(0, 5) || "";
+    document.querySelector("#preferenceTimezone").textContent = `Times use ${preferences.timezone || "local time"}`;
+    document.querySelector("#resumeAvailability").hidden = !preferences.pause_active;
+}
+
 async function dashboardData(url) {
     const response = await authFetch(url);
     if (response.status === 401 || response.status === 403) {
@@ -52,12 +69,15 @@ async function loadDashboard() {
     document.querySelector("#pending").textContent = summary.pending_verification;
     document.querySelector("#eligibility").textContent = summary.eligibility_reminder;
     document.querySelector("#donorCode").textContent = summary.donor.donor_code;
+    renderPreferences(summary.preferences);
     document.querySelector("#matchedRequestNote").innerHTML = `<span aria-hidden="true">✓</span> Only ${escapeHtml(summary.donor.blood_group)} requests are shown`;
     document.querySelector("#profile").innerHTML = [
         ["Blood group", summary.donor.blood_group], ["Email", summary.donor.email],
         ["Phone", summary.donor.phone], ["Department", summary.donor.department || "Not provided"],
         ["Availability", summary.donor.status],
-        ["Next eligible", summary.donor.status === "Deferred" ? summary.donor.deferred_until : "Available now"],
+        ["Next eligible", summary.donor.status === "Deferred" ? summary.donor.deferred_until : summary.preferences.pause_active ? `Paused until ${new Date(summary.preferences.availability_paused_until).toLocaleString()}` : "Available now"],
+        ["Travel radius", summary.preferences.travel_radius_km == null ? "No limit" : `${summary.preferences.travel_radius_km} km`],
+        ["Contact hours", summary.preferences.contact_window_start ? `${summary.preferences.contact_window_start.slice(0, 5)} – ${summary.preferences.contact_window_end.slice(0, 5)}` : "Any time"],
     ].map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
     if (requestsResult.status === "fulfilled" && requestsResult.value) {
         renderRequests(requestsResult.value);
@@ -110,5 +130,43 @@ document.querySelector("#logout").addEventListener("click", () => clearSession({
 document.querySelector("#hideLeaderboard").addEventListener("change", async (event) => {
     await authFetch(`/api/donor-dashboard/privacy/leaderboard?hidden=${event.target.checked}`, {method:"PATCH"});
     await loadDashboard();
+});
+document.querySelector("#preferencesForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const button = document.querySelector("#savePreferences");
+    const status = document.querySelector("#preferenceStatus");
+    const pausedUntil = document.querySelector("#availabilityPausedUntil").value;
+    const start = document.querySelector("#contactWindowStart").value;
+    const end = document.querySelector("#contactWindowEnd").value;
+    if (Boolean(start) !== Boolean(end)) {
+        status.textContent = "Choose both contact times, or clear both.";
+        return;
+    }
+    button.disabled = true;
+    status.textContent = "Saving…";
+    try {
+        const response = await authFetch("/api/donor-dashboard/preferences", {
+            method: "PUT",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({
+                availability_paused_until: pausedUntil ? new Date(pausedUntil).toISOString() : null,
+                travel_radius_km: document.querySelector("#travelRadius").value ? Number(document.querySelector("#travelRadius").value) : null,
+                contact_window_start: start || null,
+                contact_window_end: end || null,
+            }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.detail?.[0]?.msg || payload.detail || "Unable to save preferences.");
+        status.textContent = "Preferences saved.";
+        await loadDashboard();
+    } catch (error) {
+        status.textContent = error.message;
+    } finally {
+        button.disabled = false;
+    }
+});
+document.querySelector("#resumeAvailability").addEventListener("click", async () => {
+    document.querySelector("#availabilityPausedUntil").value = "";
+    document.querySelector("#preferencesForm").requestSubmit();
 });
 loadDashboard().catch(() => { document.querySelector("#requests").textContent = "Unable to load the donor dashboard."; });

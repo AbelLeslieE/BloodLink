@@ -8,8 +8,9 @@ the blood centre remains responsible for final donor selection.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
@@ -73,20 +74,95 @@ def donor_age(donor: Donor, *, as_of: date | None = None) -> int | None:
     )
 
 
+def _as_utc(value: datetime | None) -> datetime:
+    current = value or datetime.now(timezone.utc)
+    if current.tzinfo is None:
+        return current.replace(tzinfo=timezone.utc)
+    return current.astimezone(timezone.utc)
+
+
+def is_availability_pause_active(
+    donor: Donor,
+    *,
+    now: datetime | None = None,
+) -> bool:
+    """Return whether a donor-controlled temporary pause is still active."""
+    paused_until = donor.availability_paused_until
+    if paused_until is None:
+        return False
+    if paused_until.tzinfo is None:
+        paused_until = paused_until.replace(tzinfo=timezone.utc)
+    return paused_until.astimezone(timezone.utc) > _as_utc(now)
+
+
+def is_contact_window_open(
+    donor: Donor,
+    *,
+    now: datetime | None = None,
+) -> bool:
+    """Evaluate the donor's preferred outreach window in deployment local time."""
+    start = donor.contact_window_start
+    end = donor.contact_window_end
+    if start is None and end is None:
+        return True
+    if start is None or end is None or start == end:
+        return False
+    local_time = _as_utc(now).astimezone(
+        ZoneInfo(get_settings().request_timezone)
+    ).time().replace(tzinfo=None)
+    start = time(start.hour, start.minute, start.second)
+    end = time(end.hour, end.minute, end.second)
+    if start < end:
+        return start <= local_time < end
+    return local_time >= start or local_time < end
+
+
+def travel_radius_allows(distance_km: float | None, donor: Donor) -> bool:
+    """Apply a distance preference only when both locations can be measured."""
+    return (
+        distance_km is None
+        or donor.travel_radius_km is None
+        or distance_km <= donor.travel_radius_km
+    )
+
+
+def outreach_preference_block_reason(
+    donor: Donor,
+    *,
+    distance_km: float | None = None,
+    now: datetime | None = None,
+    include_contact_window: bool = True,
+) -> str | None:
+    """Explain why automated outreach should not contact this donor now."""
+    if is_availability_pause_active(donor, now=now):
+        return "Donor-controlled availability pause is active."
+    if not travel_radius_allows(distance_km, donor):
+        return "Request is outside the donor's preferred travel radius."
+    if include_contact_window and not is_contact_window_open(donor, now=now):
+        return "Current time is outside the donor's preferred contact hours."
+    return None
+
+
 def evaluate_donor(
     database_session: Session,
     donor: Donor,
     *,
     policy: EligibilityPolicy | None = None,
     as_of: date | None = None,
+    now: datetime | None = None,
 ) -> EligibilityEvaluation:
     """Evaluate known data without claiming clinical fitness to donate."""
     policy = policy or current_policy(database_session)
     reasons: list[str] = []
     warnings: list[str] = []
 
-    if not is_donor_currently_available(donor, as_of=as_of):
-        if is_active_deferral(donor, as_of=as_of):
+    if not is_donor_currently_available(donor, as_of=as_of, now=now):
+        if is_availability_pause_active(donor, now=now):
+            reasons.append(
+                "Donor-controlled availability is paused until "
+                f"{donor.availability_paused_until.isoformat()}."
+            )
+        elif is_active_deferral(donor, as_of=as_of):
             reasons.append(f"Temporary deferral is active until {donor.deferred_until.isoformat()}.")
         else:
             reasons.append("Donor is not marked available.")
@@ -134,7 +210,7 @@ def evaluate_donor(
     enforced = (policy.enforcement_mode or ADVISORY).upper() == ENFORCED
     # Advisory mode reports problems without disrupting existing operations.
     # Enforced mode blocks automated matching until all configured checks pass.
-    match_allowed = is_donor_currently_available(donor, as_of=as_of) and (
+    match_allowed = is_donor_currently_available(donor, as_of=as_of, now=now) and (
         screening_passed or not enforced
     )
     return EligibilityEvaluation(
@@ -152,10 +228,11 @@ def is_donor_match_allowed(
     *,
     policy: EligibilityPolicy | None = None,
     as_of: date | None = None,
+    now: datetime | None = None,
 ) -> bool:
     """Return whether automated matching/outreach may include this donor."""
     return evaluate_donor(
-        database_session, donor, policy=policy, as_of=as_of
+        database_session, donor, policy=policy, as_of=as_of, now=now
     ).match_allowed
 
 
@@ -191,9 +268,16 @@ def is_active_deferral(donor: Donor, *, as_of: date | None = None) -> bool:
     )
 
 
-def is_donor_currently_available(donor: Donor, *, as_of: date | None = None) -> bool:
+def is_donor_currently_available(
+    donor: Donor,
+    *,
+    as_of: date | None = None,
+    now: datetime | None = None,
+) -> bool:
     """Evaluate availability without requiring a scheduled restoration job."""
     today = as_of or date.today()
+    if is_availability_pause_active(donor, now=now):
+        return False
     if donor.deferred_until and donor.deferred_until > today:
         return False
     if donor.status == DEFERRED:
@@ -250,6 +334,11 @@ def eligibility_message(
     as_of: date | None = None,
 ) -> str:
     """Return a donor-friendly operational status message."""
+    if is_availability_pause_active(donor):
+        return (
+            "You paused matching until "
+            f"{donor.availability_paused_until.isoformat()}. You can resume early from your dashboard."
+        )
     if is_active_deferral(donor, as_of=as_of):
         reason = donor.deferral_reason or "Temporary donor deferral"
         return f"Deferred until {donor.deferred_until.isoformat()}: {reason}. Final eligibility is confirmed by the blood bank."

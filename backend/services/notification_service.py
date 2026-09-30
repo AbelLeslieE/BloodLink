@@ -52,7 +52,14 @@ def _send_to_recipient(
 ) -> bool:
     """Send a new, one-time response link to an existing campaign recipient."""
     donor = recipient.donor
-    if not donor_eligibility_service.is_donor_match_allowed(database_session, donor):
+    if (
+        not donor_eligibility_service.is_donor_match_allowed(database_session, donor)
+        or donor_eligibility_service.outreach_preference_block_reason(
+            donor,
+            distance_km=recipient.distance,
+            include_contact_window=False,
+        )
+    ):
         recipient.status = "INELIGIBLE"
         recipient.responded_at = None
         database_session.commit()
@@ -263,6 +270,15 @@ def send_next_stage(
         (recipient for recipient in queued if recipient.stage_number == stage_number),
         key=lambda recipient: recipient.outreach_order,
     )
+    stage_recipients = [
+        recipient
+        for recipient in stage_recipients
+        if donor_eligibility_service.is_contact_window_open(recipient.donor)
+    ]
+    if not stage_recipients:
+        raise ValueError(
+            "The next donor batch is outside its preferred contact hours. Try again during the configured window."
+        )
     successful_deliveries = sum(
         _send_to_recipient(
             database_session,
@@ -309,9 +325,17 @@ def resend_pending_recipients(
     ]
     pending_recipients = []
     for recipient in unresolved_recipients:
-        if donor_eligibility_service.is_donor_match_allowed(database_session, recipient.donor):
+        donor = recipient.donor
+        if (
+            donor_eligibility_service.is_donor_match_allowed(database_session, donor)
+            and donor_eligibility_service.travel_radius_allows(recipient.distance, donor)
+            and donor_eligibility_service.is_contact_window_open(donor)
+        ):
             pending_recipients.append(recipient)
-        else:
+        elif (
+            not donor_eligibility_service.is_donor_match_allowed(database_session, donor)
+            or not donor_eligibility_service.travel_radius_allows(recipient.distance, donor)
+        ):
             recipient.status = "INELIGIBLE"
             recipient.responded_at = None
     if len(pending_recipients) != len(unresolved_recipients):
